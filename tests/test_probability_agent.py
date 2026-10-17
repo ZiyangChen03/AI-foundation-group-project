@@ -1,11 +1,11 @@
 import random
-from itertools import combinations
 
 import pytest
 
 from battleship import (CLASSIC, MINI, BattleshipEnv, CellState, GameConfig, all_layouts,
                         evaluate, layout_from_cells, play_solo)
 from battleship.agents import Agent, HuntTargetAgent, ProbabilityDensityAgent
+from helpers import assert_public_only
 
 
 def play_until(env, cells):
@@ -111,11 +111,7 @@ def test_plays_the_same_games_as_a_reference_implementation(config, tie_break):
 
 def test_decisions_depend_only_on_public_results():
     """With the same agent seed, games on different hidden layouts make the same
-    shots until the first shot whose public result differs."""
+    shots until the first shot whose public feedback differs."""
     records = [play_solo(ProbabilityDensityAgent(), MINI, layout=layout, agent_seed=0)
                for layout in all_layouts(MINI)]
-    for a, b in combinations(records, 2):
-        for shot_a, shot_b in zip(a.shots, b.shots):
-            assert shot_a.cell == shot_b.cell
-            if shot_a != shot_b:
-                break
+    assert_public_only(records)

@@ -112,7 +112,7 @@ wins **70%** of games against hunt-target + parity and all games against random.
 | # | Check | Result |
 |---|---|---|
 | 1 | Plays the same games as an independent `ReferenceAgent` written from the blog's description (sliding each ship along rows and columns), on 6 board setups, both tie-breaks | 1,200 games, every shot identical |
-| 2 | Uses only public information: with the same agent seed, games on all 264 4×4 layouts make identical shots until the first public result differs | All 34,716 pairs agree |
+| 2 | Uses only public information: with the same agent seed, games on all 264 4×4 layouts make identical shots until the first shot whose public feedback (result, or which cells a sunk ship revealed) differs | All 34,716 pairs agree |
 | 3 | Plays by the rules: each `GameRecord` checked against its layout (legal cells, no repeats, correct miss/hit/sunk, game ends when the fleet is sunk), and reruns are identical | 300 games on each of 6 setups, plus 200 `play_match` games |
 | 4 | Compared with the exact Bayesian posterior on 4×4, rebuilt from each record's shot history over all 264 layouts | Picks a most-likely cell 96.3% of the time; never fires at an impossible cell |
 | 5 | Large-sample statistics and a round robin | See §6 |

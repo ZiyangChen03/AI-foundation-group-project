@@ -202,11 +202,11 @@ How each planned agent maps onto it:
 | Agent | `select_shot` | Extra hooks |
 |---|---|---|
 | `RandomAgent` | uniform over `legal_actions` | — |
-| `HuntTargetAgent(parity=True)` | parity cells until a hit, then neighbours of unsunk hits | — |
+| `HuntTargetAgent(parity=True, follow_direction=True)` | parity cells (spaced by the shortest remaining ship) until a hit, then cells extending a line of hits, else neighbours of unsunk hits | see `docs/design_hunt_and_target.md` |
 | `LocalSearchAgent(restarts, steps, method="hill"/"anneal")` | search for layouts consistent with `obs`, fire at the most frequently covered unknown cell | uses `placements`, `is_consistent` |
 | `MarkovAgent` | fire at the cell with the highest learned P(ship \| neighbourhood state) | `fit(records: Iterable[GameRecord])`, `save`/`load` |
 | `QLearningAgent(alpha, gamma, epsilon)` | ε-greedy over `w · features(obs, cell)` | updates weights in `observe` when `training`; `save`/`load` |
-| `ProbabilityDensityAgent(hit_weight=50, tie_break="random")` | Berry's placement counting: every consistent position of each remaining ship adds `hit_weight ** (open hits covered)` to its untried cells; fire at the maximum | `density(obs)` returns the score of every cell |
+| `ProbabilityDensityAgent(hit_weight=50, tie_break="random")` | Berry's placement counting (see `docs/design_probability_density.md`): every consistent position of each remaining ship adds `hit_weight ** (open hits covered)` to its untried cells; fire at the maximum | `density(obs)` returns the score of every cell |
 
 ## 7. Runner and evaluation — `runner.py`
 

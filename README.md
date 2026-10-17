@@ -45,5 +45,6 @@ Then commit the updated `pyproject.toml` and `uv.lock`. Never commit `.venv/`.
 
 The `battleship/` package holds the environment, the agents, evaluation, and the
 tournament. See [docs/API_DESIGN.md](docs/API_DESIGN.md) for the APIs and how to
-add a new agent, and [docs/design_probability_density.md](docs/design_probability_density.md)
-for the probability density baseline and how it was verified.
+add a new agent. The baselines and how they were verified are described in
+[docs/design_hunt_and_target.md](docs/design_hunt_and_target.md) and
+[docs/design_probability_density.md](docs/design_probability_density.md).

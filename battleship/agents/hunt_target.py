@@ -11,17 +11,20 @@ class HuntTargetAgent(Agent):
     cover at least one of them.
 
     Target: while there are hits on ships not yet sunk, fire at their unknown
-    neighbours, preferring cells that extend a line of two or more hits.
+    neighbours. With ``follow_direction``, prefer cells that extend a line of
+    two or more hits, i.e. continue along the ship's inferred direction.
 
     The agent is stateless: every decision is made from the observation. With
     ``reveal_sunk_cells=False`` it cannot tell sunk hits apart, so it wastes
     some shots around ships that are already sunk.
     """
 
-    def __init__(self, parity: bool = True):
+    def __init__(self, parity: bool = True, follow_direction: bool = True):
         super().__init__()
         self.parity = parity
-        self.name = "hunt-target+parity" if parity else "hunt-target"
+        self.follow_direction = follow_direction
+        self.name = ("hunt-target" + ("+parity" if parity else "")
+                     + ("" if follow_direction else "-nodirection"))
 
     def select_shot(self, obs):
         return self.rng.choice(self._targets(obs) or self._hunt_cells(obs))
@@ -45,7 +48,9 @@ class HuntTargetAgent(Agent):
                 if (0 <= br < size and 0 <= bc < size
                         and board[to_cell(br, bc, obs.config)] is CellState.HIT):
                     extends_line.add(cell)
-        return sorted(extends_line or candidates)
+        if self.follow_direction and extends_line:
+            return sorted(extends_line)
+        return sorted(candidates)
 
     def _hunt_cells(self, obs):
         legal = obs.legal_actions

@@ -7,15 +7,12 @@ round_robin); checks only read the records the API returns.
 """
 
 import statistics
-from itertools import combinations
 
-from battleship import (CLASSIC, MINI, CellState, GameConfig, Result, all_layouts,
-                        evaluate, play_match, play_solo, round_robin)
+from battleship import (CLASSIC, MINI, CellState, Result, all_layouts, evaluate, play_match,
+                        play_solo, round_robin)
 from battleship.agents import Agent, HuntTargetAgent, ProbabilityDensityAgent, RandomAgent
+from verify_common import CONFIGS, check_public_only, check_record
 
-CONFIGS = [MINI, CLASSIC, GameConfig(6, (3, 3, 2)), GameConfig(5, (1, 1, 4)),
-           GameConfig(4, (3, 2), reveal_sunk_cells=False),
-           GameConfig(10, (5, 4, 3, 3, 2), reveal_sunk_cells=False)]
 
 
 class ReferenceAgent(Agent):
@@ -55,29 +52,6 @@ class ReferenceAgent(Agent):
         return candidates[0] if self.tie_break == "first" else self.rng.choice(candidates)
 
 
-def check_record(record):
-    """A GameRecord obeys the rules, judged only from its layout and shots."""
-    config, layout = record.config, record.layout
-    ship_of = {cell: i for i, ship in enumerate(layout) for cell in ship.cells}
-    hits = [set() for _ in layout]
-    fired = set()
-    for shot in record.shots:
-        assert 0 <= shot.cell < config.num_cells, "shot off the board"
-        assert shot.cell not in fired, "repeated shot"
-        assert not all(h == s.cells for h, s in zip(hits, layout)), "shot after game over"
-        fired.add(shot.cell)
-        i = ship_of.get(shot.cell)
-        if i is None:
-            assert (shot.result, shot.sunk_length) == (Result.MISS, None)
-            continue
-        hits[i].add(shot.cell)
-        if hits[i] == layout[i].cells:
-            assert (shot.result, shot.sunk_length) == (Result.SUNK, layout[i].length)
-        else:
-            assert (shot.result, shot.sunk_length) == (Result.HIT, None)
-    return all(h == s.cells for h, s in zip(hits, layout))
-
-
 def check_1_reference():
     games = 0
     for config in CONFIGS:
@@ -93,16 +67,10 @@ def check_1_reference():
 
 def check_2_public_only():
     """Same agent_seed on every 4x4 layout: two games must make identical shots
-    until the first shot whose public result differs."""
+    until the first shot whose public feedback (result or revealed cells) differs."""
     records = [play_solo(ProbabilityDensityAgent(), MINI, layout=layout, agent_seed=0)
                for layout in all_layouts(MINI)]
-    pairs = 0
-    for a, b in combinations(records, 2):
-        for shot_a, shot_b in zip(a.shots, b.shots):
-            assert shot_a.cell == shot_b.cell, "decision used hidden information"
-            if shot_a != shot_b:
-                break
-        pairs += 1
+    pairs = check_public_only(records)
     print(f"[2] decisions depend only on public results: {pairs} pairs of games "
           f"over all {len(records)} 4x4 layouts: OK")
 
