@@ -2,7 +2,7 @@ import pytest
 
 from battleship import (CLASSIC, MINI, all_layouts, evaluate, play_match, play_solo,
                         round_robin, simulate_records, train)
-from battleship.agents import Agent, HuntTargetAgent, RandomAgent
+from battleship.agents import Agent, HuntTargetAgent, ProbabilityDensityAgent, RandomAgent
 
 
 class RecordingAgent(RandomAgent):
@@ -26,7 +26,8 @@ class RecordingAgent(RandomAgent):
 
 
 @pytest.mark.parametrize("config", [MINI, CLASSIC])
-@pytest.mark.parametrize("agent", [RandomAgent(), HuntTargetAgent(False), HuntTargetAgent(True)])
+@pytest.mark.parametrize("agent", [RandomAgent(), HuntTargetAgent(False), HuntTargetAgent(True),
+                                   ProbabilityDensityAgent()])
 def test_agents_finish_games(agent, config):
     for seed in range(20):
         record = play_solo(agent, config, seed=seed)
@@ -91,11 +92,13 @@ def test_illegal_agent_shot_names_the_agent():
 
 def test_play_match():
     a, b = RandomAgent(), HuntTargetAgent()
+    for seed in range(40):
+        match = play_match(a, b, MINI, first=seed % 2, seed=seed)
+        winner, loser = match.records[match.winner], match.records[1 - match.winner]
+        assert sum(shot.result.name == "SUNK" for shot in winner.shots) == len(MINI.fleet)
+        # players alternate: a first-player win leaves the loser one shot behind
+        assert winner.num_shots - loser.num_shots == (1 if match.winner == match.first else 0)
     match = play_match(a, b, CLASSIC, first=1, seed=5)
-    winner, loser = match.records[match.winner], match.records[1 - match.winner]
-    assert sum(1 for shot in winner.shots if shot.result.name == "SUNK") == len(CLASSIC.fleet)
-    # players alternate, so the shot counts differ by at most one
-    assert winner.num_shots - loser.num_shots in ((0, 1) if match.winner == match.first else (1,))
     replay = play_match(a, b, CLASSIC, first=1, seed=5)
     assert [(r.layout, r.shots) for r in replay.records] == \
         [(r.layout, r.shots) for r in match.records]

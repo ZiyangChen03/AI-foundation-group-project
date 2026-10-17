@@ -31,8 +31,9 @@ battleship/
   env.py           CellState, Result, Shot, Observation, StepResult, BattleshipEnv, is_consistent
   agents/
     base.py        Agent (abstract)
-    random_agent.py
+    random.py
     hunt_target.py
+    probability.py
     local_search.py    (to do)
     markov.py          (to do)
     q_learning.py      (to do)
@@ -205,7 +206,7 @@ How each planned agent maps onto it:
 | `LocalSearchAgent(restarts, steps, method="hill"/"anneal")` | search for layouts consistent with `obs`, fire at the most frequently covered unknown cell | uses `placements`, `is_consistent` |
 | `MarkovAgent` | fire at the cell with the highest learned P(ship \| neighbourhood state) | `fit(records: Iterable[GameRecord])`, `save`/`load` |
 | `QLearningAgent(alpha, gamma, epsilon)` | ε-greedy over `w · features(obs, cell)` | updates weights in `observe` when `training`; `save`/`load` |
-| *(optional)* `ProbabilityDensityAgent` | Berry's placement counting | reference for the strongest known approach |
+| `ProbabilityDensityAgent(hit_weight=50, tie_break="random")` | Berry's placement counting: every consistent position of each remaining ship adds `hit_weight ** (open hits covered)` to its untried cells; fire at the maximum | `density(obs)` returns the score of every cell |
 
 ## 7. Runner and evaluation — `runner.py`
 

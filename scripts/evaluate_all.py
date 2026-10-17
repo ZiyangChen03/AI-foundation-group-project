@@ -8,12 +8,13 @@
 import argparse
 
 from battleship import CLASSIC, MINI, all_layouts, evaluate, round_robin
-from battleship.agents import HuntTargetAgent, RandomAgent
+from battleship.agents import HuntTargetAgent, ProbabilityDensityAgent, RandomAgent
 
 
 def make_agents():
     # Add new agents here as they are implemented.
-    return [RandomAgent(), HuntTargetAgent(parity=False), HuntTargetAgent(parity=True)]
+    return [RandomAgent(), HuntTargetAgent(parity=False), HuntTargetAgent(parity=True),
+            ProbabilityDensityAgent()]
 
 
 def main():

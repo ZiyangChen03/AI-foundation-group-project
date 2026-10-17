@@ -31,6 +31,7 @@ Baseline results on 10×10 (2000 games, same layouts for every agent):
 | random | 95.3 | 5.0 | 100 |
 | hunt-target | 59.9 | 15.0 | 100 |
 | hunt-target + parity | 50.8 | 8.9 | 75 |
+| probability density | 44.7 | 9.1 | 73 |
 
 ### Adding a dependency
 
@@ -44,4 +45,5 @@ Then commit the updated `pyproject.toml` and `uv.lock`. Never commit `.venv/`.
 
 The `battleship/` package holds the environment, the agents, evaluation, and the
 tournament. See [docs/API_DESIGN.md](docs/API_DESIGN.md) for the APIs and how to
-add a new agent.
+add a new agent, and [docs/design_probability_density.md](docs/design_probability_density.md)
+for the probability density baseline and how it was verified.
