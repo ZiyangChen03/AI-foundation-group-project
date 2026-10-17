@@ -13,6 +13,24 @@ This project uses [uv](https://docs.astral.sh/uv/) so everyone shares the same e
    uv run battleship_4x4.py
    ```
    uv will download Python 3.12, create `.venv/`, and install the locked dependencies automatically.
+   For the 10×10 board: `uv run python -m battleship.ui --board classic`.
+
+### Evaluate agents and run tests
+
+```bash
+uv run scripts/evaluate_all.py                                   # 4×4, every possible layout
+uv run scripts/evaluate_all.py --board classic --games 2000      # 10×10
+uv run scripts/evaluate_all.py --board classic --tournament 200  # plus a round robin
+uv run pytest
+```
+
+Baseline results on 10×10 (2000 games, same layouts for every agent):
+
+| Agent | Mean shots | Std | Worst |
+|---|---|---|---|
+| random | 95.3 | 5.0 | 100 |
+| hunt-target | 59.9 | 15.0 | 100 |
+| hunt-target + parity | 50.8 | 8.9 | 75 |
 
 ### Adding a dependency
 
@@ -21,3 +39,9 @@ uv add <package>
 ```
 
 Then commit the updated `pyproject.toml` and `uv.lock`. Never commit `.venv/`.
+
+## Code layout
+
+The `battleship/` package holds the environment, the agents, evaluation, and the
+tournament. See [docs/API_DESIGN.md](docs/API_DESIGN.md) for the APIs and how to
+add a new agent.

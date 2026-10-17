@@ -1,6 +1,6 @@
 # Battleship AI — API Design
 
-Status: **draft for team review** · Tracks issue #2
+Status: **implemented** in `battleship/` except the three main agents (§11) · Tracks issue #2
 
 This document defines the interfaces shared by the environment, the agents, and the
 evaluation / tournament code, based on our proposal *"Learning to Play Battleship:
@@ -27,16 +27,16 @@ member can build one agent independently and plug it into the same runner.
 battleship/
   __init__.py
   config.py        GameConfig, presets (MINI, CLASSIC)
-  layout.py        Ship, Layout, random_layout, validate_layout, all_layouts, placement helpers
-  env.py           CellState, Result, Shot, Observation, StepResult, BattleshipEnv
+  layout.py        Ship, Layout, placements, random_layout, validate_layout, layout_from_cells, all_layouts
+  env.py           CellState, Result, Shot, Observation, StepResult, BattleshipEnv, is_consistent
   agents/
     base.py        Agent (abstract)
     random_agent.py
     hunt_target.py
-    local_search.py
-    markov.py
-    q_learning.py
-  runner.py        play_solo, train, evaluate, EvalReport, GameRecord
+    local_search.py    (to do)
+    markov.py          (to do)
+    q_learning.py      (to do)
+  runner.py        play_solo, train, simulate_records, evaluate, EvalReport, GameRecord
   tournament.py    play_match, round_robin
   ui.py            pygame app (current BoardApp), imports env — the only module that imports pygame
 scripts/
@@ -44,8 +44,10 @@ scripts/
 tests/
 ```
 
-The current `battleship_4x4.py` becomes `env.py` (the `Battleship` class) + `ui.py`
-(the `BoardApp` class). Training and evaluation never import pygame.
+The old `battleship_4x4.py` was split into `env.py` (the `Battleship` class) and `ui.py`
+(the `BoardApp` class); `battleship_4x4.py` is now a short launcher for the UI.
+Training and evaluation never import pygame. Everything below is also importable
+directly from `battleship` (e.g. `from battleship import MINI, evaluate`).
 
 ## 3. Game configuration — `config.py`
 
@@ -54,7 +56,7 @@ The current `battleship_4x4.py` becomes `env.py` (the `Battleship` class) + `ui.
 class GameConfig:
     size: int = 10
     fleet: tuple[int, ...] = (5, 4, 3, 3, 2)   # ship lengths
-    reveal_sunk_cells: bool = True             # see §8, decision needed
+    reveal_sunk_cells: bool = True             # see §9, decision needed
 
 MINI    = GameConfig(size=4,  fleet=(3, 2))
 CLASSIC = GameConfig(size=10, fleet=(5, 4, 3, 3, 2))
@@ -82,16 +84,20 @@ class Ship:
 
 Layout = tuple[Ship, ...]          # one Ship per fleet entry
 
-def placements(config, length) -> list[frozenset[int]]
+def placements(config, length) -> tuple[frozenset[int], ...]
     # every straight horizontal/vertical position of a ship of this length (cached)
 def random_layout(config, rng: random.Random) -> Layout
+    # uniform over all valid layouts (rejection sampling)
 def validate_layout(config, layout) -> None
     # raises ValueError: wrong lengths, not straight, off board, overlapping
+def layout_from_cells(config, ships: Iterable[Iterable[int]]) -> Layout
+    # predefined layout, e.g. layout_from_cells(MINI, [[0, 1, 2], [8, 12]]); validated
 def all_layouts(config) -> Iterator[Layout]
-    # exhaustive enumeration, only practical for small boards (MINI)
-def is_consistent(cells: frozenset[int], obs: Observation) -> bool
-    # a ship placement does not cover a MISS or an already-sunk ship's cells
+    # exhaustive enumeration, each distinct board once (264 on MINI); only practical for small boards
 ```
+
+`is_consistent(cells, obs)` lives in `env.py` (it reads an `Observation`): a ship
+placement is consistent if it does not cover a MISS or an already-sunk ship's cells.
 
 Rules (issue #2): ships are horizontal or vertical, may touch, may not overlap.
 
@@ -164,7 +170,11 @@ always places fleets randomly with `random_layout`, using a seed for reproducibi
 ```python
 class Agent(ABC):
     name: str = "agent"
-    training: bool = False           # learned agents explore / update only when True
+
+    def __init__(self):              # subclasses with their own __init__ must call super().__init__()
+        self.training = False        # learned agents explore / update only when True
+        self.config = None
+        self.rng = random.Random()
 
     def new_game(self, config: GameConfig, rng: random.Random) -> None:
         """Reset per-game state. rng is seeded by the runner for reproducibility."""
@@ -214,12 +224,15 @@ class GameRecord:
 def play_solo(agent, config=MINI, seed=None, layout=None, agent_seed=None) -> GameRecord
     # env.reset -> agent.new_game -> loop(select_shot, step, observe) -> agent.end_game
 
-def train(agent, config, episodes: int, seed: int = 0) -> list[GameRecord]
-    # sets agent.training = True, runs play_solo episodes on seeds seed..seed+episodes-1
+def train(agent, config, episodes: int, seed: int = TRAIN_SEED) -> list[GameRecord]
+    # agent.training = True while running play_solo on seeds seed..seed+episodes-1
 
-def simulate_records(config, n: int, seed: int = 0, shooter=None) -> list[GameRecord]
+def simulate_records(config, n: int, seed: int = TRAIN_SEED, shooter=None) -> list[GameRecord]
     # training data for MarkovAgent.fit (default shooter: RandomAgent)
 ```
+
+`TRAIN_SEED` is 1,000,000,000, far away from the evaluation seeds `range(N)`, so
+agents are never evaluated on the layouts they were trained on.
 
 ### Evaluation
 
@@ -290,11 +303,9 @@ place ships themselves.
 ## 10. Example usage
 
 ```python
-from battleship.config import MINI, CLASSIC
-from battleship.layout import all_layouts
-from battleship.agents import RandomAgent, HuntTargetAgent, QLearningAgent
-from battleship.runner import train, evaluate
-from battleship.tournament import round_robin
+from battleship import MINI, CLASSIC, all_layouts, train, evaluate, round_robin
+from battleship.agents import RandomAgent, HuntTargetAgent
+from battleship.agents.q_learning import QLearningAgent   # not written yet
 
 q = QLearningAgent(alpha=0.01, gamma=0.95, epsilon=0.1)
 train(q, CLASSIC, episodes=50_000)
@@ -310,7 +321,12 @@ print(round_robin([RandomAgent(), HuntTargetAgent(), q], CLASSIC, games_per_pair
 
 ## 11. Suggested build order
 
-1. `config`, `layout`, `env` (port the existing class, add `layout=` and `history`) + tests
-2. `Agent` base, `RandomAgent`, `HuntTargetAgent`, `runner.evaluate` — baseline numbers
-3. The three main agents in parallel, one owner each
-4. `tournament`
+1. ~~`config`, `layout`, `env` (port the existing class, add `layout=` and `history`) + tests~~ done
+2. ~~`Agent` base, `RandomAgent`, `HuntTargetAgent`, `runner.evaluate`: baseline numbers~~ done
+3. The three main agents in parallel, one owner each: **to do**
+4. ~~`tournament`~~ done
+
+To add an agent: subclass `Agent` in `battleship/agents/`, export it from
+`battleship/agents/__init__.py`, add it to `make_agents()` in
+`scripts/evaluate_all.py`, and add it to the parametrized agents in
+`tests/test_runner.py` so it is checked to finish games on both boards.
