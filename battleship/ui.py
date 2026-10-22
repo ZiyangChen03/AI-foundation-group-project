@@ -51,7 +51,7 @@ class BoardApp:
         self.message = 'Click a square to fire.'
 
     def fire(self, action):
-        if action not in self.observation.legal_actions:
+        if action not in self.game.legal_actions():
             return
         self.observation, _, done, shot = self.game.step(action)
         feedback = {Result.MISS: 'Miss', Result.HIT: 'Hit!',
@@ -114,7 +114,7 @@ class BoardApp:
             self.label(str(row + 1), (55, self.GRID_TOP + row * self.pitch + offset),
                        MUTED, center=True)
         mouse = pygame.mouse.get_pos()
-        legal = set(observation.legal_actions)
+        legal = set(self.game.legal_actions())
         colors = {CellState.UNKNOWN: PANEL, CellState.MISS: '#30465b',
                   CellState.HIT: '#b35542', CellState.SUNK: '#237d70'}
         for action, rect in enumerate(self.cells):
