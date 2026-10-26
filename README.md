@@ -33,6 +33,30 @@ Baseline results on 10×10 (2000 games, same layouts for every agent):
 | hunt-target + parity | 50.8 | 8.9 | 75 |
 | probability density | 44.7 | 9.1 | 73 |
 
+### Belief-based POMDP agent
+
+`BeliefAgent` keeps the set of layouts consistent with every shot (the POMDP belief)
+and fires at the most likely cell; on 4×4 it can also solve the belief-state MDP
+exactly (`planner="optimal"`). 4×4, sunk cells revealed, exact expected shots:
+
+| Agent | Shots |
+|---|---|
+| belief, optimal planner | 8.746 |
+| belief, rollout planner | 8.765 |
+| belief, greedy (default) | 8.913 |
+| probability density | 8.92 |
+
+Without revealed sunk cells, probability density drops to 10.13 while the belief agent
+stays at 8.91. Design, verification and 10×10 results:
+[docs/design_belief_pomdp.md](docs/design_belief_pomdp.md).
+
+Watch an agent play, with its belief shown on the board:
+
+```bash
+uv run battleship_4x4.py --agent belief      # or optimal, rollout, density, hunt, random
+uv run scripts/verify_belief.py              # checks for the POMDP agent (~5 min)
+```
+
 ### Adding a dependency
 
 ```bash

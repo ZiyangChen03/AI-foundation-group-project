@@ -2,6 +2,7 @@
 
     uv run battleship_4x4.py                     # 4 x 4
     uv run python -m battleship.ui --board classic   # 10 x 10
+    uv run battleship_4x4.py --agent belief      # watch the POMDP agent play instead
 """
 
 import argparse
@@ -149,9 +150,17 @@ class BoardApp:
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description='Play Battleship by hand.')
+    parser = argparse.ArgumentParser(description='Play Battleship by hand, or watch an agent '
+                                                 'play with --agent (see battleship/watch.py).')
     parser.add_argument('--board', choices=('mini', 'classic'), default='mini')
-    args = parser.parse_args(argv)
+    parser.add_argument('--agent', help='watch this agent instead, e.g. belief or optimal')
+    args, rest = parser.parse_known_args(argv)
+    if args.agent:
+        from . import watch
+        watch.main(['--agent', args.agent, '--board', args.board, *rest])
+        return
+    if rest:
+        parser.error(f'unrecognized arguments: {" ".join(rest)}')
     BoardApp(MINI if args.board == 'mini' else CLASSIC).run()
 
 
