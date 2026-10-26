@@ -8,13 +8,15 @@
 import argparse
 
 from battleship import CLASSIC, MINI, all_layouts, evaluate, round_robin
-from battleship.agents import HuntTargetAgent, ProbabilityDensityAgent, RandomAgent
+from battleship.agents import BeliefAgent, HuntTargetAgent, ProbabilityDensityAgent, RandomAgent
 
 
 def make_agents():
     # Add new agents here as they are implemented.
+    # BeliefAgent uses the exact belief on 4x4 and 1000 particles on 10x10
+    # (about 60 ms per shot there, so 1000 classic games take a while).
     return [RandomAgent(), HuntTargetAgent(parity=False), HuntTargetAgent(parity=True),
-            ProbabilityDensityAgent()]
+            ProbabilityDensityAgent(), BeliefAgent()]
 
 
 def main():

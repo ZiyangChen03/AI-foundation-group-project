@@ -2,7 +2,8 @@ import pytest
 
 from battleship import (CLASSIC, MINI, all_layouts, evaluate, play_match, play_solo,
                         round_robin, simulate_records, train)
-from battleship.agents import Agent, HuntTargetAgent, ProbabilityDensityAgent, RandomAgent
+from battleship.agents import (Agent, BeliefAgent, HuntTargetAgent, ProbabilityDensityAgent,
+                               RandomAgent)
 
 
 class RecordingAgent(RandomAgent):
@@ -27,7 +28,7 @@ class RecordingAgent(RandomAgent):
 
 @pytest.mark.parametrize("config", [MINI, CLASSIC])
 @pytest.mark.parametrize("agent", [RandomAgent(), HuntTargetAgent(False), HuntTargetAgent(True),
-                                   ProbabilityDensityAgent()])
+                                   ProbabilityDensityAgent(), BeliefAgent(num_particles=100)])
 def test_agents_finish_games(agent, config):
     for seed in range(20):
         record = play_solo(agent, config, seed=seed)
