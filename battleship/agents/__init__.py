@@ -1,6 +1,7 @@
 from .base import Agent
+from .belief import BeliefAgent
 from .hunt_target import HuntTargetAgent
 from .probability import ProbabilityDensityAgent
 from .random import RandomAgent
 
-__all__ = ["Agent", "HuntTargetAgent", "ProbabilityDensityAgent", "RandomAgent"]
+__all__ = ["Agent", "BeliefAgent", "HuntTargetAgent", "ProbabilityDensityAgent", "RandomAgent"]
