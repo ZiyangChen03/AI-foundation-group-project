@@ -33,6 +33,15 @@ Baseline results on 10×10 (2000 games, same layouts for every agent):
 | hunt-target + parity | 50.8 | 8.9 | 75 |
 | probability density | 44.7 | 9.1 | 73 |
 
+Baseline results on 4×4 (2000 games, same layouts for every agent):
+
+| Agent | Mean shots | Std | Worst |
+|---|---|---|---|
+| random | 14.1 | 1.9 | 16 |
+| hunt-target | 10.3 | 2.6 | 16 |
+| hunt-target + parity | 9.7 | 2.0 | 15 |
+| probability density | 8.9 | 1.6 | 13 |
+
 ### Belief-based POMDP agent
 
 `BeliefAgent` keeps the set of layouts consistent with every shot (the POMDP belief)
