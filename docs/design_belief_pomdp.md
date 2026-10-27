@@ -114,6 +114,13 @@ Each piece is checked against something independent (`tests/test_belief.py`,
 | probability density | 8.92 | 10.13 |
 | hunt-target + parity | 9.68 | 10.83 |
 
+**V\* assumes random ship placement.** It is the fewest shots any strategy can
+average when every legal layout is equally likely, which is how our runner places
+ships (`random_layout`) and what the belief's prior assumes. Against an opponent who
+places ships non-uniformly (e.g. always near the edges), a strategy that knew that
+habit could average fewer shots than 8.746; the belief agent would need that
+placement distribution as its prior to match it.
+
 - Greedy is 1.9% above the optimum. **95% of that loss happens while a ship is hit
   but not sunk**, and rollout closes about 90% of it.
 - Cutting the rollout off when targeting ends recovers nothing (8.911): targeting
@@ -153,6 +160,9 @@ Each piece is checked against something independent (`tests/test_belief.py`,
   same length, a single Observation can be ambiguous. Adding the revealed cells to
   `Shot` would remove this limitation.
 - Exact planning only scales to 4×4 with two ships.
+- The belief, and so every value above, assumes uniformly random ship placement
+  (the prior b₀). The optimum is "optimal against random placement", not against
+  any opponent.
 - The runner times `select_shot` only; `BeliefAgent` therefore applies its belief
   update at the start of `select_shot`, so the reported time per move includes it.
 

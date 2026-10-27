@@ -11,6 +11,10 @@ no discount, so the optimal expected number of shots left satisfies
 where b_a^o is the Bayes update of b after firing at a and observing o.
 ``V`` solves this by recursion over the beliefs reachable from b, memoized.
 
+The prior is uniform over legal layouts (how ``random_layout`` places ships), so
+V* is optimal against random placement; an opponent with placement habits would
+need a different prior.
+
 The same recursion evaluates a fixed policy: replace the min by the average
 over the cells the policy may pick. ``policy_value`` does this for greedy
 (fire at the most likely cell), and ``rollout`` improves on greedy by one

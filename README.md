@@ -37,7 +37,8 @@ Baseline results on 10×10 (2000 games, same layouts for every agent):
 
 `BeliefAgent` keeps the set of layouts consistent with every shot (the POMDP belief)
 and fires at the most likely cell; on 4×4 it can also solve the belief-state MDP
-exactly (`planner="optimal"`). 4×4, sunk cells revealed, exact expected shots:
+exactly (`planner="optimal"`). 4×4, sunk cells revealed, ships placed uniformly at
+random (as the runner does), exact expected shots:
 
 | Agent | Shots |
 |---|---|
@@ -56,6 +57,9 @@ Watch an agent play, with its belief shown on the board:
 uv run battleship_4x4.py --agent belief      # or optimal, rollout, density, hunt, random
 uv run scripts/verify_belief.py              # checks for the POMDP agent (~5 min)
 ```
+
+`evaluate_all.py` includes `BeliefAgent` on 4×4 (fast). On 10×10 it takes ~60 ms per
+shot, so it is left out unless you pass `--belief`.
 
 ### Adding a dependency
 
