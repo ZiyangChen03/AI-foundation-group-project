@@ -87,9 +87,11 @@ counts. Against opponents with habits on 4×4 (exact expected shots, after 1000 
 uv run scripts/verify_opponent_belief.py     # checks + benchmark (~1-2 min)
 ```
 
-On 10×10 the agent uses weighted particles. There the same kind of habits are worth
-only 1–2 of ~45 shots even to an agent that knows them, and the learned prior is
-still within noise of the uniform one after 1000 boards (sparse placement counts).
+**Not effective on 10×10 as implemented.** The agent runs there with weighted
+particles, but after 1000 boards the learned prior is still within noise of the
+uniform one. There are two reasons:
+- Mild habits are worth only 1–2 of ~45 shots, even to an agent told the true habit.
+- Counting 600 placements separately learns too slowly.
 
 Design, the two habit models, verification and full learning curves:
 [docs/design_opponent_belief.md](docs/design_opponent_belief.md).

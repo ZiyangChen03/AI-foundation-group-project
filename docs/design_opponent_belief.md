@@ -11,6 +11,18 @@ so the belief now also covers *how this opponent places ships*. This is the
 proposal's stretch goal: adapt to the opponent's placement habits over repeated
 games.
 
+**Takeaway.**
+- **Effective on 4×4.** Against opponents with habits, the learned prior saves up to
+  2.2 shots, 90–100% of what a perfect prior could save, and costs nothing against a
+  random opponent.
+- **Not effective on 10×10 as implemented.** After 1000 boards the learner is within
+  noise of the uniform belief. There are two reasons:
+  - The gain available is small for these mild habits: even an agent told the true
+    habit saves only 1–2 of about 45 shots.
+  - Counting each of the 600 placements separately learns too slowly.
+- The weighted belief itself is correct on both boards. A more data-efficient learner
+  (§5) is untested.
+
 ## 1. The idea
 
 | | `BeliefAgent` | `OpponentBeliefAgent` |
