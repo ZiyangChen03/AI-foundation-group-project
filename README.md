@@ -70,6 +70,26 @@ uv run scripts/verify_belief.py              # checks for the POMDP agent (~5 mi
 `evaluate_all.py` includes `BeliefAgent` on 4×4 (fast). On 10×10 it takes ~60 ms per
 shot, so it is left out unless you pass `--belief`.
 
+### Opponent belief: learning placement habits
+
+`OpponentBeliefAgent` is the POMDP agent with a **learned prior**. After each game it
+counts where the opponent put its ships, and it weights the layouts it keeps by those
+counts. Against opponents with habits on 4×4 (exact expected shots, after 1000 games):
+
+| Opponent | belief (uniform prior) | opponent belief | optimum against the habit |
+|---|---|---|---|
+| random (control) | 8.905 | 8.917 | 8.746 |
+| hugs the edges | 9.532 | 8.281 | 8.209 |
+| ships along rows | 8.874 | 8.415 | 8.312 |
+| reuses 3 boards (`model="layouts"`) | 7.889 | 5.667 | 5.667 |
+
+```bash
+uv run scripts/verify_opponent_belief.py     # checks + benchmark (~1-2 min)
+```
+
+Design, the two habit models, verification and full learning curves:
+[docs/design_opponent_belief.md](docs/design_opponent_belief.md).
+
 ### Adding a dependency
 
 ```bash

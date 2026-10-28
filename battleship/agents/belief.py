@@ -113,7 +113,7 @@ class BeliefAgent(Agent):
                     self.config.reveal_sunk_cells and len(set(fleet)) < len(fleet)):
                 raise RuntimeError("this belief must observe every shot")
             # Shots this agent did not observe; rebuild from the history.
-            self.belief = Belief.from_observation(obs)
+            self.belief = Belief.from_observation(obs, self.belief.weights)
             self.shots_seen = obs.num_shots
         if isinstance(self.belief, Belief) and self.planner != "greedy":
             plan = exact_planner(self.config)

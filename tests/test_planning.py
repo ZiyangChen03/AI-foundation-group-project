@@ -13,20 +13,20 @@ TINY = [GameConfig(3, (2,)), GameConfig(3, (2, 1)), GameConfig(3, (2, 1), reveal
         GameConfig(3, (1, 1)), GameConfig(3, (1, 1), reveal_sunk_cells=False), GameConfig(3, (3,))]
 
 
-def naive_optimal(config):
+def naive_optimal(config, weights=None):
     """V* with no shortcuts: every untried cell, beliefs as Belief objects."""
-    table = Belief.prior(config)._table
+    prior = Belief.prior(config, weights)
+    table = prior._table
 
     @lru_cache(maxsize=None)
     def value(support, fired):
-        belief = Belief(table, support, fired)
+        belief = Belief(table, support, fired, prior.weights)
         if belief.done:
             return 0.0
-        return min(1 + sum(len(nxt) / len(belief) * value(nxt.support, nxt.fired)
+        return min(1 + sum(nxt.mass / belief.mass * value(nxt.support, nxt.fired)
                            for nxt in belief.outcomes(cell).values())
                    for cell in range(config.num_cells) if not fired >> cell & 1)
 
-    prior = Belief.prior(config)
     return value(prior.support, prior.fired)
 
 
@@ -136,3 +136,31 @@ def test_optimal_shots_are_legal_and_optimal():
 def test_optimal_planner_needs_the_exact_belief():
     with pytest.raises(ValueError, match="exact belief"):
         BeliefAgent(belief="particles", planner="optimal")
+
+
+def test_exact_planner_refuses_a_belief_with_another_prior():
+    with pytest.raises(ValueError):
+        planner(MINI).state(Belief.prior(MINI, [1] * 264))
+    with pytest.raises(ValueError):
+        Planner(MINI, [2] * 264).state(Belief.prior(MINI))
+
+
+@pytest.mark.parametrize("config", TINY)
+def test_weighted_optimal_value_matches_a_solver_without_shortcuts(config):
+    rng = random.Random(len(config.fleet))
+    n = len(Belief.prior(config))
+    weights = [rng.random() for _ in range(n)]
+    weights[0] = 0.0                       # some layouts the opponent never uses
+    plan = Planner(config, weights)
+    assert plan.optimal_value(plan.everything, 0) == pytest.approx(
+        naive_optimal(config, weights), abs=1e-12)
+    assert plan.state(Belief.prior(config, weights)) == (plan.everything, 0)
+
+
+@pytest.mark.parametrize("config", TINY)
+def test_equal_weights_plan_like_the_uniform_prior(config):
+    n = len(Belief.prior(config))
+    uniform, weighted = Planner(config), Planner(config, [5] * n)
+    for name in ("optimal_value", "greedy_value"):
+        assert getattr(weighted, name)(weighted.everything, 0) == pytest.approx(
+            getattr(uniform, name)(uniform.everything, 0), abs=1e-12)
