@@ -36,6 +36,14 @@ P(ship at cell) is estimated with Rao-Blackwellization: while ship i is
 redrawn, the exact conditional probability that it covers each cell (given
 the others) is added, not just where it lands. This gives the same answer on
 average with far less noise than counting particles.
+
+A non-uniform prior that splits per ship, w(layout) = product over its ships
+of f(placement) (``placement_weight``, e.g. the learned placement counts of
+``OpponentBeliefAgent``), keeps every step exact: each uniform draw above
+becomes a draw in proportion to f. The conditional of one ship given the
+others is then proportional to f over its valid placements, of a pair to
+f(p) * f(q), and independent draws in proportion to f, kept when consistent,
+are exact samples of the weighted posterior.
 """
 
 import random
@@ -167,10 +175,14 @@ class ParticleBelief:
 
     ``occupancy()`` estimates P(ship at cell) for every cell. The estimate is
     refreshed by every ``update``. Randomness comes only from ``rng``.
+
+    With ``placement_weight(length, cells)`` the sample follows the prior
+    w(layout) = product of the weights of its ships instead of the uniform one.
     """
 
     def __init__(self, config: GameConfig, rng: random.Random, num_particles: int = 300,
-                 fresh_draws: int = 50, max_search_nodes: int = 200_000):
+                 fresh_draws: int = 50, max_search_nodes: int = 200_000,
+                 placement_weight=None):
         self.config = config
         self.rng = rng
         self.num_particles = num_particles
@@ -179,10 +191,40 @@ class ParticleBelief:
         self.constraints = Constraints(config)
         self.slots = tuple(config.fleet)      # the length of each particle entry
         self.searches = 0                     # times every particle died
-        by_mask = self.constraints.placements.by_mask
-        self.particles = [self._from_layout(random_layout(config, rng), by_mask)
-                          for _ in range(num_particles)]
+        placements = self.constraints.placements
+        self.weight = None                    # prior weight by placement id, or None
+        if placement_weight is not None:
+            self.weight = tuple(placement_weight(length, frozenset(cells))
+                                for length, cells in zip(placements.lengths, placements.cells))
+            if min(self.weight) <= 0:
+                raise ValueError("placement weights must be positive")
+            self.particles = [self._prior_draw() for _ in range(num_particles)]
+        else:
+            self.particles = [self._from_layout(random_layout(config, rng), placements.by_mask)
+                              for _ in range(num_particles)]
         self._estimate()
+
+    def _pick(self, ids):
+        """One of ``ids``, uniformly or in proportion to the prior weights."""
+        if self.weight is None:
+            return self.rng.choice(ids)
+        return self.rng.choices(ids, [self.weight[p] for p in ids])[0]
+
+    def _prior_draw(self) -> list[int]:
+        """A layout from the weighted prior: ships drawn independently, redrawn
+        until none overlap."""
+        masks = self.constraints.placements.masks
+        by_length = self.constraints.placements.by_length
+        while True:
+            state, union = [], 0
+            for length in self.slots:
+                p = self._pick(by_length[length])
+                if masks[p] & union:
+                    break
+                state.append(p)
+                union |= masks[p]
+            else:
+                return state
 
     def _from_layout(self, layout: Layout, by_mask) -> list[int]:
         # random_layout keeps fleet order, so each ship matches its slot.
@@ -235,18 +277,24 @@ class ParticleBelief:
             others = total ^ masks[state[i]]
             choices = self._choices(length, others, hits & ~others)
             if weights is not None:
-                share = 1 / len(choices)
-                for p in choices:
-                    weights[p] += share
+                if self.weight is None:
+                    share = 1 / len(choices)
+                    for p in choices:
+                        weights[p] += share
+                else:
+                    norm = 1 / sum(self.weight[p] for p in choices)
+                    for p in choices:
+                        weights[p] += self.weight[p] * norm
                 for j in range(n):
                     if j != i:
                         weights[state[j]] += 1
-            state[i] = self.rng.choice(choices)
+            state[i] = self._pick(choices)
             total = others | masks[state[i]]
 
     def _pair_move(self, state: list[int], i: int, j: int) -> None:
-        """Redraw ships ``i`` and ``j`` together, uniformly over every pair of
-        placements that keeps the layout consistent."""
+        """Redraw ships ``i`` and ``j`` together, over every pair of placements
+        that keeps the layout consistent (uniformly, or in proportion to the
+        product of their prior weights)."""
         masks = self.constraints.placements.masks
         valid = self.constraints.valid
         containing = self.constraints.placements.containing
@@ -270,7 +318,11 @@ class ParticleBelief:
                 pairs.extend((p, q) for p in self._choices(li, others | masks[q],
                                                            required & ~masks[q])
                              if not masks[p] & bit)
-        state[i], state[j] = self.rng.choice(pairs)
+        if self.weight is None:
+            state[i], state[j] = self.rng.choice(pairs)
+        else:
+            w = self.weight
+            state[i], state[j] = self.rng.choices(pairs, [w[p] * w[q] for p, q in pairs])[0]
 
     def _move(self, state: list[int]) -> None:
         self._sweep(state)
@@ -287,7 +339,7 @@ class ParticleBelief:
         for _ in range(self.fresh_draws):
             draw, union = [], 0
             for length in self.slots:
-                p = self.rng.choice(options[length])
+                p = self._pick(options[length])
                 if masks[p] & union:
                     break
                 draw.append(p)

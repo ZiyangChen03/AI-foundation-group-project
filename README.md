@@ -78,14 +78,18 @@ counts. Against opponents with habits on 4×4 (exact expected shots, after 1000 
 
 | Opponent | belief (uniform prior) | opponent belief | optimum against the habit |
 |---|---|---|---|
-| random (control) | 8.905 | 8.917 | 8.746 |
+| random (control) | 8.905 | 8.922 | 8.746 |
 | hugs the edges | 9.532 | 8.281 | 8.209 |
-| ships along rows | 8.874 | 8.415 | 8.312 |
+| ships along rows | 8.874 | 8.416 | 8.312 |
 | reuses 3 boards (`model="layouts"`) | 7.889 | 5.667 | 5.667 |
 
 ```bash
 uv run scripts/verify_opponent_belief.py     # checks + benchmark (~1-2 min)
 ```
+
+On 10×10 the agent uses weighted particles. There the same kind of habits are worth
+only 1–2 of ~45 shots even to an agent that knows them, and the learned prior is
+still within noise of the uniform one after 1000 boards (sparse placement counts).
 
 Design, the two habit models, verification and full learning curves:
 [docs/design_opponent_belief.md](docs/design_opponent_belief.md).
