@@ -19,7 +19,7 @@ member can build one agent independently and plug it into the same runner.
 | Baselines: random, hunt-and-target | Same `Agent` interface |
 | Shots-to-win (mean, spread, worst case), time per move, thousands of games | `evaluate()` returns an `EvalReport`; the runner times every move |
 | Round-robin tournament, full games, alternating who shoots first | Two-player `play_match()` and `round_robin()`; the runner places both fleets **randomly** (seeded) |
-| Stretch: adapt to opponent's placement habits over repeated games | **Out of scope for now**: placement is always random, so there are no habits to learn (see §8) |
+| Stretch: adapt to opponent's placement habits over repeated games | The runner still places randomly by default. Habits are simulated by passing layouts drawn from a `Habit` (`battleship/opponents.py`) to `play_solo(layout=...)`; `OpponentBeliefAgent` learns them on 4×4 (see `docs/design_opponent_belief.md`) |
 
 ## 2. Package layout
 
@@ -34,11 +34,14 @@ battleship/
     random.py
     hunt_target.py
     probability.py
+    belief.py          BeliefAgent (POMDP, docs/design_belief_pomdp.md)
+    opponent.py        OpponentBeliefAgent (learned placement prior, docs/design_opponent_belief.md)
     local_search.py    (to do)
     markov.py          (to do)
     q_learning.py      (to do)
   runner.py        play_solo, train, simulate_records, evaluate, EvalReport, GameRecord
   tournament.py    play_match, round_robin
+  opponents.py     Habit (opponents with placement habits), expected_shots
   ui.py            pygame app (current BoardApp), imports env — the only module that imports pygame
 scripts/
   evaluate_all.py  run baselines + agents, print/save results

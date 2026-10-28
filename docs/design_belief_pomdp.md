@@ -119,7 +119,8 @@ average when every legal layout is equally likely, which is how our runner place
 ships (`random_layout`) and what the belief's prior assumes. Against an opponent who
 places ships non-uniformly (e.g. always near the edges), a strategy that knew that
 habit could average fewer shots than 8.746; the belief agent would need that
-placement distribution as its prior to match it.
+placement distribution as its prior to match it. `OpponentBeliefAgent` learns that prior from past games; see
+[design_opponent_belief.md](design_opponent_belief.md).
 
 - Greedy is 1.9% above the optimum. **95% of that loss happens while a ship is hit
   but not sunk**, and rollout closes about 90% of it.
@@ -162,7 +163,8 @@ placement distribution as its prior to match it.
 - Exact planning only scales to 4×4 with two ships.
 - The belief, and so every value above, assumes uniformly random ship placement
   (the prior b₀). The optimum is "optimal against random placement", not against
-  any opponent.
+  any opponent. `OpponentBeliefAgent` learns a non-uniform prior on 4×4
+  ([design_opponent_belief.md](design_opponent_belief.md)).
 - The runner times `select_shot` only; `BeliefAgent` therefore applies its belief
   update at the start of `select_shot`, so the reported time per move includes it.
 

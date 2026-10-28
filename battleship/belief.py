@@ -12,6 +12,10 @@ outcome, and renormalizes. With the uniform prior (the distribution
 ``random_layout`` samples from) the surviving layouts stay equally likely, so
 a belief is the set of layouts still consistent with the history.
 
+A non-uniform prior (an opponent with placement habits, see
+``battleship/opponents.py``) changes only the last step: the surviving layouts
+keep their prior weights, so b'(s') = w(s') / (sum of w over the survivors).
+
 Listing every layout is only practical on small boards such as MINI.
 """
 
@@ -113,34 +117,45 @@ def explains(layout: Layout, obs: Observation) -> bool:
 
 
 class Belief:
-    """A uniform distribution over the layouts still consistent with the shots.
+    """A distribution over the layouts still consistent with the shots.
 
-    Immutable: ``update`` returns a new belief.
+    Uniform by default. With prior ``weights`` (one per layout, in the order
+    of ``Belief.prior(config).layouts``), each consistent layout has probability
+    proportional to its weight. Immutable: ``update`` returns a new belief.
     """
 
-    __slots__ = ("_table", "support", "fired")
+    __slots__ = ("_table", "support", "fired", "weights")
 
-    def __init__(self, table: _Table, support: tuple[int, ...], fired: int):
+    def __init__(self, table: _Table, support: tuple[int, ...], fired: int,
+                 weights: tuple[float, ...] | None = None):
         self._table = table
         self.support = support   # indices of the consistent layouts
         self.fired = fired       # bitmask of the cells shot so far
+        self.weights = weights   # prior weight of every layout, or None for uniform
 
     @classmethod
-    def prior(cls, config: GameConfig) -> "Belief":
-        """The belief before any shot: every legal layout, equally likely."""
+    def prior(cls, config: GameConfig, weights=None) -> "Belief":
+        """The belief before any shot: every legal layout, equally likely
+        unless ``weights`` are given. Layouts of weight 0 are left out."""
         table = _table(config)
-        return cls(table, tuple(range(len(table.layouts))), 0)
+        weights = _check_weights(table, weights)
+        support = tuple(range(len(table.layouts)))
+        if weights is not None:
+            support = tuple(i for i in support if weights[i] > 0)
+        return cls(table, support, 0, weights)
 
     @classmethod
-    def from_observation(cls, obs: Observation) -> "Belief":
+    def from_observation(cls, obs: Observation, weights=None) -> "Belief":
         """The belief after the shots in ``obs``, rebuilt from scratch.
 
         Exact unless sunk cells are revealed and two ships share a length;
         then it can keep extra layouts (see ``explains``).
         """
         table = _table(obs.config)
-        support = tuple(i for i, layout in enumerate(table.layouts) if explains(layout, obs))
-        return cls(table, support, sum(1 << shot.cell for shot in obs.history))
+        weights = _check_weights(table, weights)
+        support = tuple(i for i, layout in enumerate(table.layouts)
+                        if (weights is None or weights[i] > 0) and explains(layout, obs))
+        return cls(table, support, sum(1 << shot.cell for shot in obs.history), weights)
 
     @property
     def config(self) -> GameConfig:
@@ -154,29 +169,39 @@ class Belief:
         return len(self.support)
 
     @property
+    def mass(self) -> float:
+        """Total prior weight of the consistent layouts (their number if uniform)."""
+        if self.weights is None:
+            return len(self.support)
+        return sum(self.weights[i] for i in self.support)
+
+    @property
     def done(self) -> bool:
         """True once every ship is sunk (all consistent layouts agree on this)."""
         return not self._table.cover[self.support[0]] & ~self.fired
 
     def occupancy(self) -> list[float]:
         """P(a ship covers the cell) for each untried cell; 0 for cells already shot."""
+        weights = self.weights
         counts = [0] * self.config.num_cells
         for i in self.support:
+            w = 1 if weights is None else weights[i]
             cover = self._table.cover[i] & ~self.fired
             while cover:
                 low = cover & -cover
-                counts[low.bit_length() - 1] += 1
+                counts[low.bit_length() - 1] += w
                 cover ^= low
-        return [count / len(self.support) for count in counts]
+        mass = self.mass
+        return [count / mass for count in counts]
 
     def outcomes(self, cell: int) -> dict[Outcome, "Belief"]:
         """The possible outcomes of a shot at ``cell``, each with the belief it
-        leads to. ``len(next) / len(self)`` is P(outcome | belief, cell)."""
+        leads to. ``next.mass / self.mass`` is P(outcome | belief, cell)."""
         groups = {}
         for i in self.support:
             groups.setdefault(_predict(self._table, i, self.fired, cell), []).append(i)
         fired = self.fired | 1 << cell
-        return {outcome: Belief(self._table, tuple(group), fired)
+        return {outcome: Belief(self._table, tuple(group), fired, self.weights)
                 for outcome, group in groups.items()}
 
     def update(self, cell: int, outcome: Outcome) -> "Belief":
@@ -185,4 +210,15 @@ class Belief:
                         if _predict(self._table, i, self.fired, cell) == outcome)
         if not support:
             raise ValueError("no layout explains this outcome")
-        return Belief(self._table, support, self.fired | 1 << cell)
+        return Belief(self._table, support, self.fired | 1 << cell, self.weights)
+
+
+def _check_weights(table: _Table, weights):
+    if weights is None:
+        return None
+    weights = tuple(weights)
+    if len(weights) != len(table.layouts):
+        raise ValueError(f"expected {len(table.layouts)} prior weights, got {len(weights)}")
+    if any(w < 0 for w in weights) or not any(w > 0 for w in weights):
+        raise ValueError("prior weights must be non-negative and not all zero")
+    return weights

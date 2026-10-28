@@ -12,8 +12,10 @@ where b_a^o is the Bayes update of b after firing at a and observing o.
 ``V`` solves this by recursion over the beliefs reachable from b, memoized.
 
 The prior is uniform over legal layouts (how ``random_layout`` places ships), so
-V* is optimal against random placement; an opponent with placement habits would
-need a different prior.
+V* is optimal against random placement. ``Planner(config, weights)`` takes a
+prior weight per layout instead (an opponent with placement habits, see
+``battleship/opponents.py``); probabilities are then weight sums instead of
+layout counts, and V* is optimal against that opponent.
 
 The same recursion evaluates a fixed policy: replace the min by the average
 over the cells the policy may pick. ``policy_value`` does this for greedy
@@ -43,9 +45,9 @@ from .config import GameConfig
 
 
 class Planner:
-    """Exact optimal, greedy and rollout values for one config."""
+    """Exact optimal, greedy and rollout values for one config and prior."""
 
-    def __init__(self, config: GameConfig):
+    def __init__(self, config: GameConfig, weights=None):
         table = _table(config)
         self.config = config
         self.table = table
@@ -65,7 +67,28 @@ class Planner:
         self.ships_at = [[(mask, length, layouts)
                           for (mask, length), layouts in ship_layouts.items() if mask >> cell & 1]
                          for cell in self.cells]
-        self.everything = (1 << n) - 1
+        self.weights = None if weights is None else tuple(weights)
+        if self.weights is None:
+            self.everything = (1 << n) - 1
+            self._mass = int.bit_count
+        else:
+            if len(self.weights) != n or min(self.weights) < 0 or not max(self.weights):
+                raise ValueError(f"expected {n} non-negative prior weights, not all zero")
+            self.everything = sum(1 << i for i, w in enumerate(self.weights) if w > 0)
+            # Weight of a set of layouts, summed eight layouts at a time.
+            chunks = [self.weights[k:k + 8] for k in range(0, n, 8)]
+            tables = [[sum(w for j, w in enumerate(chunk) if byte >> j & 1)
+                       for byte in range(256)] for chunk in chunks]
+
+            def mass(layouts: int) -> float:
+                total, k = 0.0, 0
+                while layouts:
+                    total += tables[k][layouts & 255]
+                    layouts >>= 8
+                    k += 1
+                return total
+
+            self._mass = mass
         self._optimal = {}
         self._greedy = {}
 
@@ -74,6 +97,8 @@ class Planner:
     def state(self, belief: Belief) -> tuple[int, int]:
         if belief._table is not self.table:
             raise ValueError("belief belongs to another config")
+        if belief.weights != self.weights:
+            raise ValueError("the belief and the planner use different priors")
         return sum(1 << i for i in belief.support), belief.fired
 
     def _ship_cells(self, layouts: int) -> int:
@@ -88,12 +113,12 @@ class Planner:
         return layouts, fired & self._ship_cells(layouts)
 
     def hit_counts(self, layouts: int, fired: int) -> dict[int, int]:
-        """Number of consistent layouts with a ship at each untried cell, for
-        the cells where it is not zero."""
+        """Number (or prior weight) of consistent layouts with a ship at each
+        untried cell, for the cells where it is not zero."""
         counts = {}
         for cell in self.cells:
             if not fired >> cell & 1:
-                k = (layouts & self.covering[cell]).bit_count()
+                k = self._mass(layouts & self.covering[cell])
                 if k:
                     counts[cell] = k
         return counts
@@ -114,9 +139,9 @@ class Planner:
         return [g for g in (*groups.values(), hit, miss) if g]
 
     def _q(self, layouts: int, fired: int, cell: int, value) -> float:
-        size = layouts.bit_count()
+        size = self._mass(layouts)
         after = fired | 1 << cell
-        return 1 + sum(g.bit_count() / size * value(g, after)
+        return 1 + sum(self._mass(g) / size * value(g, after)
                        for g in self.outcomes(layouts, fired, cell))
 
     # --- optimal -------------------------------------------------------------
@@ -128,9 +153,9 @@ class Planner:
         key = self._key(layouts, fired)
         if key in self._optimal:
             return self._optimal[key]
-        size = layouts.bit_count()
+        size = self._mass(layouts)
         ranked = sorted(self.hit_counts(layouts, fired).items(), key=lambda kv: -kv[1])
-        if ranked[0][1] == size:
+        if not layouts & ~self.covering[ranked[0][0]]:      # a certain hit
             ranked = ranked[:1]
         remaining = self.total - (self._ship_cells(layouts) & fired).bit_count()
         best = float("inf")
@@ -152,7 +177,7 @@ class Planner:
     def greedy_shots(self, layouts: int, fired: int) -> list[int]:
         counts = self.hit_counts(layouts, fired)
         best = max(counts.values())
-        return [cell for cell, k in counts.items() if k == best]
+        return [cell for cell, k in counts.items() if k >= best * (1 - 1e-12)]
 
     def greedy_value(self, layouts: int, fired: int) -> float:
         """Expected shots left when always firing at a most likely cell,

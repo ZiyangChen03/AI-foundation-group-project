@@ -112,3 +112,54 @@ def test_impossible_outcome_raises():
 def test_large_boards_are_refused():
     with pytest.raises(ValueError, match="small boards"):
         Belief.prior(CLASSIC)
+
+
+def test_weighted_belief_matches_bayes_by_hand():
+    rng = random.Random(5)
+    layouts = list(all_layouts(MINI))
+    weights = [rng.random() for _ in layouts]
+    for before, after, cell, env in random_games(MINI, games=5):
+        if not before.history:
+            belief = Belief.prior(MINI, weights)
+        belief = belief.update(cell, observed_outcome(before, after))
+        kept = [i for i, layout in enumerate(layouts) if explains(layout, after)]
+        total = sum(weights[i] for i in kept)
+        assert belief.mass == pytest.approx(total)
+        p = belief.occupancy()
+        for c in after.legal_actions:
+            expected = sum(weights[i] for i in kept if any(c in s.cells for s in layouts[i]))
+            assert p[c] == pytest.approx(expected / total)
+
+
+def test_equal_weights_give_the_uniform_belief_exactly():
+    uniform, weighted = Belief.prior(MINI), Belief.prior(MINI, [3] * 264)
+    for cell, outcome in ((5, (Result.MISS, None, None)), (6, (Result.HIT, None, None))):
+        uniform, weighted = uniform.update(cell, outcome), weighted.update(cell, outcome)
+        assert uniform.occupancy() == weighted.occupancy()
+
+
+def test_zero_weight_layouts_are_impossible():
+    weights = [0] * 264
+    weights[0] = 1
+    belief = Belief.prior(MINI, weights)
+    assert len(belief) == 1
+    assert sorted(c for c, p in enumerate(belief.occupancy()) if p == 1.0) == sorted(
+        c for ship in belief.layouts[0] for c in ship.cells)
+
+
+def test_outcome_probabilities_use_the_weights():
+    rng = random.Random(2)
+    belief = Belief.prior(MINI, [rng.random() for _ in range(264)])
+    split = belief.outcomes(5)
+    assert sum(b.mass for b in split.values()) == pytest.approx(belief.mass)
+    hit = sum(b.mass for o, b in split.items() if o[0] is not Result.MISS) / belief.mass
+    assert hit == pytest.approx(belief.occupancy()[5])
+
+
+def test_bad_weights_are_refused():
+    with pytest.raises(ValueError):
+        Belief.prior(MINI, [1] * 10)
+    with pytest.raises(ValueError):
+        Belief.prior(MINI, [0] * 264)
+    with pytest.raises(ValueError):
+        Belief.prior(MINI, [-1] + [1] * 263)
