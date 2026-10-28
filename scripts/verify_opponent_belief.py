@@ -2,22 +2,26 @@
 
     uv run scripts/verify_opponent_belief.py            # about 2 minutes
     uv run scripts/verify_opponent_belief.py --runs 20  # tighter learning curves
+    uv run scripts/verify_opponent_belief.py --classic 200   # plus 10x10 (~15 min)
 
 Games are played by the runner (play_solo); checks read the records it returns
-and compare against independent references. Results are exact expectations
-over every 4x4 layout, weighted by the opponent's habit (see
-battleship/opponents.py), with ties averaged over agent seeds.
+and compare against independent references. 4x4 results are exact expectations
+over every layout, weighted by the opponent's habit (see
+battleship/opponents.py), with ties averaged over agent seeds. 10x10 results
+are paired: every agent plays the same layouts drawn from the habit.
 """
 
 import argparse
 import random
 import statistics
 from concurrent.futures import ProcessPoolExecutor
+from math import prod
 
-from battleship import MINI, BattleshipEnv, GameConfig, all_layouts, play_solo
+from battleship import CLASSIC, MINI, BattleshipEnv, GameConfig, all_layouts, play_solo
 from battleship.agents import BeliefAgent, OpponentBeliefAgent, ProbabilityDensityAgent
 from battleship.belief import Belief, explains, observed_outcome
-from battleship.opponents import expected_shots, standard_habits
+from battleship.opponents import expected_shots, large_board_habits, standard_habits
+from battleship.particles import ParticleBelief
 from battleship.planning import Planner
 from battleship.runner import TRAIN_SEED
 from verify_common import check_public_only, check_record
@@ -188,13 +192,117 @@ def check_5_benchmark(runs):
                   + f"   {uniform_shots - means[-1]:+.3f}{share}")
 
 
+def check_6_weighted_particles():
+    """Weighted particles (for 10x10) against the exact weighted belief on 5x5:
+    the error halves when the particles quadruple and the bias is ~0."""
+    config = GameConfig(5, (3, 2, 2), reveal_sunk_cells=False)
+    factor_rng, factors = random.Random(9), {}
+
+    def weight(length, cells):          # a strong, uneven prior that splits per ship
+        return factors.setdefault((length, cells), factor_rng.choice([1, 2, 5, 20]))
+
+    weights = [prod(weight(s.length, s.cells) for s in layout)
+               for layout in Belief.prior(config).layouts]
+    rows = []
+    for n in (100, 400, 1600):
+        worst, signed, cells = [], 0.0, 0
+        rng = random.Random(7)
+        for game in range(8):
+            env = BattleshipEnv(config)
+            obs = env.reset(seed=game)
+            particles = ParticleBelief(config, random.Random(game), n, placement_weight=weight)
+            exact = Belief.prior(config, weights)
+            while True:
+                pe, pp = exact.occupancy(), particles.occupancy()
+                worst.append(max(abs(a - b) for a, b in zip(pe, pp)))
+                signed += sum(b - a for a, b in zip(pe, pp))
+                cells += len(pe)
+                cell = rng.choice(obs.legal_actions)
+                after = env.step(cell).observation
+                if env.done:
+                    break
+                outcome = observed_outcome(obs, after)
+                particles.update(cell, outcome)
+                exact = exact.update(cell, outcome)
+                obs = after
+        rows.append((n, statistics.fmean(worst), signed / cells))
+    for (n1, e1, _), (n2, e2, _) in zip(rows, rows[1:]):
+        assert 0.35 < e2 / e1 < 0.7, f"error does not shrink like noise from {n1} to {n2}"
+    assert all(abs(bias) < 0.002 for _, _, bias in rows)
+    print("[6] weighted particles vs exact weighted belief (5x5, ships 3,2,2, no reveal): "
+          + ", ".join(f"N={n}: worst-cell error {e:.4f}, bias {b:+.5f}" for n, e, b in rows))
+
+
+CLASSIC_AGENTS = ("density", "uniform", "learned 10", "learned 100", "learned 1000", "oracle")
+
+
+def classic_agent(name, habit, habit_index):
+    if name == "density":
+        return ProbabilityDensityAgent()
+    if name == "uniform":
+        return BeliefAgent()
+    if name == "oracle":
+        return OpponentBeliefAgent(habit=habit)
+    agent = OpponentBeliefAgent()
+    rng = random.Random(f"learn:{habit_index}")
+    for _ in range(int(name.split()[1])):
+        agent.learn(habit.sample(CLASSIC, rng))   # what end_game does after a game
+    return agent
+
+
+def classic_games(task):
+    habit_index, name, start, stop = task
+    habit = large_board_habits()[habit_index]
+    agent = classic_agent(name, habit, habit_index)
+    shots = []
+    for i in range(start, stop):
+        layout = habit.sample(CLASSIC, random.Random(f"board:{habit_index}:{i}"))
+        record = play_solo(agent, CLASSIC, layout=layout, agent_seed=i)
+        assert check_record(record)
+        shots.append(record.num_shots)
+    return task, shots
+
+
+def check_7_classic(games, chunk=10):
+    """10x10: every agent plays the same layouts drawn from each habit.
+    Learned agents learn from separate boards of the habit."""
+    habits = large_board_habits()
+    tasks = [(h, name, start, min(start + chunk, games)) for h in range(len(habits))
+             for name in CLASSIC_AGENTS for start in range(0, games, chunk)]
+    shots = {}
+    with ProcessPoolExecutor() as pool:
+        for (h, name, start, _), values in pool.map(classic_games, tasks):
+            shots.setdefault((h, name), {})[start] = values
+    shots = {key: [s for start in sorted(parts) for s in parts[start]]
+             for key, parts in shots.items()}
+    print(f"[7] 10x10, {games} layouts per opponent, the same for every agent "
+          "(1000 particles); mean shots")
+    print(f"    {'opponent':<11}" + "".join(f"{name:>13}" for name in CLASSIC_AGENTS)
+          + "   learned 1000 - uniform    oracle - uniform")
+    for h, habit in enumerate(habits):
+        means = [statistics.fmean(shots[h, name]) for name in CLASSIC_AGENTS]
+
+        def paired(name):
+            diff = [a - b for a, b in zip(shots[h, name], shots[h, "uniform"])]
+            half = 1.96 * statistics.stdev(diff) / len(diff) ** 0.5
+            return f"{statistics.fmean(diff):+6.2f} ± {half:4.2f}"
+
+        print(f"    {habit.name:<11}" + "".join(f"{m:13.2f}" for m in means)
+              + f"   {paired('learned 1000'):>20}   {paired('oracle'):>17}")
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--runs", type=int, default=8, help="learning runs per curve")
+    parser.add_argument("--classic", type=int, default=0, metavar="N",
+                        help="also run N 10x10 games per opponent and agent (slow)")
     args = parser.parse_args()
     check_1_weighted_bayes()
     check_2_nothing_learned()
     check_3_rules_and_public_only()
     check_4_samplers()
     check_5_benchmark(args.runs)
+    check_6_weighted_particles()
+    if args.classic:
+        check_7_classic(args.classic)

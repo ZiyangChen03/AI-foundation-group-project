@@ -26,18 +26,24 @@ from functools import cache
 from itertools import combinations
 
 from .config import GameConfig, neighbors, to_rc
-from .layout import Layout, random_layout
+from .layout import Layout, Ship, placements, random_layout
+
+
+def _ship_border_cells(cells, config: GameConfig) -> int:
+    edge = config.size - 1
+    return sum(1 for cell in cells if {*to_rc(cell, config)} & {0, edge})
+
+
+def _ship_is_horizontal(cells, config: GameConfig) -> int:
+    return int(len(cells) > 1 and len({to_rc(c, config)[0] for c in cells}) == 1)
 
 
 def border_cells(layout: Layout, config: GameConfig) -> int:
-    edge = config.size - 1
-    return sum(1 for ship in layout for cell in ship.cells
-               if {*to_rc(cell, config)} & {0, edge})
+    return sum(_ship_border_cells(ship.cells, config) for ship in layout)
 
 
 def horizontal_ships(layout: Layout, config: GameConfig) -> int:
-    return sum(1 for ship in layout
-               if ship.length > 1 and len({to_rc(c, config)[0] for c in ship.cells}) == 1)
+    return sum(_ship_is_horizontal(ship.cells, config) for ship in layout)
 
 
 def touching_pairs(layout: Layout, config: GameConfig) -> int:
@@ -52,6 +58,9 @@ FEATURES = {
     horizontal_ships: lambda config: len(config.fleet),
     touching_pairs: lambda config: len(config.fleet) * (len(config.fleet) - 1) // 2,
 }
+
+# Features that are sums over ships, so exp(strength * feature) splits per ship.
+PER_SHIP = {border_cells: _ship_border_cells, horizontal_ships: _ship_is_horizontal}
 
 
 class Habit:
@@ -93,6 +102,27 @@ class FeatureHabit(Habit):
     def max_weight(self, config):
         return math.exp(max(0.0, self.strength * FEATURES[self.feature](config)))
 
+    @property
+    def per_ship(self) -> bool:
+        return self.feature in PER_SHIP
+
+    def placement_weight(self, length: int, cells, config: GameConfig) -> float:
+        """The factor one ship contributes to ``weight`` (per-ship features only)."""
+        if not self.per_ship:
+            raise ValueError(f"{self.name}: this habit does not split per ship")
+        return math.exp(self.strength * PER_SHIP[self.feature](cells, config))
+
+    def sample(self, config, rng):
+        """Per-ship habits: each ship drawn in proportion to its factor, redrawn
+        until none overlap (exact, and fast on 10x10). Others: rejection."""
+        if not self.per_ship:
+            return super().sample(config, rng)
+        options = [_weighted_placements(self, config, length) for length in config.fleet]
+        while True:
+            chosen = [rng.choices(cells, weights)[0] for cells, weights in options]
+            if sum(map(len, chosen)) == len(frozenset().union(*chosen)):
+                return tuple(Ship(len(cells), cells) for cells in chosen)
+
 
 @dataclass(frozen=True)
 class FavoriteLayouts(Habit):
@@ -110,6 +140,12 @@ class FavoriteLayouts(Habit):
 
     def sample(self, config, rng):
         return rng.choice(self.layouts)
+
+
+@cache
+def _weighted_placements(habit: FeatureHabit, config: GameConfig, length: int):
+    cells = placements(config, length)
+    return cells, [habit.placement_weight(length, c, config) for c in cells]
 
 
 def uniform() -> Habit:
@@ -130,6 +166,17 @@ def standard_habits(config: GameConfig) -> list[Habit]:
         FeatureHabit("horizontal", horizontal_ships, 1.5),
         FeatureHabit("touching", touching_pairs, 2.0),
         favorites(config, 3),
+    ]
+
+
+def large_board_habits() -> list[Habit]:
+    """The 10x10 opponents in the benchmark. They split per ship, so they
+    sample fast and the particle belief can use them as a prior (oracle)."""
+    return [
+        uniform(),
+        FeatureHabit("edges", border_cells, 0.5),
+        FeatureHabit("center", border_cells, -0.5),
+        FeatureHabit("horizontal", horizontal_ships, 1.0),
     ]
 
 

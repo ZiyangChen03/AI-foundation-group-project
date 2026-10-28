@@ -148,3 +148,41 @@ def test_impossible_history_raises():
     belief = ParticleBelief(MINI, random.Random(0), num_particles=10)
     with pytest.raises(RuntimeError):
         belief.update(0, (Result.SUNK, 3, frozenset({0, 1, 2})))   # nothing sinks in one shot
+
+
+def test_weighted_particles_match_the_exact_weighted_belief():
+    """A prior that splits per ship: the particle estimate tracks the exact
+    weighted belief, and differs clearly from the uniform one."""
+    from math import prod
+    config = GameConfig(4, (3, 2))
+    favourite = frozenset({0, 1, 2})            # the 3-ship along the top row
+
+    def weight(length, cells):
+        return 30.0 if cells == favourite else 1.0
+
+    weights = [prod(weight(s.length, s.cells) for s in layout)
+               for layout in Belief.prior(config).layouts]
+    exact = Belief.prior(config, weights).occupancy()
+    particles = ParticleBelief(config, random.Random(0), 3000, placement_weight=weight)
+    assert max(abs(a - b) for a, b in zip(exact, particles.occupancy())) < 0.03
+    assert exact[0] > Belief.prior(config).occupancy()[0] + 0.3
+
+
+def test_weighted_particles_explain_the_history():
+    config = GameConfig(5, (3, 2, 2), reveal_sunk_cells=False)
+    weight = lambda length, cells: 1.0 + min(cells)          # favours later cells
+    env = BattleshipEnv(config)
+    obs = env.reset(seed=4)
+    belief = ParticleBelief(config, random.Random(1), 200, placement_weight=weight)
+    rng = random.Random(2)
+    while not env.done:
+        cell = rng.choice(obs.legal_actions)
+        after = env.step(cell).observation
+        belief.update(cell, observed_outcome(obs, after))
+        assert all(belief.constraints.explains(state) for state in belief.particles)
+        obs = after
+
+
+def test_placement_weights_must_be_positive():
+    with pytest.raises(ValueError):
+        ParticleBelief(MINI, random.Random(0), 10, placement_weight=lambda length, cells: 0)
