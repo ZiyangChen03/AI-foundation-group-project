@@ -1,4 +1,7 @@
 # Byte-compiled / optimized / DLL files
+battleship/q_learning/artifacts/
+# Per-episode reward histories are retained locally; publish summaries and curves.
+battleship/q_learning/results/**/seed_*_rewards.csv
 __pycache__/
 *.py[codz]
 *$py.class
