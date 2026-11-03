@@ -1,0 +1,26 @@
+Q-learning seed 0 (selected episode: 600)
+Total user CPU time for 40 evaluation episodes (seconds): 0.0000
+Number of unique states: 6978
+Average reward over 40 evaluation episodes: -14.0500
+Average episode length: 14.0500
+Number of unique unseen states: 437
+Actions using Q-table: 20.64%
+Random actions due to unseen states: 79.36%
+
+Q-learning seed 1 (selected episode: 700)
+Total user CPU time for 40 evaluation episodes (seconds): 0.0156
+Number of unique states: 8120
+Average reward over 40 evaluation episodes: -13.9250
+Average episode length: 13.9250
+Number of unique unseen states: 432
+Actions using Q-table: 21.01%
+Random actions due to unseen states: 78.99%
+
+Q-learning seed 2 (selected episode: 900)
+Total user CPU time for 40 evaluation episodes (seconds): 0.0312
+Number of unique states: 10271
+Average reward over 40 evaluation episodes: -14.7500
+Average episode length: 14.7500
+Number of unique unseen states: 454
+Actions using Q-table: 22.88%
+Random actions due to unseen states: 77.12%

@@ -15,7 +15,7 @@ module-name = "battleship"
 module-root = ""
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["tests", "battleship/q_learning/tests"]
 
 [dependency-groups]
 dev = [

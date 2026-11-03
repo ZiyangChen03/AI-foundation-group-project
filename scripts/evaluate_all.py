@@ -14,15 +14,18 @@ import argparse
 
 from battleship import CLASSIC, MINI, all_layouts, evaluate, round_robin
 from battleship.agents import BeliefAgent, HuntTargetAgent, ProbabilityDensityAgent, RandomAgent
+from battleship.q_learning import QLearningAgent
 
 
-def make_agents(include_belief=True):
+def make_agents(include_belief=True, q_table=None):
     # Add new agents here as they are implemented.
     agents = [RandomAgent(), HuntTargetAgent(parity=False), HuntTargetAgent(parity=True),
               ProbabilityDensityAgent()]
     if include_belief:
         # Exact belief on 4x4; 1000 particles (~60 ms per shot) on 10x10.
         agents.append(BeliefAgent())
+    if q_table:
+        agents.append(QLearningAgent.load(q_table))
     return agents
 
 
@@ -36,12 +39,15 @@ def main():
                         help="also run a round robin with N games per pair")
     parser.add_argument("--belief", action=argparse.BooleanOptionalAction,
                         help="include BeliefAgent (default: on for mini, off for classic)")
+    parser.add_argument("--q-table", help="trained MINI Q-table (.json.gz)")
     args = parser.parse_args()
+    if args.q_table and args.board != "mini":
+        parser.error("--q-table supports --board mini only")
     config = MINI if args.board == "mini" else CLASSIC
     include_belief = args.belief if args.belief is not None else config == MINI
 
     print(f"Shots-to-win on {config.size}x{config.size}, fleet {config.fleet}")
-    for agent in make_agents(include_belief):
+    for agent in make_agents(include_belief, args.q_table):
         if args.games is None and config == MINI:
             report = evaluate(agent, config, layouts=all_layouts(config))
         else:
@@ -50,7 +56,7 @@ def main():
 
     if args.tournament:
         print()
-        print(round_robin(make_agents(include_belief), config, games_per_pair=args.tournament))
+        print(round_robin(make_agents(include_belief, args.q_table), config, games_per_pair=args.tournament))
     if not include_belief and config != MINI:
         print()
         print("BeliefAgent skipped on this board (slow); add --belief to include it.")
