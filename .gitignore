@@ -218,3 +218,5 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+# Belief-state Q-tables are ~11 MB each; regenerate with scripts/train_belief_q.py
+results/belief_q/*.json.gz
