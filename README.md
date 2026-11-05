@@ -90,6 +90,33 @@ uv run scripts/verify_opponent_belief.py     # checks + benchmark (~1-2 min)
 Design, the two habit models, verification and full learning curves:
 [docs/design_opponent_belief.md](docs/design_opponent_belief.md).
 
+### DQN: deep Q-learning
+
+`battleship.dqn.DQNAgent` is Q-learning with a convolutional network, trained on 256
+vectorized games at once (Double DQN, dueling head, replay buffer, target network).
+It is a separate package, so the other agents do not load PyTorch. Results on the
+2,000 test boards (seeds 0–1999, paired against probability density):
+
+| Agent | 10×10 shots | Paired vs density | Training |
+|---|---|---|---|
+| probability density | 44.65 | – | – |
+| DQN-B (board + density input) | 45.85 | +1.20 ± 0.46 | 14 min |
+| DQN-C (residual on density) | 46.05 | +1.41 ± 0.46 | 14 min |
+| DQN-A (board only) | 53.00 | +8.35 ± 0.54 | 12 min |
+
+On 4×4 the board-only DQN reaches 8.92 exact expected shots in 75 s (density 8.86,
+optimum 8.746).
+
+```bash
+uv run scripts/train_dqn.py --board classic --variant density --games 100000 --eps-fraction 0.1
+uv run scripts/benchmark_dqn.py classic results/dqn/classic_density_s0/best.pt
+uv run pytest tests/test_dqn.py      # vectorized games and density match the reference code
+```
+
+Design and results: [docs/design_dqn.md](docs/design_dqn.md). Beginner tutorial:
+[tutorial/dqn_tutorial.html](tutorial/dqn_tutorial.html). Two-page report:
+[report/dqn_report.pdf](report/dqn_report.pdf).
+
 ### Adding a dependency
 
 ```bash
