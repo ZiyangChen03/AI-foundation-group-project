@@ -1,0 +1,77 @@
+[
+  {
+    "agent": "random",
+    "games": 2000,
+    "mean": 95.27,
+    "ci95": 0.21922497183062215,
+    "median": 97.0,
+    "hunting": 5.937,
+    "targeting": 89.333,
+    "vs_density": 50.6215,
+    "vs_density_ci95": 0.44869799644773106
+  },
+  {
+    "agent": "hunt-target+parity",
+    "games": 2000,
+    "mean": 50.7605,
+    "ci95": 0.3890823308271411,
+    "median": 51.0,
+    "hunting": 32.928,
+    "targeting": 17.8325,
+    "vs_density": 6.112,
+    "vs_density_ci95": 0.5500571873355258
+  },
+  {
+    "agent": "probability-density",
+    "games": 2000,
+    "mean": 44.6485,
+    "ci95": 0.3990378940133747,
+    "median": 44.0,
+    "hunting": 27.4625,
+    "targeting": 17.186
+  },
+  {
+    "agent": "belief-greedy",
+    "games": 2000,
+    "mean": 44.5025,
+    "ci95": 0.4075745312139205,
+    "median": 44.0,
+    "hunting": 27.317,
+    "targeting": 17.1855,
+    "vs_density": -0.146,
+    "vs_density_ci95": 0.5142722708950053
+  },
+  {
+    "agent": "classic_board_s0/best",
+    "games": 2000,
+    "mean": 52.998,
+    "ci95": 0.4457453622650385,
+    "median": 52.0,
+    "hunting": 17.684,
+    "targeting": 35.314,
+    "vs_density": 8.3495,
+    "vs_density_ci95": 0.5440004353275999
+  },
+  {
+    "agent": "classic_density_s0/best",
+    "games": 2000,
+    "mean": 45.847,
+    "ci95": 0.3206782818855005,
+    "median": 46.0,
+    "hunting": 17.0895,
+    "targeting": 28.7575,
+    "vs_density": 1.1985,
+    "vs_density_ci95": 0.46134899198372825
+  },
+  {
+    "agent": "classic_residual_s0/final",
+    "games": 2000,
+    "mean": 46.0545,
+    "ci95": 0.32134859141188277,
+    "median": 46.0,
+    "hunting": 19.692,
+    "targeting": 26.3625,
+    "vs_density": 1.406,
+    "vs_density_ci95": 0.46423100265181716
+  }
+]

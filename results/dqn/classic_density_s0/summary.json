@@ -1,0 +1,52 @@
+{
+  "board": "classic",
+  "variant": "density",
+  "net": {
+    "channels": 32,
+    "layers": 4,
+    "use_density": true,
+    "residual": 0.0
+  },
+  "train": {
+    "games": 100000,
+    "parallel": 256,
+    "batch": 256,
+    "replay_ratio": 8,
+    "buffer": 200000,
+    "learn_start": 10000,
+    "lr": 0.0003,
+    "gamma": 1.0,
+    "target_every": 1000,
+    "eps_start": 1.0,
+    "eps_end": 0.02,
+    "eps_fraction": 0.1,
+    "double": true,
+    "grad_clip": 10.0,
+    "eval_every": 5000,
+    "seed": 0,
+    "device": ""
+  },
+  "validation_boards": 500,
+  "seconds": 843.0785460472107,
+  "parameters": 34914,
+  "final": {
+    "games": 100003,
+    "eval_mean": 45.66600036621094,
+    "eval_sem": 0.33493471145629883,
+    "train_mean": 46.85388766739956,
+    "epsilon": 0.020000000000000018,
+    "loss": 0.3440900265354,
+    "grad_steps": 154096,
+    "seconds": 842.4494190216064
+  },
+  "best": {
+    "eval_mean": 45.66600036621094,
+    "games": 100003,
+    "eval_sem": 0.33493471145629883,
+    "train_mean": 46.85388766739956,
+    "epsilon": 0.020000000000000018,
+    "loss": 0.3440900265354,
+    "grad_steps": 154096,
+    "seconds": 842.4494190216064
+  }
+}
