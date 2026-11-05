@@ -12,7 +12,7 @@
 \begin{document}
 
 \title{Deep Q-Networks for 10$\times$10 Battleship:\\
-Learning to Hunt Without the Rules of Placement}
+Raw Boards versus Density Features}
 
 \author{\IEEEauthorblockN{Le Cheng}
 \IEEEauthorblockA{Khoury College of Computer Sciences\\
@@ -23,92 +23,99 @@ cheng.l1@northeastern.edu}}
 
 \begin{abstract}
 Battleship is a partially observable game in which an agent must sink a hidden
-fleet in as few shots as possible. Tabular Q-learning fails on it: on a 4$\times$4
-board, a Q-table keyed on the visible board plays no better than random, and the
-classic 10$\times$10 board has more than $3\times10^{10}$ ship layouts. We train
-Deep Q-Networks (DQN) with a fully convolutional dueling network, Double DQN
-targets and action masking, using 256 vectorized games to train each agent in
-about 14 minutes on a laptop. On 4$\times$4, a DQN learned from the raw board
+fleet in as few shots as possible, and tabular Q-learning does not scale to the
+classic 10$\times$10 board. We train Deep
+Q-Networks (DQN) with a fully convolutional dueling network, Double DQN targets
+and action masking, on 256 games in parallel; one 10$\times$10 run of 100k games
+takes 12--14 minutes on a laptop. On 4$\times$4, a DQN that sees only the board
 reaches 8.92 expected shots, statistically level with the probability-density
-heuristic (8.86) and within 2\% of the exact optimum (8.75). On 10$\times$10,
-evaluated on 2{,}000 held-out boards, the board-only DQN reaches 53.0 shots,
-and adding the density map as an input plane reaches 45.8, 1.2 shots behind
-probability density (44.6). Using the density as a fixed baseline under a learned
+heuristic (8.86) and 2\% above the exact optimum (8.75). On 2{,}000 held-out
+10$\times$10 boards, the board-only DQN needs 53.00 shots. Adding the density map
+as an input plane brings it to 45.85, $1.20\pm0.46$ shots behind probability
+density (44.65). Using the density as a fixed baseline under a learned
 correction did not improve on it.
 \end{abstract}
 
 \section{Introduction}
 In single-player Battleship, ships of lengths 5, 4, 3, 3 and 2 are placed
-uniformly at random on a 10$\times$10 grid, and each shot reveals \emph{miss},
-\emph{hit} or \emph{sunk}. The hidden layout makes this a POMDP~\cite{kaelbling1998}.
-The strongest simple strategy is \emph{probability density}~\cite{berry2011}: count
-every position of every remaining ship consistent with the board, and fire at the
-cell covered most often. It is greedy and counts ships independently, so in
-principle a learner that estimates the shots still needed could improve on it.
+uniformly at random on a 10$\times$10 grid (they may touch but not overlap), and
+each shot reveals \emph{miss}, \emph{hit} or \emph{sunk}. The hidden layout makes
+this a POMDP~\cite{kaelbling1998}. The strongest simple strategy is
+\emph{probability density}~\cite{berry2011}: enumerate every position of every
+remaining ship that fits the board, weighting positions through open hits more,
+and fire at the cell covered by the largest total. It is greedy and treats ships
+independently, so a learner could, in principle, do better.
 
-Our group's tabular agents show why function approximation is needed. A Q-table
-keyed on the visible 4$\times$4 board visited 3.5 million states in a million
-games and played at random level (13.9 shots against 14.1). Keying the table on
-the exact belief (the set of consistent layouts) reached 8.97, but the belief
-cannot be stored on 10$\times$10, which has 30{,}093{,}975{,}536 layouts.
-Silver and Veness introduced 10$\times$10 Battleship as a POMDP planning
-benchmark, solved online with Monte-Carlo tree search over particles~\cite{silver2010};
-published learning approaches are hobby projects, the best DQN reaching about 52
+Our project group's tabular agents show why function approximation is needed.
+On 4$\times$4, a Q-table keyed on the visible board visited 3.5 million states in
+a million games and stayed at random level (13.9 shots, against 14.1 for random
+on the same 40 test layouts). Keying the table on the exact belief, the set of
+layouts consistent with the board, reached 8.97, but on 10$\times$10 there are
+30{,}093{,}975{,}536 layouts, too many to store a belief. Battleship (with ships
+not allowed to touch) is a benchmark for online Monte-Carlo tree
+search~\cite{silver2010}; the best published DQN we found reports about 52
 shots~\cite{gaintel}.
-We ask: \emph{can a DQN~\cite{mnih2015} learn 10$\times$10 Battleship without
-being told the placement rules, and does the density map help it as an input
-feature or as a starting policy?}
+
+We ask two questions. First, \emph{can a DQN~\cite{mnih2015} learn 10$\times$10
+Battleship from the raw board alone}, without being told how ships are placed?
+Second, \emph{does the probability-density map, which encodes that knowledge,
+help more as an input feature or as a starting policy?}
 
 \section{Method}
 \textbf{MDP.} The state $s$ is the visible board plus the lengths of the ships
 still afloat. Observations are exact, so $s$ determines the belief and is a
-Markov state. Actions are unfired cells. The reward is $-1$ per shot with
-$\gamma=1$, so $Q(s,a)$ is minus the expected number of remaining shots and the
-return equals minus the game length.
+Markov state. Actions are the unfired cells. Every shot has reward $-1$ and
+$\gamma=1$, so the return is minus the game length and $Q(s,a)$ is minus the
+expected number of shots still needed, counting the shot at $a$.
 
 \textbf{Q-learning and DQN.} Q-learning~\cite{watkins1992} moves $Q(s,a)$
 toward the target $y=r+\gamma\max_{a'}Q(s',a')$. DQN replaces the table with a
-network $Q_\theta$ trained on the Huber loss of $Q_\theta(s,a)-y$, sampling
-transitions from a replay buffer and computing $y$ with a periodically copied
-target network $\theta^-$. We use Double DQN targets~\cite{vanhasselt2016}:
-$y=-1+Q_{\theta^-}(s',\arg\max_{a'}Q_\theta(s',a'))$, and $y=-1$ when the game ends.
-Fired cells are masked to $-\infty$ both when acting and inside the target.
+network $Q_\theta$, trained with the Huber loss on $Q_\theta(s,a)-y$ over
+transitions sampled from a replay buffer, with $y$ computed by a target network
+$\theta^-$ that is copied from $\theta$ periodically. We use Double DQN
+targets~\cite{vanhasselt2016}, $y=-1+Q_{\theta^-}(s',\arg\max_{a'}Q_\theta(s',a'))$,
+and $y=-1$ when the shot ends the game. Fired cells are masked to $-\infty$ both
+when choosing a shot and inside the target.
 
-\textbf{Input and network.} The board is encoded as planes of $10\times10$:
-hit, miss, sunk, an all-ones on-board plane (so zero padding marks the edge),
-and five planes counting the ships afloat of each length 1--5. The network has
-four $3\times3$ convolutions with 32 channels and ReLU, giving a $9\times9$
-receptive field, enough to see a carrier through any cell. A dueling
-head~\cite{wang2016} computes $Q=V(s)+A(s,a)-\overline{A}(s)$: the advantage $A$ comes from a
-$1\times1$ convolution (local), and the value $V$ from global mean and max
-pooling (the shots still needed depend on the whole board). The network has
-34.6k weights.
+\textbf{Input and network.} The board is encoded as $10\times10$ planes: hit,
+miss, sunk, an all-ones on-board plane (so the zero padding of the convolutions
+marks the edge), and five planes holding the number of ships afloat of each
+length 1--5. The network has four $3\times3$ convolutions with 32 channels and
+ReLU, giving a $9\times9$ receptive field: enough to see a 5-cell carrier passing
+through any cell. A dueling head~\cite{wang2016} computes
+$Q=V(s)+A(s,a)-\overline{A}(s)$, where $\overline{A}$ is the mean of $A$ over
+legal cells. The advantage $A$ comes from a $1\times1$ convolution, a local
+quantity, and the value $V$ from global mean and max pooling, because the shots
+still needed depend on the whole board. The network has 34.6k weights.
 
-\textbf{Variants.} (A) \emph{board}: the planes above. (B) \emph{density}: plus
-the probability-density map, normalized so the best cell is 1; it is a function
-of the board, so it adds no information, only a feature. (C) \emph{residual}:
-B with $Q=c\,\hat d(s,a)+Q_\theta(s,a)$, $c=1$, and $A$'s last layer initialized
-to zero, so the untrained agent plays exactly like probability density and DQN
-learns a correction~\cite{johannink2019}.
+\textbf{Variants.} (A) \emph{Board}: the planes above. (B) \emph{Density}: A plus
+the probability-density map, scaled so the best cell is 1. It is computed from
+the board, so it adds no information, only a hand-crafted feature. (C)
+\emph{Residual}: B with $Q=c\,\hat d(s,a)+Q_\theta(s,a)$, where $\hat d$ is the
+scaled density and $c=1$. $A$'s last layer starts at zero, so the untrained agent
+always fires at a highest-density cell, and DQN learns a
+correction~\cite{johannink2019}.
 
-\textbf{Training.} 256 games run in parallel as tensors; one iteration fires one
-shot in every game. Each transition is replayed 8 times on average (batch 256),
-with a 200k-transition buffer, Adam (learning rate $3\times10^{-4}$), a target
-copy every 1{,}000 steps, and $\varepsilon$ decaying linearly from 1.0 (C: 0.1)
-to 0.02 over the first 10\% of 100k games. The games and the density map run
-on the CPU and the network on the laptop GPU (Apple MPS). Unit tests check that
-the vectorized games match the reference environment move for move, and that
-the convolutional density equals the reference heuristic exactly.
+\textbf{Training.} 256 games run in parallel as tensors, and each iteration fires
+one shot in every game. Each stored transition is trained on 8 times on average
+(batch 256), with a 200k-transition buffer, Adam (learning rate
+$3\times10^{-4}$) and a target copy every 1{,}000 gradient steps. Every run lasts
+100k games. On 10$\times$10, $\varepsilon$ decays linearly from 1.0 (C: 0.1) to
+0.02 over the first 10k games; on 4$\times$4 over the first 30k. The games and the
+density run on the CPU, the network on the laptop GPU; unit tests check both
+against the reference code.
 
 \section{Experiments}
-\textbf{Protocol.} Every 5k games we play the greedy policy on 500 validation
-boards (seeds 100{,}000+) and keep the best checkpoint. For C the best checkpoint
-was the untrained one, so we report its final checkpoint. The test set is 2{,}000
-boards (seeds 0--1{,}999), the same for every agent, played through the
-project's standard engine, which exposes only public information. We report means
-with 95\% intervals and the \emph{paired} difference to probability density on
-the same boards. On 4$\times$4 we play every one of the 264 layouts, giving the
-exact expected shots of a deterministic policy.
+\textbf{Protocol.} On 10$\times$10, every 5k games we play the greedy policy on
+500 validation boards (seeds 100{,}000--100{,}499) and keep the best checkpoint.
+For C the best was the untrained network, which is just probability density, so
+we report C's final checkpoint. The test set is 2{,}000 other boards (seeds
+0--1{,}999), the same for every agent, played through the project's standard
+engine, which shows agents only public information. We report means with 95\%
+intervals (1.96 standard errors) and the \emph{paired} difference to probability
+density, averaged board by board. On 4$\times$4 every agent plays all 264
+layouts, the exact expectation for the deterministic DQN; with no separate test
+set there, we report the final checkpoint.
 
 \begin{table}[t]
 \caption{Mean shots to sink the fleet (lower is better)}
@@ -128,22 +135,23 @@ DQN-A (board) & 53.00 & 0.45 & $+8.35\pm0.54$ & 12.4 min \\
 DQN-B (+ density input) & \textbf{45.85} & 0.32 & $+1.20\pm0.46$ & 14.1 min \\
 DQN-C (residual) & 46.05 & 0.32 & $+1.41\pm0.46$ & 14.0 min \\
 \midrule
-\multicolumn{5}{@{}l}{\emph{4$\times$4, all 264 layouts (exact for deterministic policies)}}\\
-Random & 14.23 & & & \\
+\multicolumn{5}{@{}l}{\emph{4$\times$4, all 264 layouts}}\\
+Random$^\ast$ & 14.23 & & & \\
 Q-table on visible board$^\dagger$ & 13.9 & & & \\
 Q-table on exact belief & 8.97 & & & 7 min \\
 DQN-A (board) & \textbf{8.92} & & $+0.06\pm0.26$ & 1.3 min \\
-Probability density & 8.86 & & & \\
+Probability density$^\ast$ & 8.86 & & -- & \\
 Optimal $V^*$ (exact) & 8.75 & & & \\
 \bottomrule
 \end{tabular}\\[2pt]
-\footnotesize{$^\dagger$Measured by our group on 40 held-out layouts.}
+\footnotesize{$^\ast$One random tie-breaking per layout. $^\dagger$Measured by our
+group on 40 test layouts.}
 \end{table}
 
 \begin{figure}[t]
 \centering
 \begin{tikzpicture}
-\begin{axis}[width=\columnwidth, height=4.3cm, xlabel={training games (thousands)},
+\begin{axis}[width=0.95\columnwidth, height=3.9cm, xlabel={training games (thousands)},
   ylabel={validation shots}, ymin=42, ymax=64, xmin=0, xmax=100,
   legend columns=4, legend style={font=\scriptsize, at={(0.5,1.03)}, anchor=south, draw=none, fill=none,
   /tikz/every even column/.append style={column sep=4pt}},
@@ -156,53 +164,52 @@ Optimal $V^*$ (exact) & 8.75 & & & \\
 \legend{A: board, B: + density input, C: residual, prob.\ density}
 \end{axis}
 \end{tikzpicture}
-\caption{Greedy validation score during training on 10$\times$10 (500 boards;
-untrained A and B start at 90.5 and 93.5, off the axis).}
+\caption{Greedy score on the 500 validation boards during 10$\times$10
+training. Dashed: probability density on these boards (44.13). Untrained A and
+B start above the axis (90.5, 93.5).}
 \label{fig:curve}
 \end{figure}
 
-\textbf{Results.} Table~\ref{tab:results} and Fig.~\ref{fig:curve} summarize the
-runs. On 4$\times$4, DQN-A learned from the raw board in 75 seconds and matched
-probability density, while the board Q-table stayed at random level: the network's
-generalization across boards is what the table lacked. On 10$\times$10, DQN-A
-dropped from 90.5 to 52.4 validation shots within 15k games, comparable to the
-$\sim$52 reported for an earlier DQN~\cite{gaintel}, then became unstable (53--62) while
-its training loss rose steadily from 0.36 to 1.9. Adding the density
-\emph{input} (B) gained 7.2 shots over A on the test set and came within
-$1.20\pm0.46$ shots of probability density. The \emph{residual} agent (C) started
-at the density level, but early updates pushed it to 56 shots; it recovered to
-about 45 without ever beating its untrained starting point. No learned agent beat
-probability density; belief greedy, the repo's strongest planner, is statistically
-level with it ($-0.15\pm0.51$).
+\textbf{Results.} Table~\ref{tab:results} and Fig.~\ref{fig:curve} give the
+results. On 4$\times$4, DQN-A learned from the board in 75 seconds and is
+level with probability density, while the group's Q-table on the same input
+stayed at random level (trained and evaluated differently, so the comparison
+is only indicative). On 10$\times$10, DQN-A fell
+from 90.5 to 52.4 validation shots within 15k games, comparable to the earlier
+DQN's $\sim$52~\cite{gaintel}. It then became unstable, ranging from 52 to 62,
+while its training loss rose from 0.36 to 1.9. Adding the density input (B)
+saved 7.15 shots over A on the test set and came within $1.20\pm0.46$ shots of
+probability density. The residual agent (C) started at the density level, but
+early training pushed it to 56 shots, and it never beat its start: its best
+trained score, 44.58 at 55k games, is still above density's 44.13. No DQN variant beat probability
+density, and neither did belief greedy, the project's particle-filter planner
+($-0.15\pm0.51$, not significant).
 
-\textbf{Where shots are spent.} We split each game into shots fired while no
-unsunk hit is showing (hunting) and while one is (targeting). Probability density
-uses 27.5 and 17.2 shots. DQN-B uses only 17.1 for hunting but 28.8 while a
-damaged ship is still afloat: it tends to leave a hit ship and probe elsewhere
-before finishing it, which costs more than it saves.
+\textbf{Where the shots go.} We count a shot as \emph{hunting} if no damaged,
+unsunk ship is on the board, and as \emph{targeting} otherwise. Probability
+density spends 27.46 shots hunting and 17.19 targeting; DQN-B spends 17.09 and
+28.76, most while a damaged ship is afloat. Shots elsewhere also count as
+targeting while a ship is unfinished, so this shows where DQN-B differs, not
+that it finds ships sooner.
 
 \section{Discussion and Conclusion}
-A convolutional DQN learns Battleship from experience at a fraction of the cost
-of tabular methods: 4$\times$4 in about a minute and 10$\times$10 in about a
-quarter of an hour, with no placement rules given. The density map is far more useful as
-an input feature than as a fixed starting policy: as a feature the network can
-use it selectively, while as a residual baseline early, poorly calibrated
-corrections override a near-optimal policy. Greedy play is already within 2\% of
-optimal on 4$\times$4, so the headroom above probability density on 10$\times$10
-is likely below one shot, which a learner must capture without first losing
-more.
+From the raw board alone, a convolutional DQN learns 4$\times$4 Battleship in
+about a minute and reaches 52--53 shots on 10$\times$10 within 15k games (about
+two minutes). As an input, the density map is worth about 7 shots (B against A).
+As a starting policy it gave no gain: early, poorly calibrated corrections
+degraded it, and B and C end level (45.85 against 46.05), both behind density. The room for improvement is small: on 4$\times$4,
+probability density is only 1.3\% above the optimum. If the gap is similar on
+10$\times$10, that is about 0.6 shots, which a learner must gain without first
+losing more.
 
-\textbf{Limitations.} One training seed per variant; hyperparameters were not
-tuned; checkpoints were selected on validation boards, disjoint from the test set.
+\textbf{Limitations.} One training seed per variant, no hyperparameter search,
+and checkpoint selection on a single set of 500 validation boards.
 
 \textbf{Future work.} A lower learning rate and less frequent target copies to
-remove A's divergence, $n$-step returns and early stopping to need fewer games,
-multiple seeds, and a residual agent that learns $V$ before it is allowed to
-change the density's ranking.
-
-\textbf{Reproducibility.} The code, unit tests, trained models and training
-logs are in the project repository (package \texttt{battleship/dqn}); training
-and benchmarking each take one command.
+stop A's divergence; $n$-step returns and early stopping to need fewer games;
+several seeds per variant; and a residual agent that learns $V$ before it may
+change the density's ranking. Code, tests, models and logs are in the project
+repository (\texttt{battleship/dqn}).
 
 \section*{Acknowledgment}
 The code, experiments and analysis were developed with the assistance of Claude
@@ -222,14 +229,13 @@ deep reinforcement learning,'' in \emph{Proc.\ ICML}, 2016.
 \bibitem{kaelbling1998} L.~P. Kaelbling, M.~L. Littman, and A.~R. Cassandra,
 ``Planning and acting in partially observable stochastic domains,''
 \emph{Artificial Intelligence}, vol.~101, pp.~99--134, 1998.
-\bibitem{berry2011} N.~Berry, ``Battleship,'' DataGenetics, Dec.\ 2011.
-[Online]. Available: \url{https://www.datagenetics.com/blog/december32011/}
+\bibitem{berry2011} N.~Berry, ``Battleship,'' DataGenetics blog, Dec.\ 2011,
+\url{datagenetics.com/blog/december32011/}.
 \bibitem{silver2010} D.~Silver and J.~Veness, ``Monte-Carlo planning in large
 POMDPs,'' in \emph{Advances in Neural Information Processing Systems 23}, 2010,
 pp.~2164--2172.
-\bibitem{gaintel} ``Deep reinforcement learning--of how to win at Battleship,''
-GA-Intelligence. [Online]. Available:
-\url{https://www.ga-intelligence.com/deep-reinforcement-learning-win-battleship}
+\bibitem{gaintel} GA-Intelligence, ``Deep reinforcement learning--of how to win
+at Battleship,'' blog post, \url{ga-intelligence.com}.
 \bibitem{johannink2019} T.~Johannink \emph{et al.}, ``Residual reinforcement
 learning for robot control,'' in \emph{Proc.\ ICRA}, 2019.
 \end{thebibliography}
