@@ -17,8 +17,27 @@ def test_update_masks_illegal_actions():
     result = env.step(0)
     agent.q[agent.state(result.observation)] = {i: -2. for i in result.observation.legal_actions}
     agent.q[agent.state(result.observation)][0] = 1000.
+    agent.q[agent.state(obs)] = {0: 0.}       # start from 0 so the target is easy to read
     agent.observe(obs, 0, result)
-    assert agent.q[agent.state(obs)][0] == pytest.approx(-1.4)
+    # target = -1 + 0.9 * max over LEGAL next actions (-2; the illegal 1000 is ignored)
+    assert agent.q[agent.state(obs)][0] == pytest.approx(0 + .5 * (-2.8 - 0))
+
+
+def test_untried_actions_start_at_a_lower_bound():
+    """Every reward is -1, so a 0.0 default would rank an untried action above
+    every tried one. Untried actions start at -(number of untried cells)."""
+    agent = QLearningAgent(alpha=1., epsilon=0.)
+    agent.new_game(MINI, random.Random(0))
+    env = BattleshipEnv(MINI)
+    obs = env.reset(seed=1)
+    assert QLearningAgent.default(obs) == -16.
+    agent.q[agent.state(obs)] = {3: -10.}     # one tried action, poor but above the bound
+    assert {agent.select_shot(obs) for _ in range(50)} == {3}
+    agent.training = True
+    result = env.step(15)
+    assert not result.done
+    agent.observe(obs, 15, result)            # next board never seen: bootstrap the bound
+    assert agent.q[agent.state(obs)][15] == -1. + QLearningAgent.default(result.observation)
 
 
 def test_terminal_does_not_bootstrap_even_with_unshot_cells():

@@ -50,6 +50,13 @@ class QLearningAgent(Agent):
         return "".join(cell.value for cell in obs.board) + ":" + ",".join(
             map(str, obs.remaining_ship_lengths))
 
+    @staticmethod
+    def default(obs):
+        """Value of an action never tried: a lower bound. Every reward is -1 and
+        a game never needs more shots than there are untried cells, so a 0.0
+        default would rank untried actions above every tried one."""
+        return -float(len(obs.legal_actions))
+
     def select_shot(self, obs):
         legal = obs.legal_actions
         if not legal or not obs.remaining_ship_lengths:
@@ -57,8 +64,9 @@ class QLearningAgent(Agent):
         if self.training and self.rng.random() < self.epsilon:
             return self.rng.choice(legal)
         values = self.q.get(self.state(obs), {})
-        best = max(values.get(cell, 0.0) for cell in legal)
-        return self.rng.choice([cell for cell in legal if values.get(cell, 0.0) == best])
+        default = self.default(obs)
+        best = max(values.get(cell, default) for cell in legal)
+        return self.rng.choice([cell for cell in legal if values.get(cell, default) == best])
 
     def observe(self, obs, action, result):
         if not self.training:
@@ -66,10 +74,11 @@ class QLearningAgent(Agent):
         target = result.reward
         if not result.done:
             following = self.q.get(self.state(result.observation), {})
-            target += self.gamma * max(following.get(cell, 0.0)
+            default = self.default(result.observation)
+            target += self.gamma * max(following.get(cell, default)
                                        for cell in result.observation.legal_actions)
         values = self.q.setdefault(self.state(obs), {})
-        old = values.get(action, 0.0)
+        old = values.get(action, self.default(obs))
         values[action] = old + self.alpha * (target - old)
         self.updates += 1
 
