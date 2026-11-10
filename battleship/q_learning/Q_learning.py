@@ -70,8 +70,12 @@ class QLearningAgent(Agent):
             return self.rng.choice(legal)
         values = self.q.get(self.state(obs), {})
         default = self.default(obs)
-        best = max(values.get(cell, default) for cell in legal)
-        return self.rng.choice([cell for cell in legal if values.get(cell, default) == best])
+        # Ties go to the lowest-numbered cell. Most greedy choices are ties (an
+        # unseen next board makes an action's value equal the default), and a
+        # random pick would send every game to different boards, so few boards
+        # would ever be seen twice. A fixed choice keeps greedy play on the same
+        # boards, which then accumulate updates; epsilon still explores.
+        return max(legal, key=lambda cell: values.get(cell, default))
 
     def observe(self, obs, action, result):
         if not self.training:

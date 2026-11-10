@@ -99,16 +99,28 @@ def test_eval_is_greedy_and_does_not_mutate():
     assert agent.updates == 0
 
 
-@pytest.mark.parametrize("epsilon", [0., 1.])
-def test_only_legal_shots_and_random_ties(epsilon):
-    agent = QLearningAgent(epsilon=epsilon)
+def test_exploration_fires_at_any_legal_cell():
+    agent = QLearningAgent(epsilon=1.)
     agent.new_game(MINI, random.Random(0))
     agent.training = True
     env = BattleshipEnv(MINI)
     obs = env.step(0).observation
-    agent.q[agent.state(obs)] = {0: 1000.}
+    agent.q[agent.state(obs)] = {0: 1000.}    # cell 0 is already shot: never chosen
     shots = {agent.select_shot(obs) for _ in range(200)}
     assert shots == set(obs.legal_actions)
+
+
+def test_greedy_ties_go_to_the_lowest_cell():
+    """Ties are broken the same way every time, so greedy play keeps reaching
+    the same boards; an already-shot cell is never chosen, however high."""
+    agent = QLearningAgent(epsilon=0.)
+    agent.new_game(MINI, random.Random(0))
+    env = BattleshipEnv(MINI)
+    obs = env.step(0).observation
+    agent.q[agent.state(obs)] = {0: 1000.}
+    assert {agent.select_shot(obs) for _ in range(50)} == {1}      # all legal cells tie
+    agent.q[agent.state(obs)] = {7: -3., 12: -3., 4: -9.}
+    assert agent.select_shot(obs) == 7                              # best two tie: lowest wins
 
 
 def test_state_uses_public_board_and_remaining_lengths():
