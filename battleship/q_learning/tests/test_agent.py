@@ -50,6 +50,41 @@ def test_terminal_does_not_bootstrap_even_with_unshot_cells():
     assert agent.q[agent.state(obs)][0] == -1.
 
 
+def test_default_step_is_a_running_average():
+    """alpha=None uses step 1/N(s, a): the Q-value is the mean of its targets,
+    and the starting value no longer matters after the first update."""
+    agent = QLearningAgent(epsilon=0.)
+    agent.training = True
+    obs = BattleshipEnv(MINI).reset(seed=1)
+    terminal = Observation(MINI, obs.board, (), ())
+    for reward in (-1., -2., -6.):              # three terminal targets for (obs, 0)
+        agent.observe(obs, 0, StepResult(terminal, reward, True, Shot(0, Result.SUNK, 2)))
+    assert agent.q[agent.state(obs)][0] == pytest.approx(-3.)
+    assert agent.counts[agent.state(obs)][0] == 3
+
+
+def test_save_load_keeps_counts_so_training_continues_exactly(tmp_path):
+    a = QLearningAgent()
+    train(a, MINI, 50)
+    path = tmp_path / "model.json.gz"
+    a.save(path)
+    b = QLearningAgent.load(path)
+    assert b.counts == a.counts and b.alpha is None
+    train(a, MINI, 50, seed=7)
+    train(b, MINI, 50, seed=7)
+    assert a.q == b.q
+
+
+def test_loads_version_1_files(tmp_path):
+    import gzip, json
+    path = tmp_path / "old.json.gz"
+    with gzip.open(path, "wt", encoding="utf-8") as stream:
+        json.dump({"version": 1, "config": "MINI", "alpha": .1, "gamma": 1., "epsilon": .1,
+                   "updates": 1, "q": {"s": {"3": -2.}}}, stream)
+    agent = QLearningAgent.load(path)
+    assert agent.alpha == .1 and agent.q == {"s": {3: -2.}} and agent.counts == {}
+
+
 def test_eval_is_greedy_and_does_not_mutate():
     agent = QLearningAgent(epsilon=1.)
     agent.new_game(MINI, random.Random(0))

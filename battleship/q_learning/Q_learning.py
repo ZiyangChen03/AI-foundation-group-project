@@ -32,12 +32,17 @@ from battleship.agents.base import Agent
 class QLearningAgent(Agent):
     name = "q-learning"
 
-    def __init__(self, alpha=0.1, gamma=1.0, epsilon=0.1):
+    def __init__(self, alpha=None, gamma=1.0, epsilon=0.1):
+        """``alpha=None`` (default) uses the step size 1/N(s, a), N being the
+        number of updates of that state-action pair, so each Q-value is the
+        running average of its targets. A number in (0, 1] is a fixed step."""
         super().__init__()
-        if not 0 < alpha <= 1 or not 0 <= gamma <= 1 or not 0 <= epsilon <= 1:
-            raise ValueError("require 0 < alpha <= 1 and 0 <= gamma, epsilon <= 1")
+        if (alpha is not None and not 0 < alpha <= 1) or not 0 <= gamma <= 1 \
+                or not 0 <= epsilon <= 1:
+            raise ValueError("require alpha None or 0 < alpha <= 1, and 0 <= gamma, epsilon <= 1")
         self.alpha, self.gamma, self.epsilon = alpha, gamma, epsilon
         self.q = {}
+        self.counts = {}   # state -> {action: number of updates}
         self.updates = 0
 
     def new_game(self, config, rng):
@@ -77,9 +82,13 @@ class QLearningAgent(Agent):
             default = self.default(result.observation)
             target += self.gamma * max(following.get(cell, default)
                                        for cell in result.observation.legal_actions)
-        values = self.q.setdefault(self.state(obs), {})
+        state = self.state(obs)
+        values = self.q.setdefault(state, {})
+        counts = self.counts.setdefault(state, {})
+        counts[action] = counts.get(action, 0) + 1
+        step = 1 / counts[action] if self.alpha is None else self.alpha
         old = values.get(action, self.default(obs))
-        values[action] = old + self.alpha * (target - old)
+        values[action] = old + step * (target - old)
         self.updates += 1
 
     def save(self, path):
@@ -87,19 +96,22 @@ class QLearningAgent(Agent):
         path = Path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
         with gzip.open(path, "wt", encoding="utf-8") as stream:
-            json.dump({"version": 1, "config": "MINI", "alpha": self.alpha,
+            json.dump({"version": 2, "config": "MINI", "alpha": self.alpha,
                        "gamma": self.gamma, "epsilon": self.epsilon,
-                       "updates": self.updates, "q": self.q}, stream)
+                       "updates": self.updates, "q": self.q, "counts": self.counts}, stream)
 
     @classmethod
     def load(cls, path):
+        """Reads version 2, and version 1 files (fixed alpha, no update counts)."""
         with gzip.open(path, "rt", encoding="utf-8") as stream:
             data = json.load(stream)
-        if data.get("version") != 1 or data.get("config") != "MINI":
+        if data.get("version") not in (1, 2) or data.get("config") != "MINI":
             raise ValueError("unsupported Q-table format or board")
         agent = cls(data["alpha"], data["gamma"], data["epsilon"])
         agent.q = {state: {int(action): value for action, value in values.items()}
                    for state, values in data["q"].items()}
+        agent.counts = {state: {int(action): n for action, n in values.items()}
+                        for state, values in data.get("counts", {}).items()}
         agent.updates = data["updates"]
         return agent
 
@@ -259,7 +271,7 @@ def export_report(folder, config, curves, results, games, rewards):
              "", "## Setup", "",
              "- Board: 4x4; fleet: 3 and 2; sunk cells revealed; reward: -1 per shot.",
              f"- Training episodes per seed: {config['episodes']}; evaluated seeds: {config['evaluated_seeds']}.",
-             f"- Alpha: {config['alpha']}; gamma: {config['gamma']}; epsilon: {config['epsilon_start']} -> {config['epsilon_end']} (linear).",
+             f"- Alpha: {config['alpha'] if config['alpha'] is not None else '1/N(s, a)'}; gamma: {config['gamma']}; epsilon: {config['epsilon_start']} -> {config['epsilon_end']} (linear).",
              "- Layout counts: " + ", ".join(f"{name}={len(layouts)}" for name, layouts in config["splits"].items()) + ".",
              "- Checkpoint: lowest validation mean; ties keep the earliest checkpoint, including episode 0.",
              "- Test: one game per held-out layout; policy RNG seed = layout index, shared across agents.",
@@ -306,7 +318,8 @@ def train_main(argv=None):
     parser = argparse.ArgumentParser(description='Training')
     parser.add_argument("--episodes", type=int, default=20000)
     parser.add_argument("--seeds", type=int, nargs="+", default=[0, 1, 2])
-    parser.add_argument("--alpha", type=float, default=.1)
+    parser.add_argument("--alpha", type=float, default=None,
+                        help="fixed step size in (0, 1]; default: 1/N(s, a), a running average")
     parser.add_argument("--gamma", type=float, default=1.)
     parser.add_argument("--epsilon-start", type=float, default=1.)
     parser.add_argument("--epsilon-end", type=float, default=.05)
@@ -381,6 +394,7 @@ class MeasuredAgent(QLearningAgent):
     def __init__(self, source):
         super().__init__(source.alpha, source.gamma, source.epsilon)
         self.q = source.q
+        self.counts = source.counts
         self.updates = source.updates
         self.unseen_states = set()
         self.q_table_actions = 0
