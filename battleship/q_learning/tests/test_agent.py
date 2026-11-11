@@ -147,6 +147,51 @@ def test_training_reproducible_save_load_and_all_layouts(tmp_path):
     assert report.best >= 5 and report.worst <= 16
 
 
+def run_pipeline(tmp_path, *protocol):
+    """Train 30 episodes for seed 0, then evaluate; return what was written."""
+    import json
+    from battleship.q_learning.Q_learning import test_main, train_main
+    artifacts, results = tmp_path / "artifacts", tmp_path / "results"
+    train_main(["--episodes", "30", "--seeds", "0", "--eval-every", "10",
+                "--output", str(artifacts), *protocol])
+    test_main([str(artifacts), "--output", str(results)])
+    config = json.loads((artifacts / "config.json").read_text(encoding="utf-8"))
+    report = json.loads((results / "test_results.json").read_text(encoding="utf-8"))
+    q_row = next(row for row in report["per_run"] if row["seed"] == 0)
+    return artifacts, config, q_row, (results / "README.md").read_text(encoding="utf-8")
+
+
+def test_default_protocol_trains_and_tests_on_all_264_layouts(tmp_path):
+    artifacts, config, q_row, readme = run_pipeline(tmp_path)
+    assert config["protocol"] == "all" and "splits" not in config
+    assert q_row["games"] == 264
+    assert q_row["selected_episode"] == 30                     # final model, no selection
+    reported = QLearningAgent.load(artifacts / "seed_0.json.gz")
+    final = QLearningAgent.load(artifacts / "seed_0_final.json.gz")
+    assert reported.q == final.q
+    assert "all 264 layouts" in readme and "held-out" not in readme
+
+
+def test_held_out_protocol_still_available(tmp_path):
+    artifacts, config, q_row, readme = run_pipeline(tmp_path, "--protocol", "held-out")
+    assert config["protocol"] == "held-out" and len(config["splits"]["test"]) == 40
+    assert q_row["games"] == 40
+    import csv
+    with (artifacts / "seed_0_curve.csv").open(encoding="utf-8", newline="") as stream:
+        curve = [{k: float(v) for k, v in row.items()} for row in csv.DictReader(stream)]
+    assert q_row["selected_episode"] == min(curve, key=lambda p: p["validation_mean"])["episode"]
+
+
+def test_runs_saved_before_the_protocol_option_load_as_held_out(tmp_path):
+    import json
+    from battleship.q_learning.Q_learning import load_experiment
+    artifacts, config, _, _ = run_pipeline(tmp_path, "--protocol", "held-out")
+    del config["protocol"]
+    (artifacts / "config.json").write_text(json.dumps(config), encoding="utf-8")
+    _, test_layouts, _, _ = load_experiment(artifacts)
+    assert len(test_layouts) == 40
+
+
 def test_splits_are_disjoint_and_complete():
     parts = split_layouts()
     keys = [set(tuple(tuple(sorted(ship.cells)) for ship in layout) for layout in part)
