@@ -147,6 +147,22 @@ def test_training_reproducible_save_load_and_all_layouts(tmp_path):
     assert report.best >= 5 and report.worst <= 16
 
 
+def test_measured_agent_splits_decisions_three_ways():
+    """learned (value known) vs untried (default value) vs unseen state."""
+    from battleship.q_learning.Q_learning import MeasuredAgent
+    env = BattleshipEnv(MINI)
+    obs = env.reset(seed=1)
+    agent = QLearningAgent()
+    probe = MeasuredAgent(agent)
+    probe.new_game(MINI, random.Random(0))
+    agent.q[agent.state(obs)] = {3: -10.}     # above the -16 default: the learned action wins
+    assert probe.select_shot(obs) == 3
+    agent.q[agent.state(obs)] = {3: -20.}     # below the default: an untried cell (0) wins
+    assert probe.select_shot(obs) == 0
+    probe.select_shot(env.step(15).observation)   # a board never seen
+    assert (probe.learned_actions, probe.untried_actions, probe.unseen_actions) == (1, 1, 1)
+
+
 def run_pipeline(tmp_path, *protocol):
     """Train 30 episodes for seed 0, then evaluate; return what was written."""
     import json

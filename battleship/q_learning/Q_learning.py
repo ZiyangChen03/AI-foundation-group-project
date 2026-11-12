@@ -230,8 +230,9 @@ def evaluation_summary(results):
                   f"Average reward over {row['games']} evaluation episodes: {row['average_reward']:.4f}",
                   f"Average episode length: {row['average_episode_length']:.4f}",
                   f"Number of unique unseen states: {row['unique_unseen_states']}",
-                  f"Actions using Q-table: {row['q_table_percentage']:.2f}%",
-                  f"Random actions due to unseen states: {row['random_percentage']:.2f}%", ""]
+                  f"Actions with a learned value: {row['learned_percentage']:.2f}%",
+                  f"Untried actions in seen states (default value): {row['untried_percentage']:.2f}%",
+                  f"Actions in unseen states (lowest legal cell): {row['unseen_percentage']:.2f}%", ""]
     return "\n".join(lines)
 
 
@@ -284,7 +285,7 @@ def export_report(folder, config, curves, results, games, rewards):
     lines = ["# 4x4 Q-learning experiment", "", "![Running average training reward](learning_curve.svg)", "",
              "```text", terminal_summary.rstrip(), "```", "",
              "The curve is the cumulative mean of actual training episode rewards (reward = -shots), not validation performance. Each seed has its own line.",
-             "Q-table usage counts lookups of known states, including tied or partially populated action rows; it does not guarantee an informed action. In an unseen state every action ties at the default value, so the lowest-numbered legal cell is fired. No evaluation exploration is enabled.",
+             "Decisions are split three ways: the chosen action had a learned value; the state was seen but the chosen action was never tried (it ranked first at the default value); or the state was never seen, so every action tied at the default and the lowest-numbered legal cell was fired. No evaluation exploration is enabled.",
              f"{statistics_note} CPU time measures evaluation user CPU time only.",
              "", "## Setup", "",
              "- Board: 4x4; fleet: 3 and 2; sunk cells revealed; reward: -1 per shot.",
@@ -313,7 +314,7 @@ def export_report(folder, config, curves, results, games, rewards):
               "Full-board Q-tables may have sparse coverage; in an unseen state the lowest-numbered legal cell is fired."
               + (" Episode-0 checkpoints can be selected if training did not improve validation performance."
                  if config.get("protocol", "held-out") != "all" else ""),
-              "", "The single SVG figure is viewable on GitHub. Plot rendering is sampled to about 2,000 points per seed; reward CSVs retain every episode. No second figure is generated.",
+              "", "The single SVG figure is viewable on GitHub. Plot rendering is sampled to about 2,000 points per seed; the full per-episode reward CSVs are written next to this report but are not committed to Git (see .gitignore). No second figure is generated.",
               "", "## Reproduction", "",
               "Use the recorded source revision and parameters in config.json. Run training, then the separate evaluation command documented in ../../README.md. Models remain in the training artifacts directory; publish them separately if needed, matching the SHA-256 hashes recorded here."]
     summary = "\n".join(lines) + "\n"
@@ -421,7 +422,12 @@ def train_main(argv=None):
 # ======================================================================
 
 class MeasuredAgent(QLearningAgent):
-    """Observe lookup coverage without changing the learned policy or its RNG."""
+    """Count what each decision was based on, without changing the policy.
+
+    learned: the state was seen and the chosen action has a learned value.
+    untried: the state was seen but the chosen action was never tried (default value).
+    unseen: the state was never seen; every action ties at the default.
+    """
 
     def __init__(self, source):
         super().__init__(source.alpha, source.gamma, source.epsilon)
@@ -429,17 +435,19 @@ class MeasuredAgent(QLearningAgent):
         self.counts = source.counts
         self.updates = source.updates
         self.unseen_states = set()
-        self.q_table_actions = 0
-        self.random_actions = 0
+        self.learned_actions = self.untried_actions = self.unseen_actions = 0
 
     def select_shot(self, obs):
+        cell = super().select_shot(obs)
         state = self.state(obs)
-        if state in self.q:
-            self.q_table_actions += 1
-        else:
+        if state not in self.q:
             self.unseen_states.add(state)
-            self.random_actions += 1
-        return super().select_shot(obs)
+            self.unseen_actions += 1
+        elif cell in self.q[state]:
+            self.learned_actions += 1
+        else:
+            self.untried_actions += 1
+        return cell
 
 
 def load_experiment(folder, seeds=None):
@@ -518,13 +526,16 @@ def test_main(argv=None):
                    std=report.std, median=report.median, best=report.best, worst=report.worst,
                    mean_move_time_seconds=report.mean_move_time, histogram=report.histogram)
         if seed is not None:
-            total_actions = agent.q_table_actions + agent.random_actions
+            total_actions = agent.learned_actions + agent.untried_actions + agent.unseen_actions
             row.update(unique_states=len(agent.q), average_reward=-report.mean,
                        average_episode_length=report.mean,
                        unique_unseen_states=len(agent.unseen_states),
-                       q_table_actions=agent.q_table_actions, random_actions=agent.random_actions,
-                       q_table_percentage=100 * agent.q_table_actions / total_actions,
-                       random_percentage=100 * agent.random_actions / total_actions,
+                       learned_actions=agent.learned_actions,
+                       untried_actions=agent.untried_actions,
+                       unseen_actions=agent.unseen_actions,
+                       learned_percentage=100 * agent.learned_actions / total_actions,
+                       untried_percentage=100 * agent.untried_actions / total_actions,
+                       unseen_percentage=100 * agent.unseen_actions / total_actions,
                        user_cpu_seconds=user_cpu_seconds)
             curve = curves[seed]
             if config.get("protocol", "held-out") == "all":
