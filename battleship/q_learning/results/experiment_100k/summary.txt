@@ -1,26 +1,29 @@
-Q-learning seed 0 (selected episode: 70000)
-Total user CPU time for 40 evaluation episodes (seconds): 0.0156
-Number of unique states: 550992
-Average reward over 40 evaluation episodes: -13.5000
-Average episode length: 13.5000
-Number of unique unseen states: 305
-Actions using Q-table: 42.96%
-Random actions due to unseen states: 57.04%
+Q-learning seed 0 (selected episode: 100000)
+Total user CPU time for 264 evaluation episodes (seconds): 0.0469
+Number of unique states: 427615
+Average reward over 264 evaluation episodes: -11.9432
+Average episode length: 11.9432
+Number of unique unseen states: 0
+Actions with a learned value: 100.00%
+Untried actions in seen states (default value): 0.00%
+Actions in unseen states (lowest legal cell): 0.00%
 
-Q-learning seed 1 (selected episode: 30000)
-Total user CPU time for 40 evaluation episodes (seconds): 0.0156
-Number of unique states: 264360
-Average reward over 40 evaluation episodes: -14.5250
-Average episode length: 14.5250
-Number of unique unseen states: 374
-Actions using Q-table: 34.60%
-Random actions due to unseen states: 65.40%
+Q-learning seed 1 (selected episode: 100000)
+Total user CPU time for 264 evaluation episodes (seconds): 0.0938
+Number of unique states: 427113
+Average reward over 264 evaluation episodes: -11.9659
+Average episode length: 11.9659
+Number of unique unseen states: 0
+Actions with a learned value: 100.00%
+Untried actions in seen states (default value): 0.00%
+Actions in unseen states (lowest legal cell): 0.00%
 
-Q-learning seed 2 (selected episode: 20000)
-Total user CPU time for 40 evaluation episodes (seconds): 0.0156
-Number of unique states: 184309
-Average reward over 40 evaluation episodes: -13.9750
-Average episode length: 13.9750
-Number of unique unseen states: 351
-Actions using Q-table: 36.31%
-Random actions due to unseen states: 63.69%
+Q-learning seed 2 (selected episode: 100000)
+Total user CPU time for 264 evaluation episodes (seconds): 0.0625
+Number of unique states: 428204
+Average reward over 264 evaluation episodes: -11.7841
+Average episode length: 11.7841
+Number of unique unseen states: 1
+Actions with a learned value: 99.97%
+Untried actions in seen states (default value): 0.00%
+Actions in unseen states (lowest legal cell): 0.03%
