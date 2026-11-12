@@ -17,8 +17,27 @@ def test_update_masks_illegal_actions():
     result = env.step(0)
     agent.q[agent.state(result.observation)] = {i: -2. for i in result.observation.legal_actions}
     agent.q[agent.state(result.observation)][0] = 1000.
+    agent.q[agent.state(obs)] = {0: 0.}       # start from 0 so the target is easy to read
     agent.observe(obs, 0, result)
-    assert agent.q[agent.state(obs)][0] == pytest.approx(-1.4)
+    # target = -1 + 0.9 * max over LEGAL next actions (-2; the illegal 1000 is ignored)
+    assert agent.q[agent.state(obs)][0] == pytest.approx(0 + .5 * (-2.8 - 0))
+
+
+def test_untried_actions_start_at_a_lower_bound():
+    """Every reward is -1, so a 0.0 default would rank an untried action above
+    every tried one. Untried actions start at -(number of untried cells)."""
+    agent = QLearningAgent(alpha=1., epsilon=0.)
+    agent.new_game(MINI, random.Random(0))
+    env = BattleshipEnv(MINI)
+    obs = env.reset(seed=1)
+    assert QLearningAgent.default(obs) == -16.
+    agent.q[agent.state(obs)] = {3: -10.}     # one tried action, poor but above the bound
+    assert {agent.select_shot(obs) for _ in range(50)} == {3}
+    agent.training = True
+    result = env.step(15)
+    assert not result.done
+    agent.observe(obs, 15, result)            # next board never seen: bootstrap the bound
+    assert agent.q[agent.state(obs)][15] == -1. + QLearningAgent.default(result.observation)
 
 
 def test_terminal_does_not_bootstrap_even_with_unshot_cells():
@@ -29,6 +48,41 @@ def test_terminal_does_not_bootstrap_even_with_unshot_cells():
     agent.q[agent.state(terminal)] = {0: 1000.}
     agent.observe(obs, 0, StepResult(terminal, -1., True, Shot(0, Result.SUNK, 2)))
     assert agent.q[agent.state(obs)][0] == -1.
+
+
+def test_default_step_is_a_running_average():
+    """alpha=None uses step 1/N(s, a): the Q-value is the mean of its targets,
+    and the starting value no longer matters after the first update."""
+    agent = QLearningAgent(epsilon=0.)
+    agent.training = True
+    obs = BattleshipEnv(MINI).reset(seed=1)
+    terminal = Observation(MINI, obs.board, (), ())
+    for reward in (-1., -2., -6.):              # three terminal targets for (obs, 0)
+        agent.observe(obs, 0, StepResult(terminal, reward, True, Shot(0, Result.SUNK, 2)))
+    assert agent.q[agent.state(obs)][0] == pytest.approx(-3.)
+    assert agent.counts[agent.state(obs)][0] == 3
+
+
+def test_save_load_keeps_counts_so_training_continues_exactly(tmp_path):
+    a = QLearningAgent()
+    train(a, MINI, 50)
+    path = tmp_path / "model.json.gz"
+    a.save(path)
+    b = QLearningAgent.load(path)
+    assert b.counts == a.counts and b.alpha is None
+    train(a, MINI, 50, seed=7)
+    train(b, MINI, 50, seed=7)
+    assert a.q == b.q
+
+
+def test_loads_version_1_files(tmp_path):
+    import gzip, json
+    path = tmp_path / "old.json.gz"
+    with gzip.open(path, "wt", encoding="utf-8") as stream:
+        json.dump({"version": 1, "config": "MINI", "alpha": .1, "gamma": 1., "epsilon": .1,
+                   "updates": 1, "q": {"s": {"3": -2.}}}, stream)
+    agent = QLearningAgent.load(path)
+    assert agent.alpha == .1 and agent.q == {"s": {3: -2.}} and agent.counts == {}
 
 
 def test_eval_is_greedy_and_does_not_mutate():
@@ -45,16 +99,28 @@ def test_eval_is_greedy_and_does_not_mutate():
     assert agent.updates == 0
 
 
-@pytest.mark.parametrize("epsilon", [0., 1.])
-def test_only_legal_shots_and_random_ties(epsilon):
-    agent = QLearningAgent(epsilon=epsilon)
+def test_exploration_fires_at_any_legal_cell():
+    agent = QLearningAgent(epsilon=1.)
     agent.new_game(MINI, random.Random(0))
     agent.training = True
     env = BattleshipEnv(MINI)
     obs = env.step(0).observation
-    agent.q[agent.state(obs)] = {0: 1000.}
+    agent.q[agent.state(obs)] = {0: 1000.}    # cell 0 is already shot: never chosen
     shots = {agent.select_shot(obs) for _ in range(200)}
     assert shots == set(obs.legal_actions)
+
+
+def test_greedy_ties_go_to_the_lowest_cell():
+    """Ties are broken the same way every time, so greedy play keeps reaching
+    the same boards; an already-shot cell is never chosen, however high."""
+    agent = QLearningAgent(epsilon=0.)
+    agent.new_game(MINI, random.Random(0))
+    env = BattleshipEnv(MINI)
+    obs = env.step(0).observation
+    agent.q[agent.state(obs)] = {0: 1000.}
+    assert {agent.select_shot(obs) for _ in range(50)} == {1}      # all legal cells tie
+    agent.q[agent.state(obs)] = {7: -3., 12: -3., 4: -9.}
+    assert agent.select_shot(obs) == 7                              # best two tie: lowest wins
 
 
 def test_state_uses_public_board_and_remaining_lengths():
@@ -79,6 +145,67 @@ def test_training_reproducible_save_load_and_all_layouts(tmp_path):
     report = evaluate(loaded, MINI, layouts=all_layouts(MINI))
     assert report.games == 264
     assert report.best >= 5 and report.worst <= 16
+
+
+def test_measured_agent_splits_decisions_three_ways():
+    """learned (value known) vs untried (default value) vs unseen state."""
+    from battleship.q_learning.Q_learning import MeasuredAgent
+    env = BattleshipEnv(MINI)
+    obs = env.reset(seed=1)
+    agent = QLearningAgent()
+    probe = MeasuredAgent(agent)
+    probe.new_game(MINI, random.Random(0))
+    agent.q[agent.state(obs)] = {3: -10.}     # above the -16 default: the learned action wins
+    assert probe.select_shot(obs) == 3
+    agent.q[agent.state(obs)] = {3: -20.}     # below the default: an untried cell (0) wins
+    assert probe.select_shot(obs) == 0
+    probe.select_shot(env.step(15).observation)   # a board never seen
+    assert (probe.learned_actions, probe.untried_actions, probe.unseen_actions) == (1, 1, 1)
+
+
+def run_pipeline(tmp_path, *protocol):
+    """Train 30 episodes for seed 0, then evaluate; return what was written."""
+    import json
+    from battleship.q_learning.Q_learning import test_main, train_main
+    artifacts, results = tmp_path / "artifacts", tmp_path / "results"
+    train_main(["--episodes", "30", "--seeds", "0", "--eval-every", "10",
+                "--output", str(artifacts), *protocol])
+    test_main([str(artifacts), "--output", str(results)])
+    config = json.loads((artifacts / "config.json").read_text(encoding="utf-8"))
+    report = json.loads((results / "test_results.json").read_text(encoding="utf-8"))
+    q_row = next(row for row in report["per_run"] if row["seed"] == 0)
+    return artifacts, config, q_row, (results / "README.md").read_text(encoding="utf-8")
+
+
+def test_default_protocol_trains_and_tests_on_all_264_layouts(tmp_path):
+    artifacts, config, q_row, readme = run_pipeline(tmp_path)
+    assert config["protocol"] == "all" and "splits" not in config
+    assert q_row["games"] == 264
+    assert q_row["selected_episode"] == 30                     # final model, no selection
+    reported = QLearningAgent.load(artifacts / "seed_0.json.gz")
+    final = QLearningAgent.load(artifacts / "seed_0_final.json.gz")
+    assert reported.q == final.q
+    assert "all 264 layouts" in readme and "held-out" not in readme
+
+
+def test_held_out_protocol_still_available(tmp_path):
+    artifacts, config, q_row, readme = run_pipeline(tmp_path, "--protocol", "held-out")
+    assert config["protocol"] == "held-out" and len(config["splits"]["test"]) == 40
+    assert q_row["games"] == 40
+    import csv
+    with (artifacts / "seed_0_curve.csv").open(encoding="utf-8", newline="") as stream:
+        curve = [{k: float(v) for k, v in row.items()} for row in csv.DictReader(stream)]
+    assert q_row["selected_episode"] == min(curve, key=lambda p: p["validation_mean"])["episode"]
+
+
+def test_runs_saved_before_the_protocol_option_load_as_held_out(tmp_path):
+    import json
+    from battleship.q_learning.Q_learning import load_experiment
+    artifacts, config, _, _ = run_pipeline(tmp_path, "--protocol", "held-out")
+    del config["protocol"]
+    (artifacts / "config.json").write_text(json.dumps(config), encoding="utf-8")
+    _, test_layouts, _, _ = load_experiment(artifacts)
+    assert len(test_layouts) == 40
 
 
 def test_splits_are_disjoint_and_complete():

@@ -92,50 +92,27 @@ Design, the two habit models, verification and full learning curves:
 
 ### Tabular Q-learning (4×4)
 
-`QLearningAgent` implements a sparse Q-table over the public board and remaining
-ship lengths. It supports MINI with sunk cells revealed. Training uses
-epsilon-greedy exploration; evaluation disables exploration and updates.
+`QLearningAgent` learns a Q-table over the public board and the remaining ship
+lengths (MINI, sunk cells revealed). Three training seeds per budget; training draws
+from all 264 layouts and testing plays each of the 264 once, like every other agent.
 
-Results on 4×4: three independently trained seeds (0, 1, 2), each evaluated on
-the same 40 held-out layouts, with sunk cells revealed. Each checkpoint is selected
-by its validation score. Lower shot counts are better.
+| Training episodes per seed | Mean shots | Std (all games) | Worst |
+|---|---:|---:|---:|
+| 1,000 | 13.149 | 2.540 | 16 |
+| 10,000 | 12.835 | 2.484 | 16 |
+| 100,000 | 11.898 | 2.316 | 16 |
+| 1,000,000 | 10.768 | 2.222 | 15 |
 
-| Agent | Training episodes per seed | Mean shots | Std | Worst |
-|---|---:|---:|---:|---:|
-| Q-learning | 1,000 | 14.242 | 1.713 | 16 |
-| Q-learning | 10,000 | 13.892 | 2.028 | 16 |
-| Q-learning | 100,000 | 14.000 | 1.897 | 16 |
-| Q-learning | 1,000,000 | 13.867 | 2.265 | 16 |
-
-Mean and Std are calculated over the pooled 120 test games (3 seeds × 40 layouts);
-Std is the population standard deviation of game shot counts, not the variation
-between seed means. Worst is the maximum across all three seeds. There are only
-40 unique test layouts. These results use a different evaluation set from the
-2,000-game baseline tables and exact POMDP expectations above.
-
-On this same held-out split, random averages 14.100 shots and probability density
-8.625 shots. The Q-learning results remain close to random and do not improve
-monotonically with training budget; the 1,000,000-episode result does not establish
-a statistically significant advantage.
-
-Results for 1,000 / 10,000 / 100,000 / 1,000,000 training episodes per seed
-are summarized in the [experiment comparison table and final reward curve](battleship/q_learning/README.md#training-configurations-and-evaluation-results).
+It improves steadily with training and is still improving at 1,000,000 episodes, but
+it stays behind hunt-target + parity (9.70), probability density (8.86) and the POMDP
+agent (8.91): about 2.2 million distinct boards each get only a few updates. Learning
+rule, evaluation protocols, per-seed results and the training curve:
+[battleship/q_learning/README.md](battleship/q_learning/README.md).
 
 ```bash
-uv run python -m battleship.q_learning train --episodes 1000 --seeds 0 1 2 --eval-every 100 --output battleship/q_learning/artifacts/run_1k_repeat
-uv run python -m battleship.q_learning test battleship/q_learning/artifacts/run_1k_repeat --output battleship/q_learning/results/experiment_1k_repeat
+uv run python -m battleship.q_learning train --episodes 100000 --seeds 0 1 2 --eval-every 10000 --output battleship/q_learning/artifacts/run_100k
+uv run python -m battleship.q_learning test battleship/q_learning/artifacts/run_100k --output battleship/q_learning/results/experiment_100k_repeat
 ```
-
-Training displays a progress bar and saves local Q-tables, configuration,
-validation history and per-episode rewards.
-The separate evaluation command tests the saved held-out layouts, compares all
-trained seeds against baselines, and finally exports a GitHub-ready report,
-CSV/JSON data and one cumulative-average training reward SVG figure. The terminal
-prints evaluation reward, episode length, state coverage and Q-table/fallback usage.
-Only evaluation produces the final result package.
-All Q-learning implementation, training, evaluation, tests and documentation live
-in [battleship/q_learning/](battleship/q_learning/README.md). See its README for the update rule,
-data split, saved files, and limitations.
 
 ### Adding a dependency
 

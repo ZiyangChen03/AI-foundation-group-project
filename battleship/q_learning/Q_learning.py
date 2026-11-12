@@ -32,12 +32,17 @@ from battleship.agents.base import Agent
 class QLearningAgent(Agent):
     name = "q-learning"
 
-    def __init__(self, alpha=0.1, gamma=1.0, epsilon=0.1):
+    def __init__(self, alpha=None, gamma=1.0, epsilon=0.1):
+        """``alpha=None`` (default) uses the step size 1/N(s, a), N being the
+        number of updates of that state-action pair, so each Q-value is the
+        running average of its targets. A number in (0, 1] is a fixed step."""
         super().__init__()
-        if not 0 < alpha <= 1 or not 0 <= gamma <= 1 or not 0 <= epsilon <= 1:
-            raise ValueError("require 0 < alpha <= 1 and 0 <= gamma, epsilon <= 1")
+        if (alpha is not None and not 0 < alpha <= 1) or not 0 <= gamma <= 1 \
+                or not 0 <= epsilon <= 1:
+            raise ValueError("require alpha None or 0 < alpha <= 1, and 0 <= gamma, epsilon <= 1")
         self.alpha, self.gamma, self.epsilon = alpha, gamma, epsilon
         self.q = {}
+        self.counts = {}   # state -> {action: number of updates}
         self.updates = 0
 
     def new_game(self, config, rng):
@@ -50,6 +55,13 @@ class QLearningAgent(Agent):
         return "".join(cell.value for cell in obs.board) + ":" + ",".join(
             map(str, obs.remaining_ship_lengths))
 
+    @staticmethod
+    def default(obs):
+        """Value of an action never tried: a lower bound. Every reward is -1 and
+        a game never needs more shots than there are untried cells, so a 0.0
+        default would rank untried actions above every tried one."""
+        return -float(len(obs.legal_actions))
+
     def select_shot(self, obs):
         legal = obs.legal_actions
         if not legal or not obs.remaining_ship_lengths:
@@ -57,8 +69,13 @@ class QLearningAgent(Agent):
         if self.training and self.rng.random() < self.epsilon:
             return self.rng.choice(legal)
         values = self.q.get(self.state(obs), {})
-        best = max(values.get(cell, 0.0) for cell in legal)
-        return self.rng.choice([cell for cell in legal if values.get(cell, 0.0) == best])
+        default = self.default(obs)
+        # Ties go to the lowest-numbered cell. Most greedy choices are ties (an
+        # unseen next board makes an action's value equal the default), and a
+        # random pick would send every game to different boards, so few boards
+        # would ever be seen twice. A fixed choice keeps greedy play on the same
+        # boards, which then accumulate updates; epsilon still explores.
+        return max(legal, key=lambda cell: values.get(cell, default))
 
     def observe(self, obs, action, result):
         if not self.training:
@@ -66,11 +83,16 @@ class QLearningAgent(Agent):
         target = result.reward
         if not result.done:
             following = self.q.get(self.state(result.observation), {})
-            target += self.gamma * max(following.get(cell, 0.0)
+            default = self.default(result.observation)
+            target += self.gamma * max(following.get(cell, default)
                                        for cell in result.observation.legal_actions)
-        values = self.q.setdefault(self.state(obs), {})
-        old = values.get(action, 0.0)
-        values[action] = old + self.alpha * (target - old)
+        state = self.state(obs)
+        values = self.q.setdefault(state, {})
+        counts = self.counts.setdefault(state, {})
+        counts[action] = counts.get(action, 0) + 1
+        step = 1 / counts[action] if self.alpha is None else self.alpha
+        old = values.get(action, self.default(obs))
+        values[action] = old + step * (target - old)
         self.updates += 1
 
     def save(self, path):
@@ -78,19 +100,22 @@ class QLearningAgent(Agent):
         path = Path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
         with gzip.open(path, "wt", encoding="utf-8") as stream:
-            json.dump({"version": 1, "config": "MINI", "alpha": self.alpha,
+            json.dump({"version": 2, "config": "MINI", "alpha": self.alpha,
                        "gamma": self.gamma, "epsilon": self.epsilon,
-                       "updates": self.updates, "q": self.q}, stream)
+                       "updates": self.updates, "q": self.q, "counts": self.counts}, stream)
 
     @classmethod
     def load(cls, path):
+        """Reads version 2, and version 1 files (fixed alpha, no update counts)."""
         with gzip.open(path, "rt", encoding="utf-8") as stream:
             data = json.load(stream)
-        if data.get("version") != 1 or data.get("config") != "MINI":
+        if data.get("version") not in (1, 2) or data.get("config") != "MINI":
             raise ValueError("unsupported Q-table format or board")
         agent = cls(data["alpha"], data["gamma"], data["epsilon"])
         agent.q = {state: {int(action): value for action, value in values.items()}
                    for state, values in data["q"].items()}
+        agent.counts = {state: {int(action): n for action, n in values.items()}
+                        for state, values in data.get("counts", {}).items()}
         agent.updates = data["updates"]
         return agent
 
@@ -205,8 +230,9 @@ def evaluation_summary(results):
                   f"Average reward over {row['games']} evaluation episodes: {row['average_reward']:.4f}",
                   f"Average episode length: {row['average_episode_length']:.4f}",
                   f"Number of unique unseen states: {row['unique_unseen_states']}",
-                  f"Actions using Q-table: {row['q_table_percentage']:.2f}%",
-                  f"Random actions due to unseen states: {row['random_percentage']:.2f}%", ""]
+                  f"Actions with a learned value: {row['learned_percentage']:.2f}%",
+                  f"Untried actions in seen states (default value): {row['untried_percentage']:.2f}%",
+                  f"Actions in unseen states (lowest legal cell): {row['unseen_percentage']:.2f}%", ""]
     return "\n".join(lines)
 
 
@@ -242,18 +268,30 @@ def export_report(folder, config, curves, results, games, rewards):
     spread = aggregate["std_across_seed_means"]
     terminal_summary = evaluation_summary(results)
     (folder / "summary.txt").write_text(terminal_summary, encoding="utf-8")
+    if config.get("protocol", "held-out") == "all":
+        protocol_lines = [
+            "- Layouts: training draws uniformly from all 264 layouts (the game's distribution); "
+            "testing plays every one of the 264 once, as for every other agent. This is not a "
+            "generalization test: a Q-table cannot play layouts it never saw.",
+            "- Model: the final one; no checkpoint is selected (the curve's evaluations are only recorded).",
+            "- Test: one game per layout; policy RNG seed = layout index, shared across agents."]
+        statistics_note = "Statistics describe the final model, while curves cover the entire training run."
+    else:
+        protocol_lines = [
+            "- Layout counts: " + ", ".join(f"{name}={len(layouts)}" for name, layouts in config["splits"].items()) + ".",
+            "- Checkpoint: lowest validation mean; ties keep the earliest checkpoint, including episode 0.",
+            "- Test: one game per held-out layout; policy RNG seed = layout index, shared across agents."]
+        statistics_note = "Statistics describe the validation-selected checkpoint, while curves cover the entire training run."
     lines = ["# 4x4 Q-learning experiment", "", "![Running average training reward](learning_curve.svg)", "",
              "```text", terminal_summary.rstrip(), "```", "",
              "The curve is the cumulative mean of actual training episode rewards (reward = -shots), not validation performance. Each seed has its own line.",
-             "Q-table usage counts lookups of known states, including tied or partially populated action rows; it does not guarantee an informed action. Unseen states use the existing random tie fallback. No evaluation exploration is enabled.",
-             "Statistics describe the validation-selected checkpoint, while curves cover the entire training run. CPU time measures evaluation user CPU time only.",
+             "Decisions are split three ways: the chosen action had a learned value; the state was seen but the chosen action was never tried (it ranked first at the default value); or the state was never seen, so every action tied at the default and the lowest-numbered legal cell was fired. No evaluation exploration is enabled.",
+             f"{statistics_note} CPU time measures evaluation user CPU time only.",
              "", "## Setup", "",
              "- Board: 4x4; fleet: 3 and 2; sunk cells revealed; reward: -1 per shot.",
              f"- Training episodes per seed: {config['episodes']}; evaluated seeds: {config['evaluated_seeds']}.",
-             f"- Alpha: {config['alpha']}; gamma: {config['gamma']}; epsilon: {config['epsilon_start']} -> {config['epsilon_end']} (linear).",
-             "- Layout counts: " + ", ".join(f"{name}={len(layouts)}" for name, layouts in config["splits"].items()) + ".",
-             "- Checkpoint: lowest validation mean; ties keep the earliest checkpoint, including episode 0.",
-             "- Test: one game per held-out layout; policy RNG seed = layout index, shared across agents.",
+             f"- Alpha: {config['alpha'] if config['alpha'] is not None else '1/N(s, a)'}; gamma: {config['gamma']}; epsilon: {config['epsilon_start']} -> {config['epsilon_end']} (linear).",
+             *protocol_lines,
              "- Exploration and learning disabled during testing.",
              f"- Training commit: {config.get('provenance', {}).get('commit', 'unknown')}; dirty: {config.get('provenance', {}).get('dirty', 'unknown')}.",
              f"- Evaluation commit: {config['evaluation_provenance']['commit']}; dirty: {config['evaluation_provenance']['dirty']}.",
@@ -271,10 +309,12 @@ def export_report(folder, config, curves, results, games, rewards):
               "This is distinct from Game std above, which measures variation between layouts within one run.",
               "", "## Observed comparison and limitations", "",
               f"Q-learning's mean across training seeds minus the best listed baseline ({baseline['agent']}): **{difference:+.3f}** shots. Negative means fewer shots; positive means more.",
-              "This is a descriptive comparison on this fixed test split, not a significance claim. Do not tune hyperparameters using these test scores.",
+              "This is a descriptive comparison on these test layouts, not a significance claim. Do not tune hyperparameters using these test scores.",
               "Training time includes training games only; validation and serialization are excluded. Decision time is measured on the evaluation machine.",
-              "Full-board Q-tables may have sparse coverage; unseen states choose randomly among tied legal actions. Episode-0 checkpoints can be selected if training did not improve validation performance.",
-              "", "The single SVG figure is viewable on GitHub. Plot rendering is sampled to about 2,000 points per seed; reward CSVs retain every episode. No second figure is generated.",
+              "Full-board Q-tables may have sparse coverage; in an unseen state the lowest-numbered legal cell is fired."
+              + (" Episode-0 checkpoints can be selected if training did not improve validation performance."
+                 if config.get("protocol", "held-out") != "all" else ""),
+              "", "The single SVG figure is viewable on GitHub. Plot rendering is sampled to about 2,000 points per seed; the full per-episode reward CSVs are written next to this report but are not committed to Git (see .gitignore). No second figure is generated.",
               "", "## Reproduction", "",
               "Use the recorded source revision and parameters in config.json. Run training, then the separate evaluation command documented in ../../README.md. Models remain in the training artifacts directory; publish them separately if needed, matching the SHA-256 hashes recorded here."]
     summary = "\n".join(lines) + "\n"
@@ -297,12 +337,17 @@ def train_main(argv=None):
     parser = argparse.ArgumentParser(description='Training')
     parser.add_argument("--episodes", type=int, default=20000)
     parser.add_argument("--seeds", type=int, nargs="+", default=[0, 1, 2])
-    parser.add_argument("--alpha", type=float, default=.1)
+    parser.add_argument("--alpha", type=float, default=None,
+                        help="fixed step size in (0, 1]; default: 1/N(s, a), a running average")
     parser.add_argument("--gamma", type=float, default=1.)
     parser.add_argument("--epsilon-start", type=float, default=1.)
     parser.add_argument("--epsilon-end", type=float, default=.05)
     parser.add_argument("--eval-every", type=int, default=2000)
-    parser.add_argument("--split-seed", type=int, default=42)
+    parser.add_argument("--protocol", choices=("all", "held-out"), default="all",
+                        help="all (default): train on all 264 layouts and report the final model "
+                             "on all 264, like every other agent; held-out: train on a 70%% split, "
+                             "select the best checkpoint on 15%%, test on the unseen 15%%")
+    parser.add_argument("--split-seed", type=int, default=42, help="held-out protocol only")
     parser.add_argument("--output", type=Path, default=Path(__file__).parent / "artifacts")
     args = parser.parse_args(argv)
     if args.episodes < 1 or args.eval_every < 1:
@@ -313,13 +358,21 @@ def train_main(argv=None):
         parser.error("seeds must be distinct")
     # Validate before writing any output.
     QLearningAgent(args.alpha, args.gamma, args.epsilon_start)
-    training, validation, testing = split_layouts(args.split_seed)
+    held_out = args.protocol == "held-out"
+    if held_out:
+        training, validation, testing = split_layouts(args.split_seed)
+    else:
+        # A Q-table cannot generalize to layouts it never sees, and the game draws
+        # uniformly from all 264, so train on all of them. The curve is still
+        # recorded on all 264, but no checkpoint is selected from it.
+        training = validation = list(all_layouts(MINI))
     args.output.mkdir(parents=True, exist_ok=True)
     manifest = {**vars(args), "output": str(args.output), "board": "MINI",
-                "provenance": provenance(),
-                "splits": {name: [[sorted(ship.cells) for ship in layout] for layout in layouts]
-                           for name, layouts in [("train", training), ("validation", validation),
-                                                 ("test", testing)]}}
+                "provenance": provenance()}
+    if held_out:
+        manifest["splits"] = {name: [[sorted(ship.cells) for ship in layout] for layout in layouts]
+                              for name, layouts in [("train", training), ("validation", validation),
+                                                    ("test", testing)]}
     (args.output / "config.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
     for seed in args.seeds:
         agent = QLearningAgent(args.alpha, args.gamma, args.epsilon_start)
@@ -354,37 +407,47 @@ def train_main(argv=None):
                                          states=len(agent.q), validation_mean=report.mean,
                                          validation_std=report.std))
                     stream.flush()
-                    if report.mean < best:
+                    if held_out and report.mean < best:
                         best = report.mean
                         agent.save(checkpoint)
                 if episode:
                     progress.update(episode)
+        if not held_out:
+            agent.save(checkpoint)             # the reported model is the final one
         agent.save(args.output / f"seed_{seed}_final.json.gz")
 
 
 # ======================================================================
-# Held-out evaluation
+# Evaluation
 # ======================================================================
 
 class MeasuredAgent(QLearningAgent):
-    """Observe lookup coverage without changing the learned policy or its RNG."""
+    """Count what each decision was based on, without changing the policy.
+
+    learned: the state was seen and the chosen action has a learned value.
+    untried: the state was seen but the chosen action was never tried (default value).
+    unseen: the state was never seen; every action ties at the default.
+    """
 
     def __init__(self, source):
         super().__init__(source.alpha, source.gamma, source.epsilon)
         self.q = source.q
+        self.counts = source.counts
         self.updates = source.updates
         self.unseen_states = set()
-        self.q_table_actions = 0
-        self.random_actions = 0
+        self.learned_actions = self.untried_actions = self.unseen_actions = 0
 
     def select_shot(self, obs):
+        cell = super().select_shot(obs)
         state = self.state(obs)
-        if state in self.q:
-            self.q_table_actions += 1
-        else:
+        if state not in self.q:
             self.unseen_states.add(state)
-            self.random_actions += 1
-        return super().select_shot(obs)
+            self.unseen_actions += 1
+        elif cell in self.q[state]:
+            self.learned_actions += 1
+        else:
+            self.untried_actions += 1
+        return cell
 
 
 def load_experiment(folder, seeds=None):
@@ -394,14 +457,18 @@ def load_experiment(folder, seeds=None):
     seeds = config["seeds"] if seeds is None else seeds
     if not seeds or len(set(seeds)) != len(seeds) or not set(seeds) <= set(config["seeds"]):
         raise ValueError("select distinct training seeds present in config.json")
-    splits = {name: [layout_from_cells(MINI, cells) for cells in config["splits"][name]]
-              for name in ("train", "validation", "test")}
-    keys = {name: {frozenset(ship.cells for ship in layout) for layout in layouts}
-            for name, layouts in splits.items()}
-    if any(not layouts or len(keys[name]) != len(layouts) for name, layouts in splits.items()):
-        raise ValueError("each split must be nonempty with no duplicate layouts")
-    if keys["train"] & keys["test"] or keys["validation"] & keys["test"] or keys["train"] & keys["validation"]:
-        raise ValueError("training, validation and test layouts must be disjoint")
+    if config.get("protocol", "held-out") == "all":   # runs from before --protocol are held-out
+        test = list(all_layouts(MINI))
+    else:
+        splits = {name: [layout_from_cells(MINI, cells) for cells in config["splits"][name]]
+                  for name in ("train", "validation", "test")}
+        keys = {name: {frozenset(ship.cells for ship in layout) for layout in layouts}
+                for name, layouts in splits.items()}
+        if any(not layouts or len(keys[name]) != len(layouts) for name, layouts in splits.items()):
+            raise ValueError("each split must be nonempty with no duplicate layouts")
+        if keys["train"] & keys["test"] or keys["validation"] & keys["test"] or keys["train"] & keys["validation"]:
+            raise ValueError("training, validation and test layouts must be disjoint")
+        test = splits["test"]
     curves, models = {}, {}
     for seed in seeds:
         models[seed] = QLearningAgent.load(folder / f"seed_{seed}.json.gz")
@@ -410,11 +477,11 @@ def load_experiment(folder, seeds=None):
                             for row in csv.DictReader(stream)]
         if not curves[seed] or curves[seed][-1]["episode"] != config["episodes"]:
             raise ValueError(f"training run for seed {seed} is incomplete")
-    return config, splits["test"], curves, models
+    return config, test, curves, models
 
 
 def test_main(argv=None):
-    parser = argparse.ArgumentParser(description='Held-out evaluation')
+    parser = argparse.ArgumentParser(description="Evaluation of trained Q-tables")
     parser.add_argument("source", nargs="?", type=Path,
                         default=Path(__file__).parent / "artifacts",
                         help="training folder or one best checkpoint inside that folder")
@@ -459,16 +526,22 @@ def test_main(argv=None):
                    std=report.std, median=report.median, best=report.best, worst=report.worst,
                    mean_move_time_seconds=report.mean_move_time, histogram=report.histogram)
         if seed is not None:
-            total_actions = agent.q_table_actions + agent.random_actions
+            total_actions = agent.learned_actions + agent.untried_actions + agent.unseen_actions
             row.update(unique_states=len(agent.q), average_reward=-report.mean,
                        average_episode_length=report.mean,
                        unique_unseen_states=len(agent.unseen_states),
-                       q_table_actions=agent.q_table_actions, random_actions=agent.random_actions,
-                       q_table_percentage=100 * agent.q_table_actions / total_actions,
-                       random_percentage=100 * agent.random_actions / total_actions,
+                       learned_actions=agent.learned_actions,
+                       untried_actions=agent.untried_actions,
+                       unseen_actions=agent.unseen_actions,
+                       learned_percentage=100 * agent.learned_actions / total_actions,
+                       untried_percentage=100 * agent.untried_actions / total_actions,
+                       unseen_percentage=100 * agent.unseen_actions / total_actions,
                        user_cpu_seconds=user_cpu_seconds)
             curve = curves[seed]
-            selected = min(curve, key=lambda point: point["validation_mean"])
+            if config.get("protocol", "held-out") == "all":
+                selected = curve[-1]               # final model, no selection
+            else:
+                selected = min(curve, key=lambda point: point["validation_mean"])
             row.update(training_seconds=curve[-1]["training_seconds"],
                        training_shots=int(curve[-1]["training_shots"]),
                        selected_episode=int(selected["episode"]),
@@ -479,7 +552,8 @@ def test_main(argv=None):
                           shots=record.num_shots, decision_seconds=sum(record.move_times))
                      for i, record in enumerate(report.records))
     config = {**config, "evaluated_seeds": list(models), "evaluation_provenance": provenance(),
-              "evaluation_protocol": "One game per held-out layout; policy seed = layout index"}
+              "evaluation_protocol": ("One game per layout, all 264" if config.get("protocol", "held-out") == "all"
+                                      else "One game per held-out layout") + "; policy seed = layout index"}
     summary = export_report(args.output, config, curves, results, games, rewards)
     print(summary)
     print(f"\nResults saved to: {args.output.resolve()}")

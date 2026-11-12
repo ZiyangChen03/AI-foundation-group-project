@@ -1,7 +1,9 @@
-# Byte-compiled / optimized / DLL files
+# Q-learning: trained tables stay local; per-episode reward histories are too large
+# to commit, so only summaries and curves under results/ are published.
 battleship/q_learning/artifacts/
-# Per-episode reward histories are retained locally; publish summaries and curves.
 battleship/q_learning/results/**/seed_*_rewards.csv
+
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
 *$py.class
