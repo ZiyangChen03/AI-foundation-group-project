@@ -131,10 +131,12 @@ class BeliefQAgent(Agent):
                    epsilon_end: float = 0.0, callback=None, every: int = 0) -> None:
         """Q-learning on simulated games, with epsilon decaying linearly from
         ``epsilon_start`` to ``epsilon_end``. ``callback(episode)`` runs every
-        ``every`` episodes."""
+        ``every`` episodes. ``training`` and ``epsilon`` are restored afterwards,
+        so a later ``train()`` explores with the agent's own epsilon."""
         plan = exact_planner(self.board)
         n = plan.everything.bit_length()
         previous, self.training = self.training, True
+        previous_epsilon = self.epsilon
         try:
             for episode in range(1, episodes + 1):
                 self.epsilon = epsilon_start + (epsilon_end - epsilon_start) * episode / episodes
@@ -154,6 +156,7 @@ class BeliefQAgent(Agent):
                     callback(episode)
         finally:
             self.training = previous
+            self.epsilon = previous_epsilon
 
     def exact_value(self) -> float:
         """Exact expected shots of the greedy policy (random tie-breaking) over
