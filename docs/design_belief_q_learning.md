@@ -15,17 +15,21 @@ principle learn the same policy. The difference is **sample efficiency**:
   layout could cover leave the same set of possible layouts and call for the same
   shot, but a raw-board table learns each one separately. On 4×4 the belief key
   (`Planner._key`) has **366,307** reachable non-terminal states, while a raw-board
-  table holds about **2.2 million** boards after 1,000,000 episodes. Each belief state
-  therefore gets many more updates.
-- **Same budget, same evaluation:** with the fixes in PR #18 (pessimistic default,
+  table holds about **2.2 million** boards after 1,000,000 episodes (about 6 updates
+  per board). Both agents make one update per training shot, so with about seven
+  times fewer states each belief state is updated far more often.
+- **Same budget, same layouts:** with the fixes in PR #18 (pessimistic default,
   1/N step size, fixed tie-breaking, training on all 264 layouts), the raw-board
   agent reaches **10.77** shots after 1,000,000 episodes per seed; this agent reaches
   **8.97**. Both are averaged over seeds 0, 1, 2 and evaluated on all 264 layouts.
-  The setups are close but not identical (see the table below), so the gap mostly,
-  not only, reflects the state.
-- As originally submitted, PR #14 stayed at random level (about 13.9 shots) for
-  separate reasons: an optimistic 0.0 default for untried actions and an evaluation on
-  40 layouts it never trained on. PR #18 fixes both.
+  The setups are close but not identical (see the table below), and no ablation
+  separates their effects, so the gap is consistent with the state mattering but is
+  not attributable to it alone.
+- As originally submitted, PR #14 scored about 13.9 shots on 40 held-out layouts,
+  close to random (14.1 on the same layouts). It used an optimistic 0.0 default for
+  untried actions, a fixed step size α = 0.1 and random tie-breaking, and it was
+  tested on layouts it never trained on. PR #18 changes all of these at once, so
+  their separate effects are not isolated.
 
 ## What this agent changes
 
@@ -40,6 +44,10 @@ principle learn the same policy. The difference is **sample efficiency**:
 | ε schedule | 1.0 → 0.05 | 1.0 → 0.0 |
 | Training | through the environment, all 264 layouts | simulated on beliefs, all 264 layouts |
 | Evaluation | one game per layout, all 264 | exact expected shots over all 264 |
+
+The two evaluations measure the same quantity: the raw-board greedy policy is
+deterministic (ties go to the lowest cell, no exploration), so one game per layout
+over all 264 layouts is its exact expected number of shots.
 
 The agent never sees the hidden layout: the belief is computed only from public
 feedback, exactly as in `BeliefAgent`. The update is ordinary one-step Q-learning
@@ -76,7 +84,7 @@ evaluation every 100,000 episodes (`results/belief_q/`):
   by up to 0.05 shots, in both directions, so 1,000,000 episodes is not a final value.
 - **About 320,000 states** after 1,000,000 episodes, 87% of the 366,307 reachable
   ones.
-- Training takes about 7 minutes per seed.
+- Training took 459 s (about 7.5 minutes) per seed, with the three seeds run in parallel.
 
 ![Learning curve](../results/belief_q/learning_curve.svg)
 
@@ -84,7 +92,8 @@ evaluation every 100,000 episodes (`results/belief_q/`):
 
 - The exact belief is only practical on small boards, so this agent is 4×4 only.
 - Results assume ships are placed uniformly at random, like the POMDP optimum.
-- The comparison with raw-board Q-learning uses PR #18's results; until PR #18 is
-  merged, `main` still has the original raw-board agent.
+- The raw-board numbers come from PR #18 (branch `q-learning-4x4-fixes`, built on PR
+  #14's `q-learning-4x4`). Neither is merged into `main`, which has no raw-board agent
+  yet.
 
 Reproduce: `uv run scripts/train_belief_q.py --jobs 3` (seeds 0, 1, 2; 1,000,000 episodes).
