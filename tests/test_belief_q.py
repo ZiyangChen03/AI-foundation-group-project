@@ -58,7 +58,8 @@ def test_fast_training_learns():
     before = agent.exact_value()
     agent.fast_train(60_000, random.Random(0))
     after = agent.exact_value()
-    assert after < 10.0 < 10.2 < before         # untrained: uniform over possible cells
+    assert before > 10.2                        # untrained: uniform over possible cells
+    assert after < 10.0
     assert agent.training is False
 
 
