@@ -62,6 +62,14 @@ def test_fast_training_learns():
     assert agent.training is False
 
 
+def test_fast_training_restores_epsilon():
+    """fast_train decays its own epsilon schedule but must leave the agent's
+    epsilon as it was, or a later train() would never explore."""
+    agent = BeliefQAgent(epsilon=0.1)
+    agent.fast_train(50, random.Random(3))
+    assert agent.epsilon == 0.1 and agent.training is False
+
+
 def test_training_through_the_environment_updates_the_table():
     agent = BeliefQAgent(epsilon=0.3)
     train(agent, MINI, 300)
@@ -85,3 +93,4 @@ def test_save_and_load(tmp_path):
     loaded = BeliefQAgent.load(str(path))
     assert loaded.q == agent.q and loaded.visits == agent.visits
     assert loaded.board == agent.board and loaded.initial == agent.initial
+    assert loaded.epsilon == agent.epsilon == 0.1        # not the 0.0 the schedule ends at
