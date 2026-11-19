@@ -4,30 +4,42 @@ Tabular Q-learning whose state is the exact POMDP belief instead of the raw boar
 Code: `battleship/agents/belief_q.py` (`BeliefQAgent`), training script
 `scripts/train_belief_q.py`, tests `tests/test_belief_q.py`.
 
-## Why the raw-board Q-table stays near random
+## Why the state matters
 
 The raw-board agent (PR #14) keys its table on the 16 visible cells plus the
-remaining ships. After 1,000,000 episodes it still meets an unseen state on about
-41% of test moves and falls back to a random shot. Three things cause this:
+remaining ships. With sunk cells revealed, that board is a valid Markov state: it
+determines exactly which layouts are still possible, so a raw-board table can in
+principle learn the same policy. The difference is **sample efficiency**:
 
-1. **Equivalent boards are separate states.** Many different-looking boards leave
-   exactly the same set of possible ship layouts, so they call for the same shot,
-   but the table learns each one separately.
-2. **Unvisited actions start at 0.** Every reward is −1, so any untried action looks
-   better than every tried one, and greedy play keeps choosing untried shots.
-3. **Held-out layouts.** With a table and no generalization between states, test
-   layouts mostly produce states never seen in training. The hidden layout is part
-   of the game's randomness, so training and evaluating on all 264 layouts is fine.
+- **Many boards share one belief.** Boards that differ only by misses no consistent
+  layout could cover leave the same set of possible layouts and call for the same
+  shot, but a raw-board table learns each one separately. On 4×4 the belief key
+  (`Planner._key`) has **366,307** reachable non-terminal states, while a raw-board
+  table holds about **2.2 million** boards after 1,000,000 episodes. Each belief state
+  therefore gets many more updates.
+- **Same budget, same evaluation:** with the fixes in PR #18 (pessimistic default,
+  1/N step size, fixed tie-breaking, training on all 264 layouts), the raw-board
+  agent reaches **10.77** shots after 1,000,000 episodes per seed; this agent reaches
+  **8.97**. Both are averaged over seeds 0, 1, 2 and evaluated on all 264 layouts.
+  The setups are close but not identical (see the table below), so the gap mostly,
+  not only, reflects the state.
+- As originally submitted, PR #14 stayed at random level (about 13.9 shots) for
+  separate reasons: an optimistic 0.0 default for untried actions and an evaluation on
+  40 layouts it never trained on. PR #18 fixes both.
 
 ## What this agent changes
 
-| | Raw-board Q-learning | Belief-state Q-learning |
+| | Raw-board Q-learning (with PR #18) | Belief-state Q-learning |
 |---|---|---|
 | State | visible board + remaining ships | set of consistent layouts + fired hits (`Planner._key`) |
+| Reachable states on 4×4 | millions of boards | 366,307 |
 | Actions | every unfired cell | unfired cells some consistent layout covers |
-| Unvisited actions | 0 (optimistic) | −20 (pessimistic) |
-| Step size | fixed α = 0.1 | 1 / visits(b, a), a running mean of the targets |
-| Evaluation | 40 sampled layouts | exact expected shots over all 264 layouts |
+| Unvisited actions | −(number of untried cells) | −20 |
+| Step size | 1 / visits(s, a) | 1 / visits(b, a) |
+| Greedy ties | lowest-numbered cell | uniformly at random |
+| ε schedule | 1.0 → 0.05 | 1.0 → 0.0 |
+| Training | through the environment, all 264 layouts | simulated on beliefs, all 264 layouts |
+| Evaluation | one game per layout, all 264 | exact expected shots over all 264 |
 
 The agent never sees the hidden layout: the belief is computed only from public
 feedback, exactly as in `BeliefAgent`. The update is ordinary one-step Q-learning
@@ -40,6 +52,10 @@ checks that these transitions match the environment's. `exact_value` evaluates t
 greedy policy exactly with `Planner.policy_value`, so learning curves have no
 sampling noise.
 
+Training samples layouts uniformly from the same 264 layouts the evaluation covers.
+On 4×4 that is unavoidable and matches the game's real distribution, but it is not a
+held-out generalization test.
+
 ## Results
 
 Three seeds, 1,000,000 episodes each, ε decaying linearly from 1.0 to 0.0, exact
@@ -50,12 +66,17 @@ evaluation every 100,000 episodes (`results/belief_q/`):
 | 0 | 10.395 | 10.395 | 10.395 |
 | 200,000 | 9.645 | 9.504 | 9.659 |
 | 500,000 | 9.159 | 9.239 | 9.275 |
+| 900,000 | 8.985 | 9.012 | 8.962 |
 | 1,000,000 | **8.932** | **9.030** | **8.955** |
 
-Mean after 1,000,000 episodes: **8.972 shots**, with about 320,000 states; the
-count levels off, so nearly every reachable belief has been visited. For reference:
-hunt-target with parity 9.697, POMDP greedy 8.913, POMDP optimal 8.746. Training
-takes about 7 minutes per seed.
+- **Mean after 1,000,000 episodes: 8.972 shots.** That is close to, but still
+  slightly worse than, the non-learning POMDP greedy agent (8.913), and 0.23 shots
+  above the optimum (8.746). It beats hunt-target with parity (9.697).
+- **Not yet settled.** Between 900,000 and 1,000,000 episodes the seeds still move
+  by up to 0.05 shots, in both directions, so 1,000,000 episodes is not a final value.
+- **About 320,000 states** after 1,000,000 episodes, 87% of the 366,307 reachable
+  ones.
+- Training takes about 7 minutes per seed.
 
 ![Learning curve](../results/belief_q/learning_curve.svg)
 
@@ -63,7 +84,7 @@ takes about 7 minutes per seed.
 
 - The exact belief is only practical on small boards, so this agent is 4×4 only.
 - Results assume ships are placed uniformly at random, like the POMDP optimum.
-- The raw-board results were measured on 40 held-out layouts and these exactly on
-  all 264, so compare them as trends, not as a precise head-to-head.
+- The comparison with raw-board Q-learning uses PR #18's results; until PR #18 is
+  merged, `main` still has the original raw-board agent.
 
 Reproduce: `uv run scripts/train_belief_q.py --jobs 3` (seeds 0, 1, 2; 1,000,000 episodes).

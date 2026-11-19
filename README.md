@@ -95,7 +95,11 @@ Design, the two habit models, verification and full learning curves:
 `BeliefQAgent` is tabular Q-learning whose state is the exact POMDP belief (the
 set of layouts consistent with every shot) rather than the raw board. Evaluated
 exactly over all 264 layouts, three seeds average **8.972 shots** after
-1,000,000 episodes (POMDP greedy 8.913, optimal 8.746, hunt-target + parity 9.697).
+1,000,000 episodes: better than hunt-target + parity (9.697), close to but still
+slightly worse than the non-learning POMDP greedy agent (8.913), and 0.23 above the
+optimum (8.746). It is still improving at 1,000,000 episodes. Many boards share one
+belief (366,307 reachable states on 4×4), so each state gets far more updates than
+in a raw-board table.
 
 ```bash
 uv run scripts/train_belief_q.py --jobs 3
