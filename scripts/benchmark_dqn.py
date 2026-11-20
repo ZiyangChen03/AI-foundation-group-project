@@ -1,7 +1,7 @@
 """Benchmark trained DQN agents against the baselines on the same boards.
 
-    uv run scripts/benchmark_dqn.py classic results/dqn/classic_*_s0/best.pt
-    uv run scripts/benchmark_dqn.py mini results/dqn/mini_board_s*/final.pt
+    uv run --extra dqn scripts/benchmark_dqn.py classic results/dqn/classic_*_s0/best.pt
+    uv run --extra dqn scripts/benchmark_dqn.py mini results/dqn/mini_board_s*/final.pt
 
 10x10: seeds 0-1999 (disjoint from the training and validation boards), played
 through ``play_solo`` exactly like every other agent. Each agent is compared

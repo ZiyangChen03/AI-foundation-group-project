@@ -151,13 +151,13 @@ rest.
 ## Reproduce
 
 ```bash
-uv run scripts/train_dqn.py --board mini --variant board --games 100000 --eval-every 10000 --learn-start 5000
-uv run scripts/train_dqn.py --board classic --variant board    --games 100000 --eval-every 5000 --eps-fraction 0.1
-uv run scripts/train_dqn.py --board classic --variant density  --games 100000 --eval-every 5000 --eps-fraction 0.1
-uv run scripts/train_dqn.py --board classic --variant residual --games 100000 --eval-every 5000 --eps-start 0.1 --eps-fraction 0.1
-uv run scripts/benchmark_dqn.py classic results/dqn/classic_board_s0/best.pt \
+uv run --extra dqn scripts/train_dqn.py --board mini --variant board --games 100000 --eval-every 10000 --learn-start 5000
+uv run --extra dqn scripts/train_dqn.py --board classic --variant board    --games 100000 --eval-every 5000 --eps-fraction 0.1
+uv run --extra dqn scripts/train_dqn.py --board classic --variant density  --games 100000 --eval-every 5000 --eps-fraction 0.1
+uv run --extra dqn scripts/train_dqn.py --board classic --variant residual --games 100000 --eval-every 5000 --eps-start 0.1 --eps-fraction 0.1
+uv run --extra dqn scripts/benchmark_dqn.py classic results/dqn/classic_board_s0/best.pt \
     results/dqn/classic_density_s0/best.pt results/dqn/classic_residual_s0/final.pt   # ~5 min
-uv run scripts/benchmark_dqn.py mini results/dqn/mini_board_s0/final.pt
+uv run --extra dqn scripts/benchmark_dqn.py mini results/dqn/mini_board_s0/final.pt
 ```
 
 The 4×4 runs in `results/dqn/` were trained with an output folder given explicitly;

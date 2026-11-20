@@ -1,7 +1,7 @@
 """Train a DQN agent and save the model and learning curve.
 
-    uv run scripts/train_dqn.py --board mini --variant board --games 20000
-    uv run scripts/train_dqn.py --board classic --variant residual --games 50000
+    uv run --extra dqn scripts/train_dqn.py --board mini --variant board --games 20000
+    uv run --extra dqn scripts/train_dqn.py --board classic --variant residual --games 50000
 
 Variants (docs/design_dqn.md, section 5):
     board     A: board planes only, learned from scratch

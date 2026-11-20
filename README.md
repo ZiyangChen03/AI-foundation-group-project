@@ -94,8 +94,11 @@ Design, the two habit models, verification and full learning curves:
 
 `battleship.dqn.DQNAgent` is Q-learning with a convolutional network, trained on 256
 vectorized games at once (Double DQN, dueling head, replay buffer, target network).
-It is a separate package, so the other agents do not load PyTorch. Results on the
-2,000 test boards (seeds 0–1999, paired against probability density):
+It is a separate package, so the other agents do not load PyTorch, and PyTorch is
+an optional extra: install it with `uv sync --extra dqn` or prefix commands with
+`uv run --extra dqn`. Without it, everything else works and the DQN tests are
+skipped. Results on the 2,000 test boards (seeds 0–1999, paired against probability
+density):
 
 | Agent | 10×10 shots | Paired vs density | Training |
 |---|---|---|---|
@@ -108,9 +111,9 @@ On 4×4 the board-only DQN reaches 8.92 exact expected shots in 75 s (density 8.
 optimum 8.746).
 
 ```bash
-uv run scripts/train_dqn.py --board classic --variant density --games 100000 --eps-fraction 0.1
-uv run scripts/benchmark_dqn.py classic results/dqn/classic_density_s0/best.pt
-uv run pytest tests/test_dqn.py      # vectorized games and density match the reference code
+uv run --extra dqn scripts/train_dqn.py --board classic --variant density --games 100000 --eps-fraction 0.1
+uv run --extra dqn scripts/benchmark_dqn.py classic results/dqn/classic_density_s0/best.pt
+uv run --extra dqn pytest tests/test_dqn.py      # vectorized games and density match the reference code
 ```
 
 Design and results: [docs/design_dqn.md](docs/design_dqn.md). Beginner tutorial:
@@ -124,6 +127,8 @@ uv add <package>
 ```
 
 Then commit the updated `pyproject.toml` and `uv.lock`. Never commit `.venv/`.
+A large dependency that only one part of the project needs (like PyTorch for DQN)
+belongs in an optional extra instead: `uv add --optional <extra> <package>`.
 
 ## Code layout
 

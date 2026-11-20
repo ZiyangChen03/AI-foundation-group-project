@@ -1,7 +1,10 @@
 import random
 
 import pytest
-import torch
+
+# PyTorch is an optional extra (`uv run --extra dqn pytest`); without it these
+# tests are skipped and the rest of the suite still runs.
+torch = pytest.importorskip("torch")
 
 from battleship import CLASSIC, MINI, BattleshipEnv, GameConfig, all_layouts, play_solo
 from battleship.agents import ProbabilityDensityAgent
