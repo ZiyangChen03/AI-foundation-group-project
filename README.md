@@ -97,8 +97,10 @@ vectorized games at once (Double DQN, dueling head, replay buffer, target networ
 It is a separate package, so the other agents do not load PyTorch, and PyTorch is
 an optional extra: install it with `uv sync --extra dqn` or prefix commands with
 `uv run --extra dqn`. Without it, everything else works and the DQN tests are
-skipped. Results on the 2,000 test boards (seeds 0–1999, paired against probability
-density):
+skipped (a plain `uv sync` removes PyTorch again, so check that pytest does not
+report the DQN tests as skipped). On Windows the locked PyTorch is the CPU build;
+an NVIDIA GPU is used on Linux. Results on the 2,000 test boards (seeds 0–1999,
+paired against probability density):
 
 | Agent | 10×10 shots | Paired vs density | Training |
 |---|---|---|---|
@@ -113,13 +115,14 @@ has no held-out boards, so this is how well it plays the 264 layouts it trained 
 
 ```bash
 uv run --extra dqn scripts/train_dqn.py --board classic --variant density --games 100000 --eps-fraction 0.1
-uv run --extra dqn scripts/benchmark_dqn.py classic results/dqn/classic_density_s0/best.pt
+uv run --extra dqn scripts/benchmark_dqn.py classic results/dqn/classic_density_s0/best.pt --out my_benchmark
 uv run --extra dqn pytest tests/test_dqn.py      # vectorized games and density match the reference code
 ```
 
 Design and results: [docs/design_dqn.md](docs/design_dqn.md). Beginner tutorial:
 [tutorial/dqn_tutorial.html](tutorial/dqn_tutorial.html). Two-page report:
-[report/dqn_report.pdf](report/dqn_report.pdf).
+[report/dqn_report.pdf](report/dqn_report.pdf) (not yet rebuilt: its 4×4 numbers are
+the old ones; `report/dqn_report.tex` has the current numbers).
 
 ### Adding a dependency
 

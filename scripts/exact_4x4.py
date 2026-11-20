@@ -80,6 +80,8 @@ def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("models", nargs="*", type=Path, help="DQN checkpoints (need --extra dqn)")
     args = p.parse_args(argv)
+    if args.models:                       # fail now, not after the baselines, without PyTorch
+        from battleship.dqn import DQNAgent
 
     density = per_layout(ProbabilityDensityAgent())
     rows = [("probability density, random ties", st.mean(density)),
@@ -89,7 +91,6 @@ def main(argv=None):
     rows.append(("optimal V*", plan.optimal_value(plan.everything, 0)))
     notes = []
     if args.models:
-        from battleship.dqn import DQNAgent
         for path in args.models:
             shots = per_layout(DQNAgent.load(path))
             rows.append((f"{path.parent.name}/{path.stem}", st.mean(shots)))

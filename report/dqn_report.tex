@@ -49,7 +49,8 @@ independently, so a learner could, in principle, do better.
 Our project group's tabular agents show why function approximation is needed.
 On 4$\times$4, a Q-table keyed on the visible board visited 3.5 million states in
 a million games and stayed at random level (13.9 shots, against 14.1 for random
-on the same 40 test layouts). Keying the table on the exact belief, the set of
+on the same 40 test layouts), as first submitted; the group's later fixes reach
+10.77. Keying the table on the exact belief, the set of
 layouts consistent with the board, reached 8.97, but on 10$\times$10 there are
 30{,}093{,}975{,}536 layouts, too many to store a belief. Battleship (with ships
 not allowed to touch) is a benchmark for online Monte-Carlo tree
@@ -113,10 +114,12 @@ we report C's final checkpoint. The test set is 2{,}000 other boards (seeds
 0--1{,}999), the same for every agent, played through the project's standard
 engine, which shows agents only public information. We report means with 95\%
 intervals (1.96 standard errors) and the \emph{paired} difference to probability
-density, averaged board by board. On 4$\times$4 the numbers are exact expected
-shots over all 264 layouts (for agents that break ties at random, averaged over
-every tie; random is from 100 games per layout, $\pm0.02$). There are no held-out boards on 4$\times$4: the DQN trains on the
-same layouts, and its ``validation'' score is the test score, so we report the
+density, averaged board by board. On 4$\times$4 the DQN, density, belief
+and optimum rows are exact expected shots over all 264 layouts (averaged over
+every tie for agents that break ties at random); random is from 100 games per
+layout ($\pm0.02$), and the Q-tables were measured by their authors. There are no
+held-out boards on 4$\times$4: the DQN trains on the same layouts, and its
+``validation'' score is the test score, so we report the
 final checkpoint.
 
 \begin{table}[t]
@@ -148,7 +151,8 @@ Optimal $V^*$ (exact) & 8.75 & & & \\
 \bottomrule
 \end{tabular}\\[2pt]
 \footnotesize{$^\dagger$PR \#14 as submitted, measured by our group on 40 test
-layouts; with the fixes in PR \#18 it reaches 10.77 after 1M games.}
+layouts; with the fixes in PR \#18 it reaches 10.77 after 1M games, trained
+and scored on all 264 layouts.}
 \end{table}
 
 \begin{figure}[t]

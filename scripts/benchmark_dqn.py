@@ -1,7 +1,12 @@
 """Benchmark trained DQN agents against the baselines on the same boards.
 
-    uv run --extra dqn scripts/benchmark_dqn.py classic results/dqn/classic_*_s0/best.pt
-    uv run --extra dqn scripts/benchmark_dqn.py mini results/dqn/mini_board_s0/final.pt
+    uv run --extra dqn scripts/benchmark_dqn.py classic results/dqn/classic_board_s0/best.pt \\
+        results/dqn/classic_density_s0/best.pt results/dqn/classic_residual_s0/final.pt
+    uv run --extra dqn scripts/benchmark_dqn.py mini results/dqn/mini_board_s0/final.pt \\
+        results/dqn/mini_board_lr1e-4_s0/final.pt
+
+These write results/dqn/benchmark_<board>.md and .json, the tables the docs
+quote; pass --out to write anywhere else.
 
 10x10: seeds 0-1999 (disjoint from the training and validation boards), played
 through ``play_solo`` exactly like every other agent. Each agent is compared
@@ -13,7 +18,8 @@ uniformly at random, so the average over the layouts is the expected number of
 shots, with no sampling error from the boards. A deterministic agent (the DQN)
 plays the same game every time, so its number is exact and its ± is 0; the ±
 of an agent that breaks ties at random is the error left from its own coin
-flips. There are no held-out boards on 4x4: training draws from the same 264
+flips (games with the same seed are paired, so the difference to density is
+measured game by game). There are no held-out boards on 4x4: training draws from the same 264
 layouts, so this measures how well the agent plays this game, not how it
 generalizes to boards it has not seen.
 
@@ -75,12 +81,13 @@ def play(job):
     return spec, out
 
 
-def by_layout(values, samples):
-    """Per-layout means, and the variance of the overall mean from the samples."""
+def over_layouts(values, samples):
+    """Mean over the layouts of the per-layout means, and its 95% margin from the
+    spread of the samples within each layout (the layouts themselves are all
+    there, so they add no error). ``values`` holds each layout's samples in a row."""
     groups = [values[i:i + samples] for i in range(0, len(values), samples)]
-    means = [st.mean(g) for g in groups]
-    var = sum(st.variance(g) / samples for g in groups) / len(groups) ** 2 if samples > 1 else 0.0
-    return means, var
+    var = sum(st.variance(g) / samples for g in groups) / len(groups) ** 2
+    return st.mean(st.mean(g) for g in groups), 1.96 * var ** .5
 
 
 LAYOUTS = list(all_layouts(MINI))
@@ -96,6 +103,8 @@ def main(argv=None):
     p.add_argument("--jobs", type=int, default=12)
     p.add_argument("--out", type=Path)
     args = p.parse_args(argv)
+    if args.board == "mini" and args.samples < 2:
+        p.error("--samples must be at least 2 (one game per layout cannot measure tie-breaking)")
 
     samples = 1 if args.board == "classic" else args.samples
     games = list(range(args.games)) if args.board == "classic" else list(range(len(LAYOUTS) * samples))
@@ -123,12 +132,11 @@ def main(argv=None):
                 d = [a - shots[REFERENCE][g][0] for a, g in zip(s, games)]
                 row.update(vs_density=st.mean(d), vs_density_ci95=1.96 * st.stdev(d) / len(d) ** .5)
         else:                                         # every layout: only the agents' coin flips vary
-            means, var = by_layout(s, samples)
-            row.update(ci95=1.96 * var ** .5)
+            mean, ci95 = over_layouts(s, samples)
+            row.update(mean=mean, ci95=ci95)
             if REFERENCE in shots and spec != REFERENCE:
-                ref, ref_var = by_layout([shots[REFERENCE][g][0] for g in games], samples)
-                d = [a - b for a, b in zip(means, ref)]
-                row.update(vs_density=st.mean(d), vs_density_ci95=1.96 * (var + ref_var) ** .5)
+                d = [a - shots[REFERENCE][g][0] for a, g in zip(s, games)]   # same layout and seed
+                row.update(zip(("vs_density", "vs_density_ci95"), over_layouts(d, samples)))
         results.append(row)
 
     if args.board == "mini":
@@ -142,16 +150,18 @@ def main(argv=None):
     lines = [f"# DQN benchmark: {what}", "",
              "| Agent | Mean shots | ± 95% | Median | Hunting | Targeting | Paired vs density (95%) |",
              "|---|---:|---:|---:|---:|---:|---:|"]
+    digits = 2 if args.board == "classic" else 3        # 4x4 margins are a few thousandths
     for r in results:
-        paired = (f"{r['vs_density']:+.2f} ± {r['vs_density_ci95']:.2f}" if "vs_density" in r else "-")
+        paired = (f"{r['vs_density']:+.{digits}f} ± {r['vs_density_ci95']:.{digits}f}"
+                  if "vs_density" in r else "-")
         played = (f"{r['median']:.1f} | {r['hunting']:.2f} | {r['targeting']:.2f}" if "median" in r
                   else "- | - | -")
-        lines.append(f"| {r['agent']} | {r['mean']:.3f} | {r['ci95']:.2f} | {played} | {paired} |")
+        lines.append(f"| {r['agent']} | {r['mean']:.3f} | {r['ci95']:.{digits}f} | {played} | {paired} |")
     lines.append(f"\n{time.time() - started:.0f} s")
     text = "\n".join(lines)
     print(text)
     out = args.out or Path("results/dqn") / f"benchmark_{args.board}"
-    # "±" is not in Windows' default encoding.
+    # UTF-8 everywhere; Windows would otherwise write "±" in its own code page.
     out.with_suffix(".md").write_text(text + "\n", encoding="utf-8")
     out.with_suffix(".json").write_text(json.dumps(results, indent=2), encoding="utf-8")
 

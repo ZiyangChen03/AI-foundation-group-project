@@ -26,3 +26,15 @@ def test_random_ties_average_over_every_choice():
     for layout in all_layouts(config):
         value = exact.expected_shots(RandomAgent(), layout, config)
         assert abs(value - float(Fraction(20, 3))) < 1e-12
+
+
+def test_dqn_package_explains_how_to_install_pytorch(monkeypatch):
+    import importlib
+    import sys
+
+    import pytest
+    for name in [m for m in sys.modules if m == "battleship.dqn" or m.startswith("battleship.dqn.")]:
+        monkeypatch.delitem(sys.modules, name)
+    monkeypatch.setitem(sys.modules, "torch", None)          # as if PyTorch were not installed
+    with pytest.raises(ImportError, match="--extra dqn"):
+        importlib.import_module("battleship.dqn")

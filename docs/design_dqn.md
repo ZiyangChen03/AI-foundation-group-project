@@ -10,9 +10,10 @@ and a two-page report in `report/dqn_report.pdf`.
 - **On 4×4,** a DQN that sees only the raw board learns in 75 s to play at the level
   of probability density: 8.924 expected shots, against 8.909 for density and 8.913
   for belief greedy (all three exact). That is 2.0% above the exact optimum, 8.746.
-  The board Q-table of PR #14 as submitted stayed at random level (13.9; PR #18's
-  fixes bring it to 10.77 after 1M games). There are no held-out boards on 4×4: the
-  DQN trains on the same 264 layouts it is scored on.
+  The board Q-table of PR #14 as submitted stayed at random level (13.9 on 40
+  held-out layouts); PR #18's fixes bring it to 10.77 after 1M games, trained and
+  scored on all 264 layouts. There are no held-out boards on 4×4: the DQN trains on
+  the same 264 layouts it is scored on.
 - **On 10×10,** on 2,000 test boards, the board-only DQN (A) reaches 53.0 shots.
   Adding the density map as an input plane (B) reaches **45.85**, 1.20 ± 0.46 shots
   behind probability density (44.65). Using the density as a fixed baseline under a
@@ -30,8 +31,9 @@ The alternatives are limited on 10×10:
 - **Exact belief and optimal planning:** need all 30,093,975,536 layouts listed.
 - **Rollout planner:** no measurable gain over greedy (−0.08 ± 0.97 shots).
 - **Tabular Q-learning:** fails. On the board it reaches 13.9 on 4×4 against 14.1 for
-  random, with 3.5M states and about 4 updates each (PR #14 as submitted; 10.77 after
-  PR #18's fixes, still far behind density). On the exact belief it works on 4×4
+  random, with 3.5M states and about 4 updates each (PR #14 as submitted; after
+  PR #18's fixes it reaches 10.77 after 1M games, trained and scored on all 264
+  layouts, still behind density). On the exact belief it works on 4×4
   only (8.972, PR #15).
 
 A network generalizes between similar boards, which is what the table lacked.
@@ -56,7 +58,7 @@ A network generalizes between similar boards, which is what the table lacked.
 | Replay | 200k transitions on the GPU, batch 256, each transition replayed 8× on average | Atari DQN's replay ratio; 4× cheaper than the first plan's 32× |
 | Optimizer | Adam, lr 3e-4, gradient clip 10 | Slightly ahead of 1e-4 on the 4×4 pilot (8.924 against 8.962), one seed each; the gap is smaller than one run's own swing between checkpoints (8.83 to 8.92 from 50k games on), so it is not evidence that 3e-4 is better |
 | Exploration | ε from 1.0 (C: 0.1) to 0.02 over the first 10% of games | C already starts strong, so heavy random play would waste that |
-| Devices | Games and density on the CPU, network on the Apple GPU (MPS) | – |
+| Devices | Games and density on the CPU, network on the Apple GPU (MPS) | The script now picks an NVIDIA GPU first, then MPS, then the CPU, and records the device in `summary.json`. On Windows the locked PyTorch is the CPU build |
 | Speed | ~140 games/s on 10×10; 100k games in 12–14 min | – |
 
 **Verification** (`tests/test_dqn.py`, 15 tests):
@@ -115,12 +117,12 @@ belief-state planner for belief greedy and the optimum).
 
 | Agent | Shots | Paired vs density | Exact |
 |---|---|---|---|
-| random | 14.165 ± 0.02 | +5.25 ± 0.03 | – |
-| hunt-target + parity | 9.656 ± 0.02 | +0.74 ± 0.03 | – |
-| probability density | 8.916 ± 0.02 | – | 8.909 |
-| belief greedy | 8.920 ± 0.02 | +0.00 ± 0.02 | 8.913 |
-| **DQN-A, lr 3e-4** (75 s, `final.pt`) | **8.924** | +0.01 ± 0.02 | 8.924 |
-| DQN-A, lr 1e-4 (`final.pt`) | 8.962 | +0.05 ± 0.02 | 8.962 |
+| random | 14.165 ± 0.023 | +5.249 ± 0.027 | – |
+| hunt-target + parity | 9.656 ± 0.024 | +0.740 ± 0.028 | – |
+| probability density | 8.916 ± 0.015 | – | 8.909 |
+| belief greedy | 8.920 ± 0.015 | +0.004 ± 0.011 | 8.913 |
+| **DQN-A, lr 3e-4** (75 s, `final.pt`) | **8.924** | +0.008 ± 0.015 | 8.924 |
+| DQN-A, lr 1e-4 (`final.pt`) | 8.962 | +0.046 ± 0.015 | 8.962 |
 | optimal V\* (from `planning.py`) | – | – | 8.746 |
 
 An earlier version of this table played each tie-breaking agent once per layout,
@@ -142,9 +144,11 @@ better on 127 layouts and worse on 137.
 
 ## 5. Findings
 
-1. **A network fixes what broke the Q-table.** The same raw-board state that left
-   PR #14 at random level reaches density level on 4×4, because the network shares
-   what it learns across similar boards.
+1. **A network learns from the state that left the Q-table behind.** The same
+   raw-board state that left PR #14 at random level reaches density level on 4×4.
+   Sharing what it learns across similar boards is the likely reason, but we did not
+   test it, and PR #18 shows that part of PR #14's gap came from its design choices
+   (10.77 after its fixes).
 2. **The density helps as a feature, not as a policy.**
    - As an input (B), it is worth 7.2 shots over board-only (A).
    - As a fixed baseline (C), early corrections are badly calibrated: the agent
