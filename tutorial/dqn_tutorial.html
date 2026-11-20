@@ -698,8 +698,9 @@ uv run --extra dqn scripts/train_dqn.py --board classic --variant residual --gam
     --eps-start 0.1 --eps-fraction 0.1
 
 # benchmark on 2,000 boards (seeds 0–1999), paired against density
-uv run --extra dqn scripts/benchmark_dqn.py classic results/dqn/classic_*_s0/best.pt</code></pre>
-<p>Each run writes to <code>results/dqn/&lt;board&gt;_&lt;variant&gt;_s&lt;seed&gt;/</code>: <code>log.txt</code>, <code>curve.csv</code> (the learning curve), <code>summary.json</code>, <code>best.pt</code> and <code>final.pt</code>.</p>
+uv run --extra dqn scripts/benchmark_dqn.py classic results/dqn/classic_board_s0/best.pt \
+    results/dqn/classic_density_s0/best.pt results/dqn/classic_residual_s0/final.pt</code></pre>
+<p>Each run writes to <code>results/dqn/&lt;board&gt;_&lt;variant&gt;_s&lt;seed&gt;/</code>: <code>log.txt</code>, <code>curve.csv</code> (the learning curve), <code>summary.json</code>, <code>best.pt</code> and <code>final.pt</code>. Which one each reported result uses: <code>results/dqn/README.md</code>.</p>
 <p>How to read a log line:</p>
 <pre><code>games  15002  eval  52.37 ± 0.86  train  53.47  eps 0.020  loss 0.355   124s</code></pre>
 <ul>

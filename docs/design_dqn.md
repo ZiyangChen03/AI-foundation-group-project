@@ -191,5 +191,6 @@ uv run --extra dqn scripts/benchmark_dqn.py mini results/dqn/mini_board_s0/final
 uv run --extra dqn scripts/exact_4x4.py results/dqn/mini_board_s0/final.pt            # ~25 s
 ```
 
+Which checkpoint each table uses, and why: `results/dqn/README.md`.
 The 4×4 runs in `results/dqn/` were trained with an output folder given explicitly;
 `mini_board_lr1e-4_s0` adds `--lr 0.0001`.
