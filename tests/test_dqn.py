@@ -116,3 +116,36 @@ def test_short_training_run_learns_and_round_trips(tmp_path):
     for layout in layouts[:20]:
         assert (play_solo(agent, MINI, layout=layout, agent_seed=0).num_shots
                 == play_solo(again, MINI, layout=layout, agent_seed=0).num_shots)
+
+
+@pytest.mark.parametrize("cuda, mps, expected", [(True, True, "cuda"), (False, True, "mps"),
+                                                 (False, False, "cpu")])
+def test_default_device_prefers_nvidia_then_apple_then_cpu(monkeypatch, cuda, mps, expected):
+    from battleship.dqn.train import default_device
+    monkeypatch.setattr(torch.cuda, "is_available", lambda: cuda)
+    monkeypatch.setattr(torch.backends.mps, "is_available", lambda: mps)
+    assert default_device() == expected
+
+
+def test_training_script_parses_true_false_options(monkeypatch, tmp_path):
+    """A True/False option is --double / --no-double; "--double False" used to
+    give True, because bool("False") is True."""
+    import importlib.util
+    from pathlib import Path
+    script = Path(__file__).resolve().parents[1] / "scripts" / "train_dqn.py"
+    spec = importlib.util.spec_from_file_location("train_dqn_script", script)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    seen = []
+
+    def stop(config, net, tc, layouts, log=None, callback=None):
+        seen.append(tc)
+        raise KeyboardInterrupt
+
+    monkeypatch.setattr(module, "train", stop)
+    for argv, expected in ((["--no-double"], False), (["--double"], True), ([], True)):
+        with pytest.raises(KeyboardInterrupt):
+            module.main(argv + ["--out", str(tmp_path)])
+        assert seen[-1].double is expected
+    with pytest.raises(SystemExit):                  # the old style is an error, not True
+        module.main(["--double", "False", "--out", str(tmp_path)])

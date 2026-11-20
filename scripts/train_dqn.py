@@ -45,8 +45,14 @@ def main(argv=None):
     p.add_argument("--eval-games", type=int, default=500, help="10x10 validation boards")
     p.add_argument("--out", type=Path, help="default: results/dqn/<board>_<variant>_s<seed>")
     for field, value in asdict(TrainConfig()).items():
-        if field != "games":
-            p.add_argument("--" + field.replace("_", "-"), type=type(value), default=value)
+        if field == "games":
+            continue
+        flag = "--" + field.replace("_", "-")
+        if isinstance(value, bool):
+            # type=bool would read any text, even "False", as True: use --x / --no-x.
+            p.add_argument(flag, action=argparse.BooleanOptionalAction, default=value)
+        else:
+            p.add_argument(flag, type=type(value), default=value)
     args = p.parse_args(argv)
 
     config = BOARDS[args.board]

@@ -28,6 +28,9 @@ from .vec_env import MAX_LENGTH, VecBattleship, normalized_density
 
 
 def default_device() -> str:
+    """An NVIDIA GPU if there is one, else an Apple GPU, else the CPU."""
+    if torch.cuda.is_available():
+        return "cuda"
     return "mps" if torch.backends.mps.is_available() else "cpu"
 
 
