@@ -8,9 +8,11 @@ Variants (docs/design_dqn.md, section 5):
     density   B: board planes + the probability-density map as an input
     residual  C: B, plus Q = c * density + network (starts as probability density)
 
-Validation boards: on 4x4 all 264 layouts (the exact expected shots); on 10x10
-seeds 100000+ (the final benchmark uses seeds 0-1999, so they never overlap).
-The checkpoint with the best validation score is kept as ``best.pt``.
+Validation boards: on 10x10 seeds 100000+ (the final benchmark uses seeds
+0-1999, so they never overlap); on 4x4 all 264 layouts, which give the exact
+expected shots but are also the test set (4x4 has no other boards). The
+checkpoint with the best validation score is kept as ``best.pt``; on 4x4 it is
+chosen by the test score, so report ``final.pt`` there.
 """
 
 import argparse

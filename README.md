@@ -54,7 +54,7 @@ random (as the runner does), exact expected shots:
 | belief, optimal planner | 8.746 |
 | belief, rollout planner | 8.765 |
 | belief, greedy (default) | 8.913 |
-| probability density | 8.92 |
+| probability density | 8.909 |
 
 Without revealed sunk cells, probability density drops to 10.13 while the belief agent
 stays at 8.91. Design, verification and 10×10 results:
@@ -107,8 +107,9 @@ density):
 | DQN-C (residual on density) | 46.05 | +1.41 ± 0.46 | 14 min |
 | DQN-A (board only) | 53.00 | +8.35 ± 0.54 | 12 min |
 
-On 4×4 the board-only DQN reaches 8.92 exact expected shots in 75 s (density 8.86,
-optimum 8.746).
+On 4×4 the board-only DQN reaches 8.924 expected shots in 75 s, level with
+probability density (8.909) and belief greedy (8.913); the optimum is 8.746. 4×4
+has no held-out boards, so this is how well it plays the 264 layouts it trained on.
 
 ```bash
 uv run --extra dqn scripts/train_dqn.py --board classic --variant density --games 100000 --eps-fraction 0.1

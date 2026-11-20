@@ -533,7 +533,7 @@ The games and the density map run on the CPU. The network trains on the M3's GPU
 <tr><td><code>replay_ratio</code></td><td>8</td><td>Times each transition is trained on</td><td>Atari DQN standard.</td></tr>
 <tr><td><code>buffer</code></td><td>200,000</td><td>Replay buffer size</td><td>About 4,000 recent games; ~100 MB.</td></tr>
 <tr><td><code>learn_start</code></td><td>10,000</td><td>Transitions before training begins</td><td>Don't train on a nearly empty buffer.</td></tr>
-<tr><td><code>lr</code></td><td>3e-4</td><td>Adam step size η</td><td>Standard; it beat 1e-4 on the 4×4 pilot.</td></tr>
+<tr><td><code>lr</code></td><td>3e-4</td><td>Adam step size η</td><td>Standard; slightly ahead of 1e-4 on the 4×4 pilot (one seed each, within the run's own noise).</td></tr>
 <tr><td><code>target_every</code></td><td>1,000</td><td>Steps between target copies</td><td>Long enough to hold the target still.</td></tr>
 <tr><td><code>eps_start → eps_end</code></td><td>1.0 → 0.02 (A, B); 0.1 → 0.02 (C)</td><td>Exploration</td><td>C already starts good, so heavy randomness would waste that.</td></tr>
 <tr><td><code>eps_fraction</code></td><td>0.1</td><td>Share of training over which ε shrinks</td><td>Explore early, then mostly exploit.</td></tr>
@@ -658,7 +658,7 @@ if grad_steps % tc.target_every == 0:
   <li><code>torch.where(dn, 0, q_next)</code>: if the game ended (done), there's no future, so the target is just −1.</li>
 </ul>
 <h3>Evaluation during training</h3>
-<p>Every 5,000 games, <code>play_greedy</code> plays the current network with ε = 0 on fixed <b>validation boards</b> (all 264 layouts on 4×4; 500 boards from seeds 100000+ on 10×10). The best-scoring checkpoint is saved as <code>best.pt</code>. The final benchmark uses <i>different</i> boards (seeds 0–1999), so picking the best checkpoint doesn't make the final score look better than it is.</p>
+<p>Every 5,000 games, <code>play_greedy</code> plays the current network with ε = 0 on fixed <b>validation boards</b> (all 264 layouts on 4×4; 500 boards from seeds 100000+ on 10×10). The best-scoring checkpoint is saved as <code>best.pt</code>. On 10×10 the final benchmark uses <i>different</i> boards (seeds 0–1999), so picking the best checkpoint doesn't make the final score look better than it is. On 4×4 there are no other boards: the 264 layouts are also the test, so there <code>best.pt</code> is picked by its test score, and we report <code>final.pt</code> instead.</p>
 
 <!-- ================================================================== -->
 <h2 id="code-agent"><span class="num">23</span><code>agent.py</code>: playing a real game</h2>
@@ -683,22 +683,22 @@ if grad_steps % tc.target_every == 0:
 <tr><td><code>test_greedy_vector_play_matches_the_agent</code></td><td>The fast evaluation gives the same shot counts as playing through the real engine.</td></tr>
 <tr><td><code>test_short_training_run_learns_and_round_trips</code></td><td>A short 4×4 run clearly improves, and save → load plays identically.</td></tr>
 </table>
-<pre><code>uv run pytest tests/test_dqn.py -q     # 15 tests, about 1 minute</code></pre>
+<pre><code>uv run --extra dqn pytest tests/test_dqn.py -q     # 19 tests, about 1 minute</code></pre>
 
 <!-- ================================================================== -->
 <h2 id="run"><span class="num">25</span>Running it yourself</h2>
 <pre><code># 4×4 pilot: about 75 seconds
-uv run scripts/train_dqn.py --board mini --variant board --games 100000 --eval-every 10000 --learn-start 5000
+uv run --extra dqn scripts/train_dqn.py --board mini --variant board --games 100000 --eval-every 10000 --learn-start 5000
 
 # 10×10, variant A (board only): about 15 minutes
-uv run scripts/train_dqn.py --board classic --variant board --games 100000 --eval-every 5000 --eps-fraction 0.1
+uv run --extra dqn scripts/train_dqn.py --board classic --variant board --games 100000 --eval-every 5000 --eps-fraction 0.1
 
 # 10×10, variant C (residual): starts near density, explores less
-uv run scripts/train_dqn.py --board classic --variant residual --games 100000 --eval-every 5000 \
+uv run --extra dqn scripts/train_dqn.py --board classic --variant residual --games 100000 --eval-every 5000 \
     --eps-start 0.1 --eps-fraction 0.1
 
 # benchmark on 2,000 boards (seeds 0–1999), paired against density
-uv run scripts/benchmark_dqn.py classic results/dqn/classic_*_s0/best.pt</code></pre>
+uv run --extra dqn scripts/benchmark_dqn.py classic results/dqn/classic_*_s0/best.pt</code></pre>
 <p>Each run writes to <code>results/dqn/&lt;board&gt;_&lt;variant&gt;_s&lt;seed&gt;/</code>: <code>log.txt</code>, <code>curve.csv</code> (the learning curve), <code>summary.json</code>, <code>best.pt</code> and <code>final.pt</code>.</p>
 <p>How to read a log line:</p>
 <pre><code>games  15002  eval  52.37 ± 0.86  train  53.47  eps 0.020  loss 0.355   124s</code></pre>
@@ -710,18 +710,19 @@ uv run scripts/benchmark_dqn.py classic results/dqn/classic_*_s0/best.pt</code><
 
 <!-- ================================================================== -->
 <h2 id="results"><span class="num">26</span>Results so far</h2>
-<h3>4×4 pilot (exact: one game per layout over all 264 layouts)</h3>
+<h3>4×4 pilot (expected shots over all 264 layouts)</h3>
 <table>
 <tr><th>Agent</th><th class="n">Expected shots</th></tr>
-<tr><td>Random</td><td class="n">14.23</td></tr>
-<tr><td>Q-table on the board (PR #14)</td><td class="n">~13.9</td></tr>
-<tr><td>Hunt-target with parity</td><td class="n">9.70</td></tr>
+<tr><td>Random</td><td class="n">14.17</td></tr>
+<tr><td>Q-table on the board (PR #14 as submitted; 10.77 after PR #18's fixes)</td><td class="n">~13.9</td></tr>
+<tr><td>Hunt-target with parity</td><td class="n">9.66</td></tr>
 <tr><td>Q-table on the exact belief (PR #15), 7 min per seed</td><td class="n">8.97</td></tr>
 <tr><td><b>DQN, variant A, from scratch, 75 s</b></td><td class="n"><b>8.92</b></td></tr>
-<tr><td>Probability density</td><td class="n">8.86</td></tr>
+<tr><td>Belief greedy</td><td class="n">8.91</td></tr>
+<tr><td>Probability density</td><td class="n">8.91</td></tr>
 <tr><td>Optimal (exact V*)</td><td class="n">8.746</td></tr>
 </table>
-<p>The DQN, given only the raw board, learned in about a minute to play at the level of the hand-written expert. The paired difference against density is +0.06 ± 0.26 shots, i.e. not significant.</p>
+<p>The DQN, given only the raw board, learned in about a minute to play at the level of the hand-written expert: 0.015 shots behind density (8.924 against 8.909, both exact), better on 127 layouts and worse on 137. Two caveats: 4×4 has no held-out boards, so the DQN was trained on the very layouts it is scored on, and this is one training seed.</p>
 <h3>10×10 (2,000 test boards, seeds 0–1999)</h3>
 <table>
 <tr><th>Agent</th><th class="n">Mean shots</th><th class="n">Paired vs density (95%)</th><th class="n">Training</th></tr>

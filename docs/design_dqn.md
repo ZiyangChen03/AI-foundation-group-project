@@ -8,9 +8,11 @@ and a two-page report in `report/dqn_report.pdf`.
 ## Takeaway
 
 - **On 4×4,** a DQN that sees only the raw board learns in 75 s to play at the level
-  of probability density: 8.924 exact expected shots, against 8.864 (paired
-  +0.06 ± 0.26). It comes within 2% of the exact optimum, 8.746. The board Q-table
-  of PR #14 stayed at random level (13.9).
+  of probability density: 8.924 expected shots, against 8.909 for density and 8.913
+  for belief greedy (all three exact). That is 2.0% above the exact optimum, 8.746.
+  The board Q-table of PR #14 as submitted stayed at random level (13.9; PR #18's
+  fixes bring it to 10.77 after 1M games). There are no held-out boards on 4×4: the
+  DQN trains on the same 264 layouts it is scored on.
 - **On 10×10,** on 2,000 test boards, the board-only DQN (A) reaches 53.0 shots.
   Adding the density map as an input plane (B) reaches **45.85**, 1.20 ± 0.46 shots
   behind probability density (44.65). Using the density as a fixed baseline under a
@@ -28,8 +30,9 @@ The alternatives are limited on 10×10:
 - **Exact belief and optimal planning:** need all 30,093,975,536 layouts listed.
 - **Rollout planner:** no measurable gain over greedy (−0.08 ± 0.97 shots).
 - **Tabular Q-learning:** fails. On the board it reaches 13.9 on 4×4 against 14.1 for
-  random, with 3.5M states and about 4 updates each (PR #14). On the exact belief
-  it works on 4×4 only (8.972, PR #15).
+  random, with 3.5M states and about 4 updates each (PR #14 as submitted; 10.77 after
+  PR #18's fixes, still far behind density). On the exact belief it works on 4×4
+  only (8.972, PR #15).
 
 A network generalizes between similar boards, which is what the table lacked.
 
@@ -51,7 +54,7 @@ A network generalizes between similar boards, which is what the table lacked.
 |---|---|---|
 | Parallel games | 256 tensor games (`VecBattleship`) | One forward pass picks 256 shots. Measured 1–3.5 µs per board, against ~430 µs for one game at a time |
 | Replay | 200k transitions on the GPU, batch 256, each transition replayed 8× on average | Atari DQN's replay ratio; 4× cheaper than the first plan's 32× |
-| Optimizer | Adam, lr 3e-4, gradient clip 10 | Beat 1e-4 on the 4×4 pilot (8.924 against 8.962) |
+| Optimizer | Adam, lr 3e-4, gradient clip 10 | Slightly ahead of 1e-4 on the 4×4 pilot (8.924 against 8.962), one seed each; the gap is smaller than one run's own swing between checkpoints (8.83 to 8.92 from 50k games on), so it is not evidence that 3e-4 is better |
 | Exploration | ε from 1.0 (C: 0.1) to 0.02 over the first 10% of games | C already starts strong, so heavy random play would waste that |
 | Devices | Games and density on the CPU, network on the Apple GPU (MPS) | – |
 | Speed | ~140 games/s on 10×10; 100k games in 12–14 min | – |
@@ -74,8 +77,19 @@ A network generalizes between similar boards, which is what the table lacked.
   network, so we report its final checkpoint.
 - **Test:** 2,000 boards (seeds 0–1999), the same for every agent, played through
   `play_solo`, with paired differences against probability density.
-- **4×4:** every agent plays all 264 layouts. That is exact for the deterministic
-  DQN; agents that break ties at random get one sample per layout.
+- **4×4:** every agent plays all 264 layouts, 100 times each with different agent
+  seeds, averaged layout by layout. Ships are placed uniformly at random, so this is
+  the expected number of shots; the DQN is deterministic, so its number is exact,
+  and the ± of the other agents is only the error left from their random
+  tie-breaking.
+  - There are **no held-out boards** on 4×4. Training draws its games from the same
+    264 layouts, so the score says how well the agent plays this game, not how it
+    generalizes to unseen boards.
+  - During training the "validation" score on 4×4 is the same exact score, so
+    `best.pt` is the checkpoint with the best test score (8.830 at 90k games for
+    lr 3e-4). That number is its true expected shots, but it was picked by looking
+    at the test score among 11 checkpoints (from 50k games on they swing between
+    8.83 and 8.92), so we report `final.pt` (a fixed 100k games) instead.
 
 ### 10×10 (`results/dqn/benchmark_classic.md`)
 
@@ -94,15 +108,26 @@ rest.
 
 ### 4×4 (`results/dqn/benchmark_mini.md`)
 
-| Agent | Shots | Paired vs density |
-|---|---|---|
-| random | 14.227 | +5.36 ± 0.27 |
-| hunt-target + parity | 9.697 | +0.83 ± 0.32 |
-| probability density | 8.864 | – |
-| belief greedy | 8.879 | +0.02 ± 0.12 |
-| **DQN-A, lr 3e-4** (75 s) | **8.924** | +0.06 ± 0.26 |
-| DQN-A, lr 1e-4 | 8.962 | +0.10 ± 0.24 |
-| optimal V\* (from `planning.py`) | 8.746 | – |
+Expected shots over all 264 layouts, each played 100 times. The DQN rows are exact
+(deterministic); the ± on the others is from their random tie-breaking. The last
+column is exact (`scripts/exact_4x4.py`: every tie enumerated for density, the
+belief-state planner for belief greedy and the optimum).
+
+| Agent | Shots | Paired vs density | Exact |
+|---|---|---|---|
+| random | 14.165 ± 0.02 | +5.25 ± 0.03 | – |
+| hunt-target + parity | 9.656 ± 0.02 | +0.74 ± 0.03 | – |
+| probability density | 8.916 ± 0.02 | – | 8.909 |
+| belief greedy | 8.920 ± 0.02 | +0.00 ± 0.02 | 8.913 |
+| **DQN-A, lr 3e-4** (75 s, `final.pt`) | **8.924** | +0.01 ± 0.02 | 8.924 |
+| DQN-A, lr 1e-4 (`final.pt`) | 8.962 | +0.05 ± 0.02 | 8.962 |
+| optimal V\* (from `planning.py`) | – | – | 8.746 |
+
+An earlier version of this table played each tie-breaking agent once per layout,
+so one coin flip per layout set their scores (density came out at 8.864 and belief
+greedy at 8.879, against exact values of 8.909 and 8.913), and it gave the DQN's
+difference to density as +0.06 ± 0.26. The exact difference is +0.015: the DQN is
+better on 127 layouts and worse on 137.
 
 ### Learning curves (validation, 500 boards; density scores 44.13 on them)
 
@@ -157,7 +182,9 @@ uv run --extra dqn scripts/train_dqn.py --board classic --variant density  --gam
 uv run --extra dqn scripts/train_dqn.py --board classic --variant residual --games 100000 --eval-every 5000 --eps-start 0.1 --eps-fraction 0.1
 uv run --extra dqn scripts/benchmark_dqn.py classic results/dqn/classic_board_s0/best.pt \
     results/dqn/classic_density_s0/best.pt results/dqn/classic_residual_s0/final.pt   # ~5 min
-uv run --extra dqn scripts/benchmark_dqn.py mini results/dqn/mini_board_s0/final.pt
+uv run --extra dqn scripts/benchmark_dqn.py mini results/dqn/mini_board_s0/final.pt \
+    results/dqn/mini_board_lr1e-4_s0/final.pt                                         # ~1 min
+uv run --extra dqn scripts/exact_4x4.py results/dqn/mini_board_s0/final.pt            # ~25 s
 ```
 
 The 4×4 runs in `results/dqn/` were trained with an output folder given explicitly;
