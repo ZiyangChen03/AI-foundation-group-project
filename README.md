@@ -54,7 +54,7 @@ random (as the runner does), exact expected shots:
 | belief, optimal planner | 8.746 |
 | belief, rollout planner | 8.765 |
 | belief, greedy (default) | 8.913 |
-| probability density | 8.92 |
+| probability density | 8.909 |
 
 Without revealed sunk cells, probability density drops to 10.13 while the belief agent
 stays at 8.91. Design, verification and 10×10 results:
