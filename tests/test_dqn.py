@@ -149,17 +149,3 @@ def test_training_script_parses_true_false_options(monkeypatch, tmp_path):
         assert seen[-1].double is expected
     with pytest.raises(SystemExit):                  # the old style is an error, not True
         module.main(["--double", "False", "--out", str(tmp_path)])
-
-
-def test_4x4_benchmark_needs_two_games_per_layout():
-    """One game per layout cannot measure random tie-breaking; it used to print ± 0."""
-    import importlib.util
-    from pathlib import Path
-    script = Path(__file__).resolve().parents[1] / "scripts" / "benchmark_dqn.py"
-    spec = importlib.util.spec_from_file_location("benchmark_dqn_script", script)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    with pytest.raises(SystemExit):
-        module.main(["mini", "--samples", "1"])
-    mean, margin = module.over_layouts([8, 10, 9, 9], samples=2)    # two layouts, two games each
-    assert mean == 9 and margin == pytest.approx(1.96 * ((2 / 2 + 0 / 2) / 4) ** .5)

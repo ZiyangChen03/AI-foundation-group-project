@@ -54,7 +54,7 @@ random (as the runner does), exact expected shots:
 | belief, optimal planner | 8.746 |
 | belief, rollout planner | 8.765 |
 | belief, greedy (default) | 8.913 |
-| probability density | 8.909 |
+| probability density | 8.92 |
 
 Without revealed sunk cells, probability density drops to 10.13 while the belief agent
 stays at 8.91. Design, verification and 10×10 results:
@@ -115,7 +115,7 @@ has no held-out boards, so this is how well it plays the 264 layouts it trained 
 
 ```bash
 uv run --extra dqn scripts/train_dqn.py --board classic --variant density --games 100000 --eps-fraction 0.1
-uv run --extra dqn scripts/benchmark_dqn.py classic results/dqn/classic_density_s0/best.pt --out my_benchmark
+uv run --extra dqn scripts/benchmark_dqn.py classic results/dqn/classic_density_s0/best.pt --out results/dqn/my_benchmark
 uv run --extra dqn pytest tests/test_dqn.py      # vectorized games and density match the reference code
 ```
 

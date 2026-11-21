@@ -60,7 +60,7 @@ def expected_shots(agent, layout, config=MINI) -> float:
         if key not in memo:
             env = BattleshipEnv(config)
             obs = env.reset(layout=layout)
-            for cell in history:                # in firing order: the game may end early
+            for cell in history:     # in firing order: another order could sink the fleet early
                 obs = env.step(cell).observation
             if env.done:
                 memo[key] = 0.0

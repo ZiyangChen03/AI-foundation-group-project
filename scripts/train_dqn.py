@@ -66,7 +66,7 @@ def main(argv=None):
                                           if f != "games"})
     if not tc.device:                     # so the log and summary.json say which device ran
         tc.device = default_device()
-    layouts =(list(all_layouts(config)) if config == MINI
+    layouts = (list(all_layouts(config)) if config == MINI
                else eval_layouts(config, args.eval_games, VALIDATION_SEED))
     out = args.out or Path("results/dqn") / f"{args.board}_{args.variant}_s{tc.seed}"
     out.mkdir(parents=True, exist_ok=True)

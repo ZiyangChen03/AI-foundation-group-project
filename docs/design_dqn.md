@@ -36,7 +36,8 @@ The alternatives are limited on 10×10:
   layouts, still behind density). On the exact belief it works on 4×4
   only (8.972, PR #15).
 
-A network generalizes between similar boards, which is what the table lacked.
+A network can generalize between similar boards, which the table cannot; whether that is
+what it lacked was not tested.
 
 ## 2. Model
 
@@ -57,11 +58,12 @@ A network generalizes between similar boards, which is what the table lacked.
 | Parallel games | 256 tensor games (`VecBattleship`) | One forward pass picks 256 shots. Measured 1–3.5 µs per board, against ~430 µs for one game at a time |
 | Replay | 200k transitions on the GPU, batch 256, each transition replayed 8× on average | Atari DQN's replay ratio; 4× cheaper than the first plan's 32× |
 | Optimizer | Adam, lr 3e-4, gradient clip 10 | Slightly ahead of 1e-4 on the 4×4 pilot (8.924 against 8.962), one seed each; the gap is smaller than one run's own swing between checkpoints (8.83 to 8.92 from 50k games on), so it is not evidence that 3e-4 is better |
-| Exploration | ε from 1.0 (C: 0.1) to 0.02 over the first 10% of games | C already starts strong, so heavy random play would waste that |
+| Exploration | ε from 1.0 (C: 0.1) to 0.02 over the first 10% of games (4×4: 30%) | C already starts strong, so heavy random play would waste that |
 | Devices | Games and density on the CPU, network on the Apple GPU (MPS) | The script now picks an NVIDIA GPU first, then MPS, then the CPU, and records the device in `summary.json`. On Windows the locked PyTorch is the CPU build |
 | Speed | ~140 games/s on 10×10; 100k games in 12–14 min | – |
 
-**Verification** (`tests/test_dqn.py`, 15 tests):
+**Verification** (`tests/test_dqn.py`, 19 tests; tests that need no PyTorch are in
+`tests/test_dqn_tools.py` and `tests/test_exact_4x4.py`):
 - Random games through `VecBattleship` and `BattleshipEnv` give identical boards,
   remaining ships, shot counts and end of game at every step, on 4×4, 10×10 and a
   6×6 board that doesn't reveal sunk cells.
