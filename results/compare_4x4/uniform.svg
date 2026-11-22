@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="380" font-family="sans-serif" font-size="12">
+<rect width="760" height="380" fill="white"/>
+<text x="10" y="22" font-size="14" font-weight="bold">4x4, random placement: expected shots to win (lower is better)</text>
+<line x1="250.0" x2="250.0" y1="34" y2="346" stroke="#eee"/><text x="250.0" y="360" text-anchor="middle">0</text>
+<line x1="308.7" x2="308.7" y1="34" y2="346" stroke="#eee"/><text x="308.7" y="360" text-anchor="middle">2</text>
+<line x1="367.3" x2="367.3" y1="34" y2="346" stroke="#eee"/><text x="367.3" y="360" text-anchor="middle">4</text>
+<line x1="426.0" x2="426.0" y1="34" y2="346" stroke="#eee"/><text x="426.0" y="360" text-anchor="middle">6</text>
+<line x1="484.7" x2="484.7" y1="34" y2="346" stroke="#eee"/><text x="484.7" y="360" text-anchor="middle">8</text>
+<line x1="543.3" x2="543.3" y1="34" y2="346" stroke="#eee"/><text x="543.3" y="360" text-anchor="middle">10</text>
+<line x1="602.0" x2="602.0" y1="34" y2="346" stroke="#eee"/><text x="602.0" y="360" text-anchor="middle">12</text>
+<line x1="660.7" x2="660.7" y1="34" y2="346" stroke="#eee"/><text x="660.7" y="360" text-anchor="middle">14</text>
+<text x="242" y="55.4" text-anchor="end">Random</text><rect x="250" y="40" width="419.9" height="22" fill="#8C9AAB"/><text x="673.9" y="55.4">14.314</text>
+<text x="242" y="85.4" text-anchor="end">Hunt-target</text><rect x="250" y="70" width="301.5" height="22" fill="#8C9AAB"/><text x="555.5" y="85.4">10.279</text>
+<text x="242" y="115.4" text-anchor="end">Hunt-target + parity</text><rect x="250" y="100" width="283.8" height="22" fill="#8C9AAB"/><text x="537.8" y="115.4">9.676</text>
+<text x="242" y="145.4" text-anchor="end">Probability density</text><rect x="250" y="130" width="261.2" height="22" fill="#8C9AAB"/><text x="515.2" y="145.4">8.904</text>
+<text x="242" y="175.4" text-anchor="end">POMDP greedy</text><rect x="250" y="160" width="261.2" height="22" fill="#2F5597"/><text x="515.2" y="175.4">8.905</text>
+<text x="242" y="205.4" text-anchor="end">POMDP rollout</text><rect x="250" y="190" width="257.1" height="22" fill="#2F5597"/><text x="511.1" y="205.4">8.764</text>
+<text x="242" y="235.4" text-anchor="end">POMDP optimal</text><rect x="250" y="220" width="256.6" height="22" fill="#2F5597"/><text x="510.6" y="235.4">8.746</text>
+<text x="242" y="265.4" text-anchor="end">POMDP info gain</text><rect x="250" y="250" width="262.6" height="22" fill="#2F5597"/><text x="516.6" y="265.4">8.951</text>
+<text x="242" y="295.4" text-anchor="end">POMDP greedy + info tie-break</text><rect x="250" y="280" width="260.9" height="22" fill="#2F5597"/><text x="514.9" y="295.4">8.895</text>
+<text x="242" y="325.4" text-anchor="end">Belief-state Q-learning</text><rect x="250" y="310" width="262.0" height="22" fill="#2F5597"/><text x="516.0" y="325.4">8.932</text>
+<line x1="506.6" x2="506.6" y1="34" y2="346" stroke="#C00000" stroke-dasharray="5 3"/><text x="510.6" y="30" fill="#C00000">optimum 8.746</text>
+</svg>

@@ -90,6 +90,18 @@ uv run scripts/verify_opponent_belief.py     # checks + benchmark (~1-2 min)
 Design, the two habit models, verification and full learning curves:
 [docs/design_opponent_belief.md](docs/design_opponent_belief.md).
 
+
+### Comparing the 4×4 agents
+
+`scripts/compare_4x4.py` runs every 4×4 agent on all 264 layouts, against
+opponents with placement habits, and in a head-to-head tournament.
+
+```bash
+uv run scripts/compare_4x4.py
+```
+
+Results and discussion: [docs/comparison_4x4.md](docs/comparison_4x4.md).
+
 ### Adding a dependency
 
 ```bash
