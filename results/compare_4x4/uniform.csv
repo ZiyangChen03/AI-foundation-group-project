@@ -1,0 +1,11 @@
+agent,mean_shots,std,worst,gap_to_optimum
+Random,14.3144,1.9125,16,5.5682
+Hunt-target,10.2790,2.4811,16,1.5328
+Hunt-target + parity,9.6755,1.9706,14,0.9293
+Probability density,8.9040,1.5965,12,0.1578
+POMDP greedy,8.9053,1.6088,12,0.1591
+POMDP rollout,8.7639,1.6092,12,0.0177
+POMDP optimal,8.7462,1.6065,12,0.0000
+POMDP info gain,8.9508,1.7506,14,0.2045
+POMDP greedy + info tie-break,8.8952,1.6035,12,0.1490
+Belief-state Q-learning,8.9318,1.7109,13,0.1856
