@@ -8,7 +8,8 @@ from ..planning import planner as exact_planner
 from ..rollout import rollout_choice
 from .base import Agent
 
-PLANNERS = ("greedy", "rollout", "optimal")
+PLANNERS = ("greedy", "rollout", "optimal", "infogain", "greedy-info")
+EXACT_ONLY = ("optimal", "infogain", "greedy-info")
 
 
 @cache
@@ -51,6 +52,10 @@ class BeliefAgent(Agent):
       ``"particles"`` (greedy on the particles that agree with the simulated
       outcomes) or ``"density"`` (the probability density baseline). The
       simulations use a random ``rollout_particles`` of the particles.
+    - ``"infogain"``: the cell whose outcome is expected to shrink the belief
+      the most (largest expected information gain). Exact belief only.
+    - ``"greedy-info"``: greedy, with ties between equally likely cells broken
+      by information gain. Exact belief only.
     - ``"optimal"``: the cell minimizing expected shots to finish, by solving
       the belief-state MDP exactly. Exact belief only.
 
@@ -69,8 +74,8 @@ class BeliefAgent(Agent):
             raise ValueError('belief must be "auto", "exact" or "particles"')
         if planner not in PLANNERS:
             raise ValueError(f"planner must be one of {PLANNERS}")
-        if planner == "optimal" and belief == "particles":
-            raise ValueError('planner "optimal" needs the exact belief')
+        if planner in EXACT_ONLY and belief == "particles":
+            raise ValueError(f'planner "{planner}" needs the exact belief')
         if rollout_base not in ("particles", "density"):
             raise ValueError('rollout_base must be "particles" or "density"')
         self.mode = belief
@@ -88,8 +93,8 @@ class BeliefAgent(Agent):
         exact = self.mode == "exact" or (self.mode == "auto" and _exact_is_practical(config))
         if exact:
             self.belief = Belief.prior(config)
-        elif self.planner == "optimal":
-            raise ValueError('planner "optimal" needs the exact belief, which is only '
+        elif self.planner in EXACT_ONLY:
+            raise ValueError(f'planner "{self.planner}" needs the exact belief, which is only '
                              "practical on small boards")
         else:
             self.belief = ParticleBelief(config, rng, self.num_particles)
@@ -120,6 +125,10 @@ class BeliefAgent(Agent):
             layouts, fired = plan.state(self.belief)
             if self.planner == "rollout":
                 return self.rng.choice(plan.rollout_shots(layouts, fired))
+            if self.planner == "infogain":
+                return self.rng.choice(plan.info_gain_shots(layouts, fired))
+            if self.planner == "greedy-info":
+                return self.rng.choice(plan.greedy_info_shots(layouts, fired))
             return self.rng.choice(plan.optimal_shots(layouts, fired))
         probabilities = self.belief.occupancy()
         best = max(probabilities[cell] for cell in obs.legal_actions)
