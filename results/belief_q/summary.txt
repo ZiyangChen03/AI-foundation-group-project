@@ -1,0 +1,10 @@
+Belief-state Q-learning, 4x4, 1,000,000 episodes per seed, alpha=1/visits, initial=-20.0, epsilon 1.0 -> 0.0 (linear)
+
+seed 0: 8.932 shots, 320,269 states, 459 s
+seed 1: 9.030 shots, 318,735 states, 459 s
+seed 2: 8.955 shots, 320,220 states, 459 s
+mean over seeds: 8.972 shots
+
+POMDP optimal: 8.746
+POMDP greedy: 8.913
+Hunt-target + parity: 9.697

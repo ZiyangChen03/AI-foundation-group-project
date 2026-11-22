@@ -90,6 +90,23 @@ uv run scripts/verify_opponent_belief.py     # checks + benchmark (~1-2 min)
 Design, the two habit models, verification and full learning curves:
 [docs/design_opponent_belief.md](docs/design_opponent_belief.md).
 
+### Belief-state Q-learning (4×4)
+
+`BeliefQAgent` is tabular Q-learning whose state is the exact POMDP belief (the
+set of layouts consistent with every shot) rather than the raw board. Evaluated
+exactly over all 264 layouts, three seeds average **8.972 shots** after
+1,000,000 episodes: better than hunt-target + parity (9.697), close to but still
+slightly worse than the non-learning POMDP greedy agent (8.913), and 0.23 above the
+optimum (8.746). It has not settled at 1,000,000 episodes. Many boards share one
+belief (366,307 reachable belief states on 4×4, against about 2.2 million boards in a
+raw-board table after 1,000,000 episodes), so each state gets far more updates.
+
+```bash
+uv run scripts/train_belief_q.py --jobs 3
+```
+
+Design and results: [docs/design_belief_q_learning.md](docs/design_belief_q_learning.md).
+
 ### Adding a dependency
 
 ```bash
