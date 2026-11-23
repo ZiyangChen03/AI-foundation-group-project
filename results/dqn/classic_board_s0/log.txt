@@ -1,0 +1,23 @@
+classic board: NetConfig(channels=32, layers=4, use_density=False, residual=0.0)  TrainConfig(games=100000, parallel=256, batch=256, replay_ratio=8, buffer=200000, learn_start=10000, lr=0.0003, gamma=1.0, target_every=1000, eps_start=1.0, eps_end=0.02, eps_fraction=0.1, double=True, grad_clip=10.0, eval_every=5000, seed=0, device='')
+games       0  eval  90.50 ± 0.73  train    nan  eps 1.000  loss nan       0s
+games    5001  eval  55.63 ± 0.95  train  76.24  eps 0.510  loss 0.033      51s
+games   10001  eval  54.43 ± 0.91  train  59.28  eps 0.020  loss 0.223      89s
+games   15002  eval  52.37 ± 0.86  train  53.47  eps 0.020  loss 0.355     124s
+games   20002  eval  52.38 ± 0.93  train  53.51  eps 0.020  loss 0.473     159s
+games   25003  eval  55.06 ± 1.05  train  53.19  eps 0.020  loss 0.580     194s
+games   30002  eval  52.94 ± 1.00  train  53.71  eps 0.020  loss 0.717     229s
+games   35000  eval  54.30 ± 1.04  train  54.09  eps 0.020  loss 0.847     264s
+games   40000  eval  55.42 ± 1.14  train  54.51  eps 0.020  loss 0.952     300s
+games   45000  eval  54.27 ± 1.19  train  55.25  eps 0.020  loss 1.149     336s
+games   50010  eval  61.77 ± 1.41  train  56.95  eps 0.020  loss 1.275     373s
+games   55001  eval  60.59 ± 1.28  train  59.20  eps 0.020  loss 1.284     412s
+games   60006  eval  58.83 ± 1.26  train  58.92  eps 0.020  loss 1.430     450s
+games   65002  eval  59.36 ± 1.23  train  58.52  eps 0.020  loss 1.506     488s
+games   70001  eval  57.99 ± 1.18  train  58.73  eps 0.020  loss 1.603     527s
+games   75000  eval  62.31 ± 1.21  train  58.62  eps 0.020  loss 1.685     565s
+games   80002  eval  56.78 ± 1.25  train  58.73  eps 0.020  loss 1.722     603s
+games   85006  eval  57.92 ± 1.25  train  56.91  eps 0.020  loss 1.898     640s
+games   90003  eval  53.36 ± 1.21  train  55.03  eps 0.020  loss 1.910     675s
+games   95005  eval  55.57 ± 1.28  train  53.91  eps 0.020  loss 1.936     710s
+games  100004  eval  55.79 ± 1.20  train  53.24  eps 0.020  loss 1.919     745s
+done in 12.4 min; best validation 52.370 at 15002 games; final 55.794

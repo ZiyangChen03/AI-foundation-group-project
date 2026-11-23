@@ -1,0 +1,806 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DQN Battleship Tutorial</title>
+<style>
+:root {
+  --bg: #fbfaf7; --panel: #ffffff; --text: #1f2328; --muted: #5b6470; --line: #e3e0d8;
+  --accent: #2b5fb8; --accent-soft: #e8effb; --ok: #1f7a4d; --ok-soft: #e6f4ec;
+  --warn: #9a5b00; --warn-soft: #fdf1dc; --code-bg: #f3f1ec; --mark: #fff1a8;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #15171a; --panel: #1c1f23; --text: #e6e6e3; --muted: #a0a7b0; --line: #30343a;
+    --accent: #7fa8f0; --accent-soft: #1f2a3d; --ok: #6cc59a; --ok-soft: #17302a;
+    --warn: #e5b45f; --warn-soft: #33291a; --code-bg: #23262b; --mark: #4a4220;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #15171a; --panel: #1c1f23; --text: #e6e6e3; --muted: #a0a7b0; --line: #30343a;
+  --accent: #7fa8f0; --accent-soft: #1f2a3d; --ok: #6cc59a; --ok-soft: #17302a;
+  --warn: #e5b45f; --warn-soft: #33291a; --code-bg: #23262b; --mark: #4a4220;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--bg); color: var(--text);
+  font: 17px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+.wrap { display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: 40px; max-width: 1180px; margin: 0 auto; padding: 32px 16px 80px; }
+nav { position: sticky; top: 16px; align-self: start; max-height: calc(100vh - 32px); overflow: auto; font-size: 14.5px; }
+nav h2 { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+nav ol { padding-left: 20px; margin: 0; }
+nav li { margin: 3px 0; }
+nav a { color: var(--text); text-decoration: none; }
+nav a:hover { color: var(--accent); }
+nav .part { margin-top: 12px; font-weight: 600; color: var(--muted); list-style: none; margin-left: -20px; font-size: 12.5px; text-transform: uppercase; letter-spacing: .06em; }
+main { min-width: 0; }
+header.hero { border-bottom: 1px solid var(--line); padding-bottom: 20px; margin-bottom: 28px; }
+h1 { font-size: 2.1rem; line-height: 1.2; margin: 0 0 8px; }
+.sub { color: var(--muted); margin: 0; }
+h2 { font-size: 1.55rem; margin: 56px 0 12px; padding-top: 8px; border-top: 1px solid var(--line); }
+h2 .num { color: var(--accent); margin-right: 8px; }
+h3 { font-size: 1.15rem; margin: 28px 0 8px; }
+p { margin: 10px 0; }
+code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .88em; background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
+pre { background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; overflow-x: auto; font-size: 14px; line-height: 1.5; }
+pre code { background: none; padding: 0; font-size: inherit; }
+.file { font-size: 13px; color: var(--muted); margin: 14px 0 -6px; font-family: ui-monospace, Menlo, monospace; }
+.box { border-radius: 10px; padding: 14px 18px; margin: 16px 0; border: 1px solid var(--line); background: var(--panel); }
+.box.key { background: var(--accent-soft); border-color: transparent; }
+.box.ok { background: var(--ok-soft); border-color: transparent; }
+.box.warn { background: var(--warn-soft); border-color: transparent; }
+.box > :first-child { margin-top: 0; }
+.box > :last-child { margin-bottom: 0; }
+.box .label { font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: .06em; display: block; margin-bottom: 4px; }
+.key .label { color: var(--accent); } .ok .label { color: var(--ok); } .warn .label { color: var(--warn); }
+.eq { text-align: center; font-family: "Cambria Math", "STIX Two Math", Georgia, serif; font-size: 1.15rem; margin: 18px 0; padding: 12px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; overflow-x: auto; }
+.eq small { display: block; font-family: inherit; font-size: .8rem; color: var(--muted); margin-top: 6px; font-family: -apple-system, sans-serif; }
+table { border-collapse: collapse; width: 100%; margin: 14px 0; font-size: 15px; background: var(--panel); display: block; overflow-x: auto; }
+th, td { border: 1px solid var(--line); padding: 7px 10px; text-align: left; vertical-align: top; }
+th { background: var(--code-bg); font-weight: 600; }
+td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; }
+details { border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; margin: 12px 0; background: var(--panel); }
+details summary { cursor: pointer; font-weight: 600; color: var(--accent); }
+details[open] summary { margin-bottom: 6px; }
+.quiz { border-left: 4px solid var(--accent); }
+.grid { display: grid; gap: 4px; margin: 10px 0; }
+.cell { width: 38px; height: 38px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--line); border-radius: 4px; font-family: ui-monospace, Menlo, monospace; font-size: 14px; background: var(--panel); }
+.cell.hit { background: #d64545; color: #fff; border-color: #d64545; }
+.cell.miss { background: var(--code-bg); color: var(--muted); }
+.cell.sunk { background: #6b2a2a; color: #fff; }
+.row { display: flex; gap: 4px; }
+svg { max-width: 100%; height: auto; }
+svg text { fill: var(--text); font-family: -apple-system, sans-serif; }
+svg .stroke { stroke: var(--text); fill: none; }
+svg .boxfill { fill: var(--panel); stroke: var(--line); }
+svg .accentfill { fill: var(--accent-soft); stroke: var(--accent); }
+svg .arrow { stroke: var(--accent); stroke-width: 2; fill: none; marker-end: url(#ah); }
+.toggle { position: fixed; top: 12px; right: 12px; border: 1px solid var(--line); background: var(--panel); color: var(--text); border-radius: 20px; padding: 4px 12px; font-size: 13px; cursor: pointer; }
+.pill { display: inline-block; font-size: 12px; padding: 1px 8px; border-radius: 10px; background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+@media (max-width: 860px) {
+  .wrap { grid-template-columns: 1fr; gap: 0; }
+  nav { position: static; max-height: none; border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; margin-bottom: 20px; background: var(--panel); }
+  h1 { font-size: 1.7rem; }
+}
+</style>
+</head>
+<body>
+<button class="toggle" id="themeToggle" type="button">Light / Dark</button>
+<div class="wrap">
+<nav>
+  <h2>Contents</h2>
+  <ol>
+    <li class="part">Start here</li>
+    <li><a href="#how">How to read this</a></li>
+    <li><a href="#notation">Notation cheat sheet</a></li>
+    <li class="part">Part 1 · How DQN works</li>
+    <li><a href="#rl">The game as a learning problem</a></li>
+    <li><a href="#return">Return and the discount γ</a></li>
+    <li><a href="#qvalue">The Q-value</a></li>
+    <li><a href="#bellman">The Bellman equation</a></li>
+    <li><a href="#qlearning">Q-learning</a></li>
+    <li><a href="#tables">Why a table fails</a></li>
+    <li><a href="#nn">Neural networks in 15 minutes</a></li>
+    <li><a href="#gd">Gradient descent, slowly</a></li>
+    <li><a href="#dqn">From table to network: DQN</a></li>
+    <li><a href="#tricks">The tricks that make DQN stable</a></li>
+    <li><a href="#algo">The full algorithm</a></li>
+    <li class="part">Part 2 · Our design</li>
+    <li><a href="#question">The question we ask</a></li>
+    <li><a href="#inputs">What the network sees</a></li>
+    <li><a href="#cnn">Why a convolutional network</a></li>
+    <li><a href="#dueling">The dueling head</a></li>
+    <li><a href="#variants">Three variants: A, B, C</a></li>
+    <li><a href="#speed">Making it fast</a></li>
+    <li><a href="#hparams">Every setting and its reason</a></li>
+    <li class="part">Part 3 · The code</li>
+    <li><a href="#map">Map of the files</a></li>
+    <li><a href="#code-env">vec_env.py: the games</a></li>
+    <li><a href="#code-model">model.py: the network</a></li>
+    <li><a href="#code-train">train.py: the learning loop</a></li>
+    <li><a href="#code-agent">agent.py: playing a real game</a></li>
+    <li><a href="#code-tests">The tests: how we know it's right</a></li>
+    <li><a href="#run">Running it yourself</a></li>
+    <li><a href="#results">Results so far</a></li>
+    <li><a href="#glossary">Glossary</a></li>
+  </ol>
+</nav>
+
+<main>
+<header class="hero">
+  <h1>Deep Q-Networks for Battleship</h1>
+  <p class="sub">A from-zero tutorial: how DQN works, why we designed ours the way we did, and how the code in <code>battleship/dqn/</code> implements it.</p>
+</header>
+
+<!-- ================================================================== -->
+<h2 id="how"><span class="num">0</span>How to read this</h2>
+<p>The tutorial has three parts. Read them in order: each one uses ideas from the one before.</p>
+<ol>
+  <li><b>How DQN works.</b> From "what is a reward" to the full DQN algorithm. No code.</li>
+  <li><b>Our design.</b> Why each choice in our Battleship DQN was made, and what it buys us.</li>
+  <li><b>The code.</b> A walk through the real files, with the important lines explained.</li>
+</ol>
+<p>Every section ends with a short <b>check yourself</b> question. Try to answer before opening the answer. If you can't, re-read the section: the next one will rely on it.</p>
+<div class="box key"><span class="label">Assumed knowledge</span>
+Basic Python, what an average is, and a vague idea of what a derivative ("slope") is. Everything else is explained here.</div>
+
+<!-- ================================================================== -->
+<h2 id="notation"><span class="num">0.1</span>Notation cheat sheet</h2>
+<p>Keep this open in a second tab. Every symbol is explained again where it first appears.</p>
+<table>
+<tr><th>Symbol</th><th>Read as</th><th>Meaning in our Battleship game</th></tr>
+<tr><td><b>s</b></td><td>"state"</td><td>What the agent knows right now: the board of hits, misses, sunk ships, and which ships are still afloat.</td></tr>
+<tr><td><b>a</b></td><td>"action"</td><td>The cell we fire at next (0–99 on 10×10).</td></tr>
+<tr><td><b>r</b></td><td>"reward"</td><td>The score for one shot: always −1.</td></tr>
+<tr><td><b>s′</b></td><td>"s prime"</td><td>The <i>next</i> state, after the shot.</td></tr>
+<tr><td><b>a′</b></td><td>"a prime"</td><td>A possible action in the next state s′.</td></tr>
+<tr><td><b>γ</b></td><td>"gamma"</td><td>Discount factor: how much future rewards count (we use 1).</td></tr>
+<tr><td><b>Q(s, a)</b></td><td>"Q of s and a"</td><td>How good shot a is in state s: −(expected shots still needed, counting this one).</td></tr>
+<tr><td><b>V(s)</b></td><td>"value of s"</td><td>How good the state is if you play the best shot: V(s) = max over a of Q(s, a).</td></tr>
+<tr><td><b>max<sub>a′</sub></b></td><td>"max over a′"</td><td>Try every possible a′ and take the largest result.</td></tr>
+<tr><td><b>argmax<sub>a</sub></b></td><td>"arg max over a"</td><td>Not the largest value itself, but <i>which</i> a gives it. "argmax Q" = the best cell.</td></tr>
+<tr><td><b>y</b></td><td>"target"</td><td>What Q(s, a) <i>should</i> have been, according to what actually happened.</td></tr>
+<tr><td><b>δ</b></td><td>"delta"</td><td>The error: y − Q(s, a).</td></tr>
+<tr><td><b>α</b></td><td>"alpha"</td><td>Learning rate in tabular Q-learning: how far to move toward the target each time.</td></tr>
+<tr><td><b>ε</b></td><td>"epsilon"</td><td>Exploration rate: the chance of firing at a random cell instead of the best one.</td></tr>
+<tr><td><b>θ</b></td><td>"theta"</td><td>All the numbers (weights) inside the neural network. Learning means changing θ.</td></tr>
+<tr><td><b>Q<sub>θ</sub></b></td><td>"Q theta"</td><td>The Q-function computed by the network with weights θ.</td></tr>
+<tr><td><b>θ⁻</b></td><td>"theta minus"</td><td>The weights of the <i>target network</i>: an older, frozen copy of θ.</td></tr>
+<tr><td><b>L(θ)</b></td><td>"loss"</td><td>A number measuring how wrong the network is. Lower is better.</td></tr>
+<tr><td><b>∇L</b></td><td>"gradient of L"</td><td>The direction in which the loss increases fastest. We step the opposite way.</td></tr>
+<tr><td><b>η</b></td><td>"eta"</td><td>Learning rate for gradient descent (the code calls it <code>lr</code>).</td></tr>
+<tr><td><b>𝔼[…]</b></td><td>"expected value"</td><td>The average over all the ways things could turn out.</td></tr>
+<tr><td><b>P(s′ | s, a)</b></td><td>"probability of s′ given s and a"</td><td>The chance the shot leads to s′ (e.g. hit vs miss).</td></tr>
+</table>
+
+<!-- ================================================================== -->
+<h2 id="rl"><span class="num">1</span>The game as a learning problem</h2>
+<p><b>Reinforcement learning (RL)</b> is learning by trial and error: an <b>agent</b> takes <b>actions</b> in an <b>environment</b>, gets <b>rewards</b>, and gradually learns which actions lead to the most reward.</p>
+<svg viewBox="0 0 640 170" role="img" aria-label="Agent-environment loop">
+  <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="currentColor" style="fill:var(--accent)"/></marker></defs>
+  <rect x="30" y="50" width="160" height="70" rx="10" class="accentfill"/>
+  <text x="110" y="82" text-anchor="middle" font-weight="700">Agent</text>
+  <text x="110" y="104" text-anchor="middle" font-size="13">(our DQN)</text>
+  <rect x="450" y="50" width="160" height="70" rx="10" class="boxfill"/>
+  <text x="530" y="82" text-anchor="middle" font-weight="700">Environment</text>
+  <text x="530" y="104" text-anchor="middle" font-size="13">(the hidden fleet)</text>
+  <path d="M190,68 L450,68" class="arrow"/>
+  <text x="320" y="58" text-anchor="middle" font-size="14">action a: "fire at E5"</text>
+  <path d="M450,104 L190,104" class="arrow"/>
+  <text x="320" y="130" text-anchor="middle" font-size="14">new state s′ (hit / miss / sunk) + reward r = −1</text>
+</svg>
+<table>
+<tr><th>RL word</th><th>In Battleship</th></tr>
+<tr><td><b>Agent</b></td><td>The player who fires (our program).</td></tr>
+<tr><td><b>Environment</b></td><td>The board with the hidden ships. It answers each shot.</td></tr>
+<tr><td><b>State s</b></td><td>The visible board plus the list of ships still afloat. The agent <i>never</i> sees the hidden layout.</td></tr>
+<tr><td><b>Action a</b></td><td>One of the cells not yet fired at.</td></tr>
+<tr><td><b>Reward r</b></td><td>−1 for every shot, hit or miss.</td></tr>
+<tr><td><b>Episode</b></td><td>One whole game, from the empty board to the last ship sunk.</td></tr>
+<tr><td><b>Policy</b></td><td>The agent's rule for choosing a shot in each state. Learning = improving the policy.</td></tr>
+</table>
+<div class="box key"><span class="label">Why −1 per shot?</span>
+We want to sink the fleet in as few shots as possible. If every shot costs −1, the total reward of a game is exactly −(number of shots), so <b>maximizing reward = minimizing shots</b>. A reward like "+1 per hit" would not work: every game has exactly 17 ship cells, so every strategy would total +17 and the agent couldn't tell good play from bad.</div>
+<details class="quiz"><summary>Check yourself: a game took 47 shots. What was its total reward?</summary>
+−47. One −1 per shot.</details>
+
+<!-- ================================================================== -->
+<h2 id="return"><span class="num">2</span>Return and the discount γ</h2>
+<p>The <b>return</b> is the total reward from now until the game ends. With a discount factor γ (gamma):</p>
+<div class="eq">return = r₁ + γ·r₂ + γ²·r₃ + …<small>r₁ is the reward of this shot, r₂ of the next one, and so on.</small></div>
+<p>γ says how much a reward later is worth compared with a reward now:</p>
+<ul>
+  <li><b>γ = 1</b>: every shot counts the same. Return = −(shots left).</li>
+  <li><b>γ = 0.9</b>: a shot 10 moves away counts only 0.9¹⁰ ≈ 0.35 as much.</li>
+</ul>
+<p>Rule of thumb: γ "looks ahead" about <b>1 / (1 − γ)</b> steps. γ = 0.9 sees ~10 shots, γ = 0.99 sees ~100.</p>
+<table>
+<tr><th>γ</th><th class="n">Value of a 45-shot game</th><th class="n">Value of a 60-shot game</th><th>Can it tell them apart?</th></tr>
+<tr><td>1.0</td><td class="n">−45.0</td><td class="n">−60.0</td><td>Yes, clearly</td></tr>
+<tr><td>0.99</td><td class="n">−36.4</td><td class="n">−45.3</td><td>Yes</td></tr>
+<tr><td>0.9</td><td class="n">−9.91</td><td class="n">−9.98</td><td>Barely: this would wreck learning</td></tr>
+</table>
+<div class="box ok"><span class="label">Our choice: γ = 1</span>
+A Battleship game always ends (at most 100 shots), so the total can't blow up, and our goal really is "every shot costs the same". γ = 1 matches the goal exactly.</div>
+<div class="box warn"><span class="label">Common confusion</span>
+γ does <i>not</i> make the agent act randomly. That's ε (section 5). γ only decides how far ahead the agent cares.</div>
+<details class="quiz"><summary>Check yourself: why would γ = 0.9 be bad for 10×10 Battleship?</summary>
+It only looks ~10 shots ahead, so a game of 45 shots and one of 60 look almost equally bad (−9.91 vs −9.98). The agent would have no reason to finish efficiently.</details>
+
+<!-- ================================================================== -->
+<h2 id="qvalue"><span class="num">3</span>The Q-value</h2>
+<div class="eq">Q(s, a) = expected return if you fire at a in state s, and play as well as possible afterwards</div>
+<p>With reward −1 per shot and γ = 1: <b>Q(s, a) = −(expected number of shots still needed, counting this one)</b>. So Q is always negative, and <b>closer to 0 is better</b>.</p>
+<p>If we knew Q, playing would be trivial: fire at <b>argmax<sub>a</sub> Q(s, a)</b>, the cell with the largest Q.</p>
+
+<h3>Worked example: a 1×4 strip</h3>
+<p>One ship of length 2 is hidden on a strip of 4 cells. It can be at {0,1}, {1,2} or {2,3}, each with probability ⅓.</p>
+<div class="row"><span class="cell">0</span><span class="cell">1</span><span class="cell">2</span><span class="cell">3</span></div>
+<p><b>Fire at cell 1:</b></p>
+<ul>
+  <li>Hit with probability ⅔ (ship at {0,1} or {1,2}). Then try cell 0 or 2: half the time it sinks the ship (1 more shot), half the time you need 2. Average 1.5 more shots.</li>
+  <li>Miss with probability ⅓ (ship must be {2,3}). Then 2 more shots.</li>
+</ul>
+<div class="eq">Q(start, 1) = −1 + ⅔·(−1.5) + ⅓·(−2) = <b>−2.67</b></div>
+<p><b>Fire at cell 0:</b></p>
+<ul>
+  <li>Hit with probability ⅓ (ship at {0,1}). Then cell 1 is certain: 1 more shot.</li>
+  <li>Miss with probability ⅔. Cell 2 is now certain to be a hit, then one or two more: average 2.5 more shots.</li>
+</ul>
+<div class="eq">Q(start, 0) = −1 + ⅓·(−1) + ⅔·(−2.5) = <b>−3.00</b></div>
+<p>−2.67 &gt; −3.00, so the best first shot is the middle. That matches intuition: cell 1 belongs to more possible ship positions.</p>
+<details class="quiz"><summary>Check yourself: after a hit at cell 1, what is Q of firing at cell 3?</summary>
+The ship is at {0,1} or {1,2}, so cell 3 is a certain miss. You waste a shot and are back in the same situation: Q = −1 + (−1.5) = −2.5, worse than firing at 0 or 2 (−1.5).</details>
+
+<!-- ================================================================== -->
+<h2 id="bellman"><span class="num">4</span>The Bellman equation</h2>
+<p>Look at how we computed Q above: "this shot's reward, plus the value of the best play afterwards". Written generally, that's the <b>Bellman equation</b>:</p>
+<div class="eq">Q(s, a) = Σ<sub>s′</sub> P(s′ | s, a) · [ r + γ · max<sub>a′</sub> Q(s′, a′) ]<small>For every possible outcome s′: its probability × (reward now + discounted value of the best next shot). Then add them up.</small></div>
+<p>Piece by piece:</p>
+<ul>
+  <li><b>Σ<sub>s′</sub> P(s′ | s, a) · […]</b>: average over the outcomes (hit or miss), weighted by how likely each is.</li>
+  <li><b>r</b>: this shot's reward (−1).</li>
+  <li><b>max<sub>a′</sub> Q(s′, a′)</b>: in the next state, assume we'll take the best shot.</li>
+  <li>When the game is over, there are no more shots: max Q = 0.</li>
+</ul>
+<p>In our game r = −1 whatever happens, so the reward comes out of the sum, and with γ = 1 it simplifies to:</p>
+<div class="eq">Q(s, a) = −1 + 𝔼[ max<sub>a′</sub> Q(s′, a′) ]</div>
+<div class="box key"><span class="label">The one idea to remember</span>
+The value of a shot = its cost now + the value of the best shot after it. Everything in Q-learning and DQN is a way of making this equation true.</div>
+<details class="quiz"><summary>Check yourself: why can we pull r out of the sum here?</summary>
+Because r = −1 for every outcome. Σ P(s′)·(−1) = −1·Σ P(s′) = −1, since the probabilities add up to 1.</details>
+
+<!-- ================================================================== -->
+<h2 id="qlearning"><span class="num">5</span>Q-learning</h2>
+<p>To <i>compute</i> Q with the Bellman equation, we needed the probabilities P (the ⅔ and ⅓). A learning agent doesn't know them. <b>Q-learning</b> learns Q from experience instead: play, see what happened, nudge Q toward it.</p>
+<p>After each shot you see one transition: <b>(s, a, r, s′)</b>.</p>
+<div class="eq">
+target&nbsp; y = r + γ · max<sub>a′</sub> Q(s′, a′)<br>
+error&nbsp;&nbsp; δ = y − Q(s, a)<br>
+update&nbsp; Q(s, a) ← Q(s, a) + α · δ
+</div>
+<ul>
+  <li><b>y</b> ("target"): the Bellman right-hand side, but using the <i>one outcome that actually happened</i> instead of averaging over all outcomes.</li>
+  <li><b>δ</b> ("TD error"; TD = <i>temporal difference</i>): how wrong our guess was.</li>
+  <li><b>α</b> (learning rate, e.g. 0.1): how far we move toward the target. Small = slow but steady.</li>
+</ul>
+<div class="box key"><span class="label">Why this works without P</span>
+If a shot hits ⅔ of the time, then about ⅔ of the targets you see are "hit" targets. Q becomes a running average of the targets, and that average converges to the same Σ P·(…) we computed by hand. <b>Sampling replaces the probabilities.</b></div>
+
+<h3>ε-greedy exploration</h3>
+<p>If the agent always picks argmax Q, it never tries shots it currently thinks are bad, and never discovers they might be good. So:</p>
+<pre><code>with probability ε:  fire at a random legal cell     ← explore
+otherwise:           fire at argmax Q(s, a)          ← exploit</code></pre>
+<p>ε starts high (e.g. 1.0: fully random) and shrinks during training (e.g. to 0.02). When we <i>measure</i> the agent, ε = 0.</p>
+<details class="quiz"><summary>Check yourself: Q(s, a) = −0.5, and a shot gives target y = −1. With α = 0.5, what is the new Q?</summary>
+δ = −1 − (−0.5) = −0.5. New Q = −0.5 + 0.5·(−0.5) = −0.75.</details>
+
+<!-- ================================================================== -->
+<h2 id="tables"><span class="num">6</span>Why a table fails</h2>
+<p>Plain Q-learning stores one number Q(s, a) per state and action: a <b>Q-table</b>. Our teammates tried this:</p>
+<table>
+<tr><th>Attempt</th><th>State used as table key</th><th class="n">Result (4×4)</th><th>What happened</th></tr>
+<tr><td>PR #14</td><td>The visible board</td><td class="n">13.9 shots (random: 14.1)</td><td>3.5 million states after 1M games, about 4 updates each. 40% of test moves met a never-seen state.</td></tr>
+<tr><td>PR #15</td><td>The exact belief (set of possible layouts)</td><td class="n">8.97 shots</td><td>Equivalent boards share one entry: 320k states. Works, but needs every layout listed.</td></tr>
+</table>
+<p>On 10×10, both break:</p>
+<ul>
+  <li>There are about <b>4¹⁰⁰</b> possible boards. A table would never see the same board twice.</li>
+  <li>There are <b>30,093,975,536</b> ship layouts. One belief alone would be a 3.8 GB bitmask.</li>
+</ul>
+<div class="box key"><span class="label">The core problem</span>
+A table can't <b>generalize</b>. Learning "hit next to unknown cells, so fire beside it" in one corner teaches it nothing about the same pattern elsewhere. We need a function that takes <i>any</i> board and gives sensible Q-values, including boards it never saw. That's what a neural network does.</div>
+
+<!-- ================================================================== -->
+<h2 id="nn"><span class="num">7</span>Neural networks in 15 minutes</h2>
+<p>A <b>neural network</b> is a function with many adjustable numbers (<b>weights</b>, written θ). You feed it numbers, it outputs numbers. Training means adjusting θ until the outputs are what we want.</p>
+
+<h3>One neuron</h3>
+<div class="eq">output = ReLU( w₁·x₁ + w₂·x₂ + … + b )<small>x = inputs, w = weights, b = bias (an extra adjustable number). ReLU(z) = max(0, z).</small></div>
+<ul>
+  <li>The weighted sum lets the neuron decide how much each input matters.</li>
+  <li><b>ReLU</b> ("rectified linear unit") sets negative values to 0. Without it, stacking neurons would collapse into a single weighted sum; with it, the network can represent complicated, bendy functions.</li>
+</ul>
+
+<h3>Layers</h3>
+<p>Neurons are arranged in <b>layers</b>. Each layer's outputs are the next layer's inputs. Early layers find simple patterns; later layers combine them into complex ones.</p>
+<svg viewBox="0 0 640 180" role="img" aria-label="Layers of a network">
+  <g font-size="13">
+  <rect x="20" y="40" width="120" height="100" rx="8" class="boxfill"/><text x="80" y="85" text-anchor="middle">input</text><text x="80" y="105" text-anchor="middle">(the board)</text>
+  <rect x="190" y="40" width="110" height="100" rx="8" class="accentfill"/><text x="245" y="85" text-anchor="middle">layer 1</text><text x="245" y="105" text-anchor="middle">simple patterns</text>
+  <rect x="350" y="40" width="110" height="100" rx="8" class="accentfill"/><text x="405" y="85" text-anchor="middle">layer 2…4</text><text x="405" y="105" text-anchor="middle">bigger patterns</text>
+  <rect x="510" y="40" width="110" height="100" rx="8" class="boxfill"/><text x="565" y="85" text-anchor="middle">output</text><text x="565" y="105" text-anchor="middle">Q for each cell</text>
+  <path d="M140,90 L190,90" class="arrow"/><path d="M300,90 L350,90" class="arrow"/><path d="M460,90 L510,90" class="arrow"/>
+  </g>
+</svg>
+
+<h3>Loss</h3>
+<p>To train, we need a number that says how wrong the network is: the <b>loss</b> L(θ). The simplest is <b>squared error</b>:</p>
+<div class="eq">L = (prediction − target)²</div>
+<p>It's 0 when the prediction is perfect and grows quickly as the prediction gets worse. Training = making L small.</p>
+
+<!-- ================================================================== -->
+<h2 id="gd"><span class="num">8</span>Gradient descent, slowly</h2>
+<p>How do we change θ to make the loss smaller? Imagine the loss as a hilly landscape, where your position is θ and the height is L. You want to walk downhill.</p>
+<ul>
+  <li>The <b>gradient</b> ∇L tells you which direction is <i>uphill</i>, and how steep it is.</li>
+  <li><b>Gradient descent</b>: take a small step the opposite way.</li>
+</ul>
+<div class="eq">θ ← θ − η · ∇L(θ)<small>η ("eta", the learning rate, <code>lr</code> in code) = the step size.</small></div>
+
+<h3>A tiny example with one number</h3>
+<p>Suppose the "network" is just one number q (a prediction of Q), and the target is y = −3.</p>
+<div class="eq">L(q) = (q − y)² &nbsp;&nbsp;⇒&nbsp;&nbsp; slope dL/dq = 2·(q − y)</div>
+<p>Start at q = 0 with η = 0.25:</p>
+<table>
+<tr><th class="n">Step</th><th class="n">q</th><th class="n">slope 2(q − y)</th><th class="n">new q = q − 0.25·slope</th><th class="n">loss</th></tr>
+<tr><td class="n">1</td><td class="n">0</td><td class="n">6</td><td class="n">−1.5</td><td class="n">9</td></tr>
+<tr><td class="n">2</td><td class="n">−1.5</td><td class="n">3</td><td class="n">−2.25</td><td class="n">2.25</td></tr>
+<tr><td class="n">3</td><td class="n">−2.25</td><td class="n">1.5</td><td class="n">−2.625</td><td class="n">0.56</td></tr>
+<tr><td class="n">4</td><td class="n">−2.625</td><td class="n">0.75</td><td class="n">−2.8125</td><td class="n">0.14</td></tr>
+</table>
+<p>Each step halves the distance to −3. That's gradient descent.</p>
+<div class="box key"><span class="label">Surprise: this is the Q-learning update</span>
+q ← q − η·2(q − y) = q + 2η·(y − q). Compare with Q ← Q + α·(y − Q). They're the same, with α = 2η. <b>Tabular Q-learning is gradient descent on a squared error, one table entry at a time.</b> DQN does the same thing, but on a network's weights.</div>
+
+<h3>With millions of weights</h3>
+<p>A real network has thousands of weights. You can't work out slopes by hand, but <b>PyTorch</b> does it automatically (this is called <i>backpropagation</i>): you compute the loss, call <code>loss.backward()</code>, and PyTorch fills in the slope for every weight. Then an <b>optimizer</b> takes the step.</p>
+<ul>
+  <li><b>Batch</b>: instead of one example per step, we average the loss over many (e.g. 256). The step direction is then less noisy.</li>
+  <li><b>Adam</b>: a popular optimizer. Plain gradient descent with a smarter, per-weight step size. You don't need its details.</li>
+</ul>
+<pre><code>loss = ((prediction - target) ** 2).mean()   # how wrong, averaged over the batch
+optimizer.zero_grad()                         # clear old slopes
+loss.backward()                               # compute the slope for every weight
+optimizer.step()                              # move every weight a little downhill</code></pre>
+<details class="quiz"><summary>Check yourself: what happens if η is far too large?</summary>
+Steps overshoot the bottom. With η = 1 in the example, q jumps from 0 to −6, then back to 0, forever. With even larger η it diverges. Too small, and learning takes forever.</details>
+
+<!-- ================================================================== -->
+<h2 id="dqn"><span class="num">9</span>From table to network: DQN</h2>
+<p><b>DQN = Deep Q-Network</b> (DeepMind, 2015, the Atari paper). Replace the Q-table with a neural network:</p>
+<div class="eq">Q(s, a) ≈ Q<sub>θ</sub>(s)[a]<small>The network takes the board s and outputs one Q-value per cell; [a] picks out the value for cell a.</small></div>
+<p>Then train it by gradient descent, using the Q-learning target as the "correct answer":</p>
+<div class="eq">L(θ) = ( Q<sub>θ</sub>(s)[a] − y )², &nbsp;&nbsp; y = r + γ · max<sub>a′</sub> Q(s′)[a′]</div>
+<p>Because similar boards produce similar network outputs, <b>learning from one board also improves the predictions for boards the agent has never seen</b>. That's exactly the generalization the table lacked.</p>
+<div class="box warn"><span class="label">The catch</span>
+The target y contains Q itself. When we update θ, the target moves too. It's like chasing your own shadow. On top of that, consecutive shots in one game are very similar, so the network over-fits to the current game. Plain "Q-learning + network" is famously unstable. Section 10 is about the fixes.</div>
+
+<!-- ================================================================== -->
+<h2 id="tricks"><span class="num">10</span>The tricks that make DQN stable</h2>
+
+<h3>Trick 1: experience replay</h3>
+<p>Store every transition (s, a, r, s′, done) in a big <b>replay buffer</b>. To train, pick a random <b>batch</b> from it.</p>
+<ul>
+  <li><b>Breaks correlation:</b> a batch mixes shots from many different games, not 256 shots in a row from the same board.</li>
+  <li><b>Reuses data:</b> each experience is trained on several times (our <i>replay ratio</i>, 8).</li>
+</ul>
+
+<h3>Trick 2: target network</h3>
+<p>Keep a second, frozen copy of the network, with weights θ⁻, and compute targets with it:</p>
+<div class="eq">y = r + γ · max<sub>a′</sub> Q<sub>θ⁻</sub>(s′)[a′]</div>
+<p>Every N training steps (we use 1,000), copy θ into θ⁻. Between copies, the target stays still, so the online network has a fixed goal to move toward.</p>
+
+<h3>Trick 3: Double DQN</h3>
+<p>Taking the <b>max</b> over 100 noisy estimates picks whichever happens to be too high. So targets are biased upward ("overestimation"). Double DQN splits the job:</p>
+<div class="eq">a* = argmax<sub>a′</sub> Q<sub>θ</sub>(s′)[a′] &nbsp;(online network chooses) <br> y = r + γ · Q<sub>θ⁻</sub>(s′)[a*] &nbsp;(target network evaluates)</div>
+<p>One network's lucky overestimate is unlikely to be the other's too.</p>
+
+<h3>Trick 4: Huber loss</h3>
+<p>Squared error punishes large errors very hard: an error of 20 counts 400. Early in training, errors of 20+ shots are common, so a few bad examples can yank the weights around. <b>Huber loss</b> is squared for small errors (&lt; 1) and grows only linearly for large ones. PyTorch calls it <code>smooth_l1_loss</code>.</p>
+
+<h3>Trick 5: action masking</h3>
+<p>Already-fired cells are illegal. We set their Q to −∞ before choosing a shot <i>and</i> before taking the max in the target. The agent can never waste a shot, and illegal cells never pollute the targets.</p>
+<details class="quiz"><summary>Check yourself: what problem does each of tricks 1 and 2 solve?</summary>
+Replay: consecutive shots are correlated, and data would be used once. Target network: the target would move every time we update, so the network chases itself.</details>
+
+<!-- ================================================================== -->
+<h2 id="algo"><span class="num">11</span>The full algorithm</h2>
+<pre><code>initialize network Q_θ randomly;  target network θ⁻ ← θ;  empty replay buffer
+
+repeat for many games:
+    look at the board s
+    with probability ε: a ← random legal cell
+    otherwise:          a ← argmax over legal cells of Q_θ(s)
+    fire at a; observe r = −1, the next board s′, and whether the game ended (done)
+    store (s, a, r, s′, done) in the replay buffer
+
+    sample a random batch of transitions from the buffer
+    for each:  y = r                                        if done
+               y = r + γ · Q_θ⁻(s′)[ argmax_a′ Q_θ(s′)[a′] ]  otherwise   (Double DQN)
+    loss = Huber( Q_θ(s)[a] − y ), averaged over the batch
+    one gradient-descent step on θ
+
+    every 1,000 steps: θ⁻ ← θ
+    slowly decrease ε</code></pre>
+<p>That's all of DQN. Everything in Part 2 is about <i>what</i> s looks like, <i>what</i> network to use, and <i>which</i> numbers to pick, for Battleship.</p>
+
+<!-- ================================================================== -->
+<h2 id="question"><span class="num">12</span>The question we ask</h2>
+<div class="box key"><span class="label">Research question</span>
+Can a model-free learner (one that is never told the rules of ship placement) learn to play 10×10 Battleship as well as the best hand-written strategy, <b>probability density</b>, and can it beat it?</div>
+<p>What we compare against, on 10×10:</p>
+<table>
+<tr><th>Strategy</th><th class="n">Mean shots</th><th>How it works</th></tr>
+<tr><td>Random</td><td class="n">~95</td><td>Fire anywhere.</td></tr>
+<tr><td>Hunt-target with parity</td><td class="n">~62–65</td><td>Fire on a checkerboard until a hit, then fire at its neighbours.</td></tr>
+<tr><td><b>Probability density</b></td><td class="n"><b>44.65 ± 0.4</b></td><td>Try every position of every remaining ship, count how many cover each cell, fire at the highest count. (Measured: 2,000 boards.)</td></tr>
+<tr><td>Best published DQN we found</td><td class="n">~52</td><td>A hobby project; no peer-reviewed DQN benchmark exists.</td></tr>
+</table>
+<p>Probability density is strong but has three known flaws: it counts each ship separately (it ignores that ships can't overlap), its "follow up on hits" rule uses a hand-picked weight of 50, and it's <b>greedy</b> (it never asks which shot makes the next shots cheaper). DQN's Q-value is "shots still needed", so in principle it can learn to look ahead.</p>
+
+<!-- ================================================================== -->
+<h2 id="inputs"><span class="num">13</span>What the network sees</h2>
+<p>A network needs numbers, so we turn the board into a stack of 10×10 grids called <b>planes</b> (or <b>channels</b>, like the red/green/blue channels of an image). Each plane holds 0s and 1s, or small counts:</p>
+<table>
+<tr><th>Plane</th><th>Value at each cell</th><th>Why</th></tr>
+<tr><td>hit</td><td>1 if hit (ship not yet sunk)</td><td>Where to follow up</td></tr>
+<tr><td>miss</td><td>1 if miss</td><td>Where ships aren't</td></tr>
+<tr><td>sunk</td><td>1 if part of a sunk ship</td><td>Finished; ships can't be here</td></tr>
+<tr><td>on-board</td><td>always 1</td><td>Explained below</td></tr>
+<tr><td>ships of length 1…5 (5 planes)</td><td>How many ships of that length are afloat, the same number everywhere</td><td>Which ships are left changes where they fit</td></tr>
+<tr><td>density (variants B and C only)</td><td>Probability-density score, scaled so the best cell is 1</td><td>A strong hint</td></tr>
+</table>
+<p>Unknown cells are simply 0 in the hit, miss and sunk planes.</p>
+<div class="box key"><span class="label">Is this a valid state?</span>
+The game hides the layout, so it's a <b>POMDP</b> (partially observable). But observations are exact (no noise), so the board plus the remaining ships contains <i>everything</i> the agent knows: the exact belief can be computed from it. That makes it a proper <b>Markov</b> state: nothing else about the past matters. The density plane is computed from the board too, so it adds no new information, just a pre-computed, useful feature.</div>
+<div class="box"><span class="label">Why an "on-board" plane of 1s?</span>
+Convolutions (next section) pad the board's edge with zeros. Without this plane, "off the board" and "unknown cell" would both look like all-zeros. With it, the network sees exactly where the edge is, which matters: ships can't stick out.</div>
+
+<!-- ================================================================== -->
+<h2 id="cnn"><span class="num">14</span>Why a convolutional network</h2>
+<p>A <b>convolution</b> slides a small grid of weights (a <b>filter</b>, here 3×3) over the board. At each cell it computes a weighted sum of that cell and its 8 neighbours. One filter = one pattern detector.</p>
+<p>For example, a filter that weights "hit on the left" positively and "this cell is unknown" positively lights up wherever a hit has an unknown cell to its right: a good place to fire.</p>
+<div class="row"><span class="cell miss">o</span><span class="cell hit">x</span><span class="cell">?</span><span class="cell">?</span></div>
+<p style="color:var(--muted);font-size:14px">The 3×3 filter centred on the third cell sees "hit to my left, I'm unknown": a strong signal.</p>
+<ul>
+  <li><b>Weight sharing:</b> the same filter is used at every cell. A pattern learned in one corner works everywhere. That's the generalization a table lacks, and it keeps the network small (our 32-channel network has about 35,000 weights).</li>
+  <li><b>Receptive field:</b> one 3×3 layer sees 1 cell in each direction. Stacking 4 layers sees 4 cells away, a 9×9 window. That's enough to see a whole 5-long carrier passing through any cell. That's why we use <b>4 layers</b>.</li>
+  <li><b>Channels:</b> each layer has 32 filters, so it produces 32 planes of pattern-detections for the next layer.</li>
+  <li><b>No fully connected layer:</b> the output is computed per cell by a 1×1 convolution, so the network keeps the grid structure. A project that used a plain fully connected network stalled at 85–99 shots.</li>
+</ul>
+
+<!-- ================================================================== -->
+<h2 id="dueling"><span class="num">15</span>The dueling head</h2>
+<p>Here's a subtle problem. Q(s, a) ≈ −(shots still needed). The "shots still needed" part depends on the <i>whole</i> board (how much is left to find), but a 9×9 local window can't see the whole board. Meanwhile, <i>which</i> cell is best is mostly local.</p>
+<p>So we split Q into two parts (the <b>dueling</b> architecture, Wang et al. 2016):</p>
+<div class="eq">Q(s, a) = V(s) + A(s, a) − mean<sub>legal a</sub> A(s, a)<small>V = value of the board (one number, from the whole board). A = advantage of each cell (how much better or worse than average).</small></div>
+<ul>
+  <li><b>V(s)</b> is computed from <b>global pooling</b>: the average and the maximum of each of the 32 feature planes over the whole board, then a small fully connected layer. It sees everything.</li>
+  <li><b>A(s, a)</b> comes from a 1×1 convolution: local, one value per cell.</li>
+  <li>Subtracting the mean of A makes the split unique (otherwise V could be +5 and every A −5).</li>
+</ul>
+<div class="box ok"><span class="label">Why it helps</span>
+The choice of cell (argmax) depends only on A, which is local, as it should be. The level of Q, needed for good targets y, comes from V, which is global. Each part does the job it's suited for.</div>
+
+<!-- ================================================================== -->
+<h2 id="variants"><span class="num">16</span>Three variants: A, B, C</h2>
+<p>To learn <i>what</i> helps, we train three versions and compare them. Changing one thing at a time like this is called an <b>ablation</b>.</p>
+<table>
+<tr><th>Variant</th><th>Inputs</th><th>Q</th><th>Question it answers</th></tr>
+<tr><td><b>A. Board only</b> (main)</td><td>hit, miss, sunk, on-board, ships</td><td>Network</td><td>Can pure DQN learn Battleship from scratch?</td></tr>
+<tr><td><b>B. Density input</b></td><td>A + density plane</td><td>Network</td><td>Does the density help as a <i>feature</i>?</td></tr>
+<tr><td><b>C. Residual</b></td><td>A + density plane</td><td>c · density + network</td><td>Does it help as a <i>starting policy</i>? Can learning beat the expert?</td></tr>
+</table>
+<h3>How the residual variant works</h3>
+<div class="eq">Q(s, a) = c · density(s, a) + network<sub>θ</sub>(s)[a]</div>
+<p>The last layer of the advantage part starts at all zeros, so at the very start A = 0 and the agent fires at the highest density: it plays exactly like probability density (~44.6 shots) from game 1, instead of randomly (~95). DQN then only has to learn a <i>correction</i>. The density term is fixed, so the only learned part is still trained with the ordinary DQN loss: it's still DQN.</p>
+<div class="box warn"><span class="label">Honest expectations</span>
+On 4×4, where the exact optimum is known, greedy play is only 1.9% above optimal. If 10×10 is similar, there's less than a shot to gain over density. So for C, "no significant gain" is a likely, and still meaningful, result.</div>
+
+<!-- ================================================================== -->
+<h2 id="speed"><span class="num">17</span>Making it fast</h2>
+<p>Playing one game at a time in Python and training a batch every 4 shots would cost about 1 ms per shot: 100k games ≈ 80 minutes. We cut that about 10× with three changes:</p>
+<ol>
+  <li><b>256 games at once.</b> The boards are stored as tensors (PyTorch arrays), and one network pass chooses 256 shots. Measured: a batched forward pass costs 1–3.5 µs per board instead of ~430 µs.</li>
+  <li><b>Replay ratio 8.</b> Each stored shot is trained on 8 times on average, the standard Atari DQN setting (my first plan used 32).</li>
+  <li><b>32 channels, not 64.</b> Measured: 1.7× cheaper per training sample.</li>
+</ol>
+<p>Result: about 140 games per second on 10×10, so 100k games in ~12–15 minutes.</p>
+<div class="box"><span class="label">Device split</span>
+The games and the density map run on the CPU. The network trains on the M3's GPU (<b>MPS</b>, "Metal Performance Shaders", Apple's GPU backend for PyTorch).</div>
+
+<!-- ================================================================== -->
+<h2 id="hparams"><span class="num">18</span>Every setting and its reason</h2>
+<p>A <b>hyperparameter</b> is a setting we choose (not learned). Ours, from <code>TrainConfig</code> and <code>NetConfig</code>:</p>
+<table>
+<tr><th>Name in code</th><th>Value</th><th>Meaning</th><th>Why this value</th></tr>
+<tr><td><code>gamma</code></td><td>1.0</td><td>Discount γ</td><td>Every shot costs the same; games always end.</td></tr>
+<tr><td><code>channels</code>, <code>layers</code></td><td>32, 4</td><td>Network width and depth</td><td>4 layers see a 9×9 window (a whole carrier); 32 is fast enough.</td></tr>
+<tr><td><code>parallel</code></td><td>256</td><td>Games played side by side</td><td>Fills the GPU with one forward pass.</td></tr>
+<tr><td><code>batch</code></td><td>256</td><td>Transitions per gradient step</td><td>A less noisy step direction.</td></tr>
+<tr><td><code>replay_ratio</code></td><td>8</td><td>Times each transition is trained on</td><td>Atari DQN standard.</td></tr>
+<tr><td><code>buffer</code></td><td>200,000</td><td>Replay buffer size</td><td>About 4,000 recent games; ~100 MB.</td></tr>
+<tr><td><code>learn_start</code></td><td>10,000</td><td>Transitions before training begins</td><td>Don't train on a nearly empty buffer.</td></tr>
+<tr><td><code>lr</code></td><td>3e-4</td><td>Adam step size η</td><td>Standard; it beat 1e-4 on the 4×4 pilot.</td></tr>
+<tr><td><code>target_every</code></td><td>1,000</td><td>Steps between target copies</td><td>Long enough to hold the target still.</td></tr>
+<tr><td><code>eps_start → eps_end</code></td><td>1.0 → 0.02 (A, B); 0.1 → 0.02 (C)</td><td>Exploration</td><td>C already starts good, so heavy randomness would waste that.</td></tr>
+<tr><td><code>eps_fraction</code></td><td>0.1</td><td>Share of training over which ε shrinks</td><td>Explore early, then mostly exploit.</td></tr>
+<tr><td><code>double</code></td><td>True</td><td>Double DQN targets</td><td>Reduces overestimation from max over 100 cells.</td></tr>
+<tr><td><code>grad_clip</code></td><td>10</td><td>Cap on the gradient size</td><td>Guards against rare huge steps.</td></tr>
+<tr><td><code>residual</code></td><td>1.0 (C)</td><td>Weight c of the density in Q</td><td>Best-vs-worst density gap ≈ 1 shot.</td></tr>
+</table>
+
+<!-- ================================================================== -->
+<h2 id="map"><span class="num">19</span>Map of the files</h2>
+<table>
+<tr><th>File</th><th>What it does</th></tr>
+<tr><td><code>battleship/dqn/vec_env.py</code></td><td>Many games at once as tensors; the density map, vectorized.</td></tr>
+<tr><td><code>battleship/dqn/model.py</code></td><td>Turning a board into planes; the Q-network; saving and loading.</td></tr>
+<tr><td><code>battleship/dqn/train.py</code></td><td>The replay buffer and the DQN training loop.</td></tr>
+<tr><td><code>battleship/dqn/agent.py</code></td><td><code>DQNAgent</code>: a trained network that plays through the normal game engine.</td></tr>
+<tr><td><code>scripts/train_dqn.py</code></td><td>Command line: train one variant, save the model and the learning curve.</td></tr>
+<tr><td><code>scripts/benchmark_dqn.py</code></td><td>Command line: compare agents on the same boards.</td></tr>
+<tr><td><code>tests/test_dqn.py</code></td><td>Checks that the fast code agrees with the real game.</td></tr>
+</table>
+<div class="box"><span class="label">About the code excerpts</span>The snippets below are lightly shortened for reading (some arguments and type conversions removed). Open the files for the exact code.</div>
+<svg viewBox="0 0 680 200" role="img" aria-label="How the files connect">
+  <g font-size="13">
+  <rect x="10" y="20" width="190" height="56" rx="8" class="boxfill"/><text x="105" y="44" text-anchor="middle" font-weight="600">vec_env.py</text><text x="105" y="62" text-anchor="middle">256 games + density</text>
+  <rect x="245" y="20" width="190" height="56" rx="8" class="accentfill"/><text x="340" y="44" text-anchor="middle" font-weight="600">train.py</text><text x="340" y="62" text-anchor="middle">replay + DQN loop</text>
+  <rect x="480" y="20" width="190" height="56" rx="8" class="boxfill"/><text x="575" y="44" text-anchor="middle" font-weight="600">model.py</text><text x="575" y="62" text-anchor="middle">planes + QNet</text>
+  <rect x="245" y="124" width="190" height="56" rx="8" class="boxfill"/><text x="340" y="148" text-anchor="middle" font-weight="600">best.pt / final.pt</text><text x="340" y="166" text-anchor="middle">saved weights</text>
+  <rect x="480" y="124" width="190" height="56" rx="8" class="boxfill"/><text x="575" y="148" text-anchor="middle" font-weight="600">agent.py</text><text x="575" y="166" text-anchor="middle">plays real games</text>
+  <path d="M200,48 L245,48" class="arrow"/><path d="M480,48 L435,48" class="arrow"/>
+  <path d="M340,76 L340,124" class="arrow"/><path d="M435,152 L480,152" class="arrow"/>
+  </g>
+</svg>
+
+<!-- ================================================================== -->
+<h2 id="code-env"><span class="num">20</span><code>vec_env.py</code>: the games</h2>
+<p>Each board is a row of 100 small integers: 0 unknown, 1 miss, 2 hit, 3 sunk. With 256 games, <code>board</code> is a 256×100 tensor.</p>
+<p class="file">battleship/dqn/vec_env.py</p>
+<pre><code>self.board   = torch.zeros(n, cells, dtype=torch.int8)        # what the agent sees
+self.ship_at = torch.full((n, cells), -1, dtype=torch.long)   # hidden: which ship is at each cell (-1 = none)
+self.left    = torch.zeros(n, ships, dtype=torch.long)        # hidden: cells still afloat per ship</code></pre>
+<p><code>ship_at</code> and <code>left</code> are the hidden layout. The agent's network never receives them: only <code>board</code> and <code>remaining()</code> are encoded.</p>
+<h3>Firing one shot in every game</h3>
+<pre><code>def step(self, actions, active=None):
+    rows  = torch.arange(self.n) if active is None else active.nonzero().flatten()
+    cells = actions[rows]
+    ship  = self.ship_at[rows, cells]        # which ship (if any) is at each fired cell
+    hit   = ship >= 0
+    self.board[rows, cells] = torch.where(hit, HIT, MISS)
+    self.left[rows[hit], ship[hit]] -= 1     # one fewer cell afloat
+    sunk = self.left[rows[hit], ship[hit]] == 0
+    ...                                      # if sunk: mark that ship's cells SUNK
+    return self.done                         # True where every ship is sunk</code></pre>
+<p>This does the same thing as the original <code>BattleshipEnv.step</code>, but for all 256 games in a handful of tensor operations, with no Python loop over games.</p>
+<h3>The density map with convolutions</h3>
+<p>Probability density asks, for each ship length L: "where can a ship of length L fit?" A position fits if none of its L cells is a miss or sunk. That's a sliding window, which is exactly what a convolution with a kernel of ones computes:</p>
+<pre><code>kernel = torch.ones(1, 1, 1, L)                     # a 1×L window (horizontal ships)
+fits   = F.conv2d(blocked, kernel) == 0             # no blocked cell inside the window
+weight = fits * 50 ** F.conv2d(hits, kernel) * count  # 50^k for k open hits; × ships of this length
+score += F.conv_transpose2d(weight, kernel)         # spread each position's weight back onto its L cells</code></pre>
+<p><code>conv_transpose2d</code> does the reverse of the sliding window: each valid position adds its weight to all the cells it covers. The same is repeated with an L×1 kernel for vertical ships. Finally, already-fired cells are set to 0.</p>
+
+<!-- ================================================================== -->
+<h2 id="code-model"><span class="num">21</span><code>model.py</code>: the network</h2>
+<h3>Encoding the board into planes</h3>
+<p class="file">battleship/dqn/model.py</p>
+<pre><code>planes = [grid == HIT, grid == MISS, grid == SUNK, torch.ones_like(grid)]   # 4 planes of 0/1
+planes.append(remaining.view(n, 5, 1, 1).expand(n, 5, size, size))          # 5 "ships left" planes
+if dens is not None:
+    planes.append(dens.view(n, 1, size, size))                              # density plane (B, C)
+return torch.cat(planes, 1)                                                 # shape: n × planes × 10 × 10</code></pre>
+<h3>The network</h3>
+<pre><code>for _ in range(net.layers):                                   # 4 times:
+    layers += [nn.Conv2d(width, net.channels, 3, padding=1),  #   32 filters of 3×3
+               nn.ReLU()]
+self.body      = nn.Sequential(*layers)
+self.advantage = nn.Conv2d(width, 1, 1)                       # A: one number per cell
+self.value     = nn.Sequential(nn.Linear(2 * width, 64),      # V: from global pooling
+                               nn.ReLU(), nn.Linear(64, 1))</code></pre>
+<p><code>padding=1</code> adds a ring of zeros around the board so each 3×3 filter also fits at the edges and the output stays 10×10.</p>
+<h3>The forward pass (computing Q)</h3>
+<pre><code>h = self.body(x)                                           # 32 feature planes
+a = self.advantage(h).flatten(1)                           # A(s, a): n × 100
+v = self.value(torch.cat([h.mean((2, 3)), h.amax((2, 3))], 1))   # V(s): mean + max over the board
+a_mean = (a * legal).sum(1) / legal.sum(1)                 # mean of A over legal cells
+q = v + a - a_mean                                         # dueling: Q = V + A − mean A
+if self.net.residual > 0:
+    q = q + self.net.residual * dens                       # variant C: + c · density
+return q.masked_fill(~legal, float("-inf"))                # fired cells can never be chosen</code></pre>
+<p>For variant C, <code>nn.init.zeros_(self.advantage.weight)</code> makes A start at zero, so the argmax is the density's argmax.</p>
+
+<!-- ================================================================== -->
+<h2 id="code-train"><span class="num">22</span><code>train.py</code>: the learning loop</h2>
+<h3>The replay buffer</h3>
+<p>Fixed-size tensors on the GPU. New transitions overwrite the oldest ones (a <b>circular buffer</b>). We store the boards as small integers and rebuild the planes when sampling, which saves memory.</p>
+<pre><code>idx = (torch.arange(n) + self.pos) % self.capacity   # next n slots, wrapping around
+store[idx] = value                                     # for board, action, done, next board, …</code></pre>
+<h3>One iteration: act in 256 games</h3>
+<p class="file">battleship/dqn/train.py</p>
+<pre><code>q = _q(online, board, remaining, dens, config)          # Q for all 256 boards
+actions = q.argmax(1)                                    # best legal cell in each game
+explore = torch.rand(env.n) &lt; epsilon()                  # ε-greedy: which games explore
+actions[explore] = torch.multinomial(legal[explore].float(), 1).squeeze(1)  # random legal cell
+done = env.step(actions)
+replay.add(board, remaining, dens, actions, done, next_board, next_remaining, next_dens)
+env.reset(done)                                          # finished games start a new board</code></pre>
+<h3>Then a few gradient steps</h3>
+<pre><code>b, r, d, a, dn, nb, nr, nd = replay.sample(tc.batch)                 # random batch
+q_sa = _q(online, b, r, d, config).gather(1, a[:, None]).squeeze(1)  # Q_θ(s)[a]
+with torch.no_grad():                                                # targets: no learning here
+    q_next_t = _q(target, nb, nr, nd, config)                        # target network θ⁻
+    best = _q(online, nb, nr, nd, config).argmax(1, keepdim=True)    # Double DQN: online chooses
+    q_next = q_next_t.gather(1, best).squeeze(1)                     #   target evaluates
+    y = -1.0 + tc.gamma * torch.where(dn, 0, q_next)                 # y = −1 (+ γ·Q′ if not done)
+loss = F.smooth_l1_loss(q_sa, y)                                     # Huber loss
+opt.zero_grad(); loss.backward(); opt.step()                         # gradient descent
+if grad_steps % tc.target_every == 0:
+    target.load_state_dict(online.state_dict())                      # θ⁻ ← θ</code></pre>
+<p>Compare with the pseudocode in section 11: it's line for line the same algorithm.</p>
+<ul>
+  <li><code>.gather(1, a[:, None])</code> picks, from 100 Q-values per row, the one for the action actually taken.</li>
+  <li><code>torch.no_grad()</code> means "don't compute slopes here". The target is treated as a fixed answer, not something to learn.</li>
+  <li><code>torch.where(dn, 0, q_next)</code>: if the game ended (done), there's no future, so the target is just −1.</li>
+</ul>
+<h3>Evaluation during training</h3>
+<p>Every 5,000 games, <code>play_greedy</code> plays the current network with ε = 0 on fixed <b>validation boards</b> (all 264 layouts on 4×4; 500 boards from seeds 100000+ on 10×10). The best-scoring checkpoint is saved as <code>best.pt</code>. The final benchmark uses <i>different</i> boards (seeds 0–1999), so picking the best checkpoint doesn't make the final score look better than it is.</p>
+
+<!-- ================================================================== -->
+<h2 id="code-agent"><span class="num">23</span><code>agent.py</code>: playing a real game</h2>
+<p>The training code uses the fast tensor games. To be sure the agent plays the real game, under the same rules as every other agent, <code>DQNAgent</code> plugs into the project's normal engine (<code>play_solo</code>, <code>evaluate</code>):</p>
+<p class="file">battleship/dqn/agent.py</p>
+<pre><code>def select_shot(self, obs):                    # obs = the public observation only
+    board = board_codes(obs).unsqueeze(0)      # CellState → 0/1/2/3, as a batch of 1
+    remaining = remaining_counts(obs).unsqueeze(0)
+    x, legal, dens = features(board, remaining, obs.config, self.model.net)
+    return int(self.model(x, legal, dens)[0].argmax())   # best legal cell</code></pre>
+<p>It receives only the <code>Observation</code> (the public board), never the layout.</p>
+
+<!-- ================================================================== -->
+<h2 id="code-tests"><span class="num">24</span>The tests: how we know it's right</h2>
+<p>Fast code is only useful if it's correct. <code>tests/test_dqn.py</code> checks the risky parts against the original, trusted code:</p>
+<table>
+<tr><th>Test</th><th>What it proves</th></tr>
+<tr><td><code>test_vector_games_match_the_environment</code></td><td>Random games played in both <code>VecBattleship</code> and <code>BattleshipEnv</code> give identical boards, remaining ships, shot counts and "done" flags at every step, on 4×4, 10×10, and a no-reveal 6×6 variant.</td></tr>
+<tr><td><code>test_density_matches_the_probability_agent</code></td><td>The convolution density equals <code>ProbabilityDensityAgent.density</code> exactly, at every step of random games.</td></tr>
+<tr><td><code>test_residual_network_starts_as_probability_density</code></td><td>Untrained variant C always picks a highest-density cell.</td></tr>
+<tr><td><code>test_untrained_agent_plays_legal_games_…</code></td><td>Every shot is legal, and decisions depend only on public information (<code>assert_public_only</code>).</td></tr>
+<tr><td><code>test_greedy_vector_play_matches_the_agent</code></td><td>The fast evaluation gives the same shot counts as playing through the real engine.</td></tr>
+<tr><td><code>test_short_training_run_learns_and_round_trips</code></td><td>A short 4×4 run clearly improves, and save → load plays identically.</td></tr>
+</table>
+<pre><code>uv run pytest tests/test_dqn.py -q     # 15 tests, about 1 minute</code></pre>
+
+<!-- ================================================================== -->
+<h2 id="run"><span class="num">25</span>Running it yourself</h2>
+<pre><code># 4×4 pilot: about 75 seconds
+uv run scripts/train_dqn.py --board mini --variant board --games 100000 --eval-every 10000 --learn-start 5000
+
+# 10×10, variant A (board only): about 15 minutes
+uv run scripts/train_dqn.py --board classic --variant board --games 100000 --eval-every 5000 --eps-fraction 0.1
+
+# 10×10, variant C (residual): starts near density, explores less
+uv run scripts/train_dqn.py --board classic --variant residual --games 100000 --eval-every 5000 \
+    --eps-start 0.1 --eps-fraction 0.1
+
+# benchmark on 2,000 boards (seeds 0–1999), paired against density
+uv run scripts/benchmark_dqn.py classic results/dqn/classic_*_s0/best.pt</code></pre>
+<p>Each run writes to <code>results/dqn/&lt;board&gt;_&lt;variant&gt;_s&lt;seed&gt;/</code>: <code>log.txt</code>, <code>curve.csv</code> (the learning curve), <code>summary.json</code>, <code>best.pt</code> and <code>final.pt</code>.</p>
+<p>How to read a log line:</p>
+<pre><code>games  15002  eval  52.37 ± 0.86  train  53.47  eps 0.020  loss 0.355   124s</code></pre>
+<ul>
+  <li><b>eval</b>: mean shots on the validation boards with ε = 0, and its 95% margin. This is the number that matters.</li>
+  <li><b>train</b>: mean shots of recent training games (includes ε's random shots).</li>
+  <li><b>loss</b>: the Huber loss. It doesn't need to go to 0: targets are noisy because the hidden layout varies.</li>
+</ul>
+
+<!-- ================================================================== -->
+<h2 id="results"><span class="num">26</span>Results so far</h2>
+<h3>4×4 pilot (exact: one game per layout over all 264 layouts)</h3>
+<table>
+<tr><th>Agent</th><th class="n">Expected shots</th></tr>
+<tr><td>Random</td><td class="n">14.23</td></tr>
+<tr><td>Q-table on the board (PR #14)</td><td class="n">~13.9</td></tr>
+<tr><td>Hunt-target with parity</td><td class="n">9.70</td></tr>
+<tr><td>Q-table on the exact belief (PR #15), 7 min per seed</td><td class="n">8.97</td></tr>
+<tr><td><b>DQN, variant A, from scratch, 75 s</b></td><td class="n"><b>8.92</b></td></tr>
+<tr><td>Probability density</td><td class="n">8.86</td></tr>
+<tr><td>Optimal (exact V*)</td><td class="n">8.746</td></tr>
+</table>
+<p>The DQN, given only the raw board, learned in about a minute to play at the level of the hand-written expert. The paired difference against density is +0.06 ± 0.26 shots, i.e. not significant.</p>
+<h3>10×10 (2,000 test boards, seeds 0–1999)</h3>
+<table>
+<tr><th>Agent</th><th class="n">Mean shots</th><th class="n">Paired vs density (95%)</th><th class="n">Training</th></tr>
+<tr><td>Random</td><td class="n">95.27</td><td class="n">+50.62 ± 0.45</td><td class="n">–</td></tr>
+<tr><td>Hunt-target with parity</td><td class="n">50.76</td><td class="n">+6.11 ± 0.55</td><td class="n">–</td></tr>
+<tr><td>Probability density</td><td class="n">44.65</td><td class="n">–</td><td class="n">–</td></tr>
+<tr><td>Belief greedy (particles)</td><td class="n">44.50</td><td class="n">−0.15 ± 0.51</td><td class="n">–</td></tr>
+<tr><td>DQN-A (board only)</td><td class="n">53.00</td><td class="n">+8.35 ± 0.54</td><td class="n">12.4 min</td></tr>
+<tr><td><b>DQN-B (+ density input)</b></td><td class="n"><b>45.85</b></td><td class="n">+1.20 ± 0.46</td><td class="n">14.1 min</td></tr>
+<tr><td>DQN-C (residual)</td><td class="n">46.05</td><td class="n">+1.41 ± 0.46</td><td class="n">14.0 min</td></tr>
+</table>
+<p>How to read the "paired" column: each agent played the same 2,000 boards as probability density, and we average the per-board difference. +1.20 ± 0.46 means DQN-B needs 1.20 more shots per game, and the true gap is very likely between 0.74 and 1.66. An interval that excludes 0 means the difference is real, not luck.</p>
+<ul>
+  <li><b>A</b> learned from 90.5 to 52.4 validation shots within 15k games (about the best published DQN, ~52), then became unstable while its loss kept rising: the classic DQN divergence from section 9.</li>
+  <li><b>B</b> shows that the density helps a lot as an <i>input</i>: 7.2 shots better than A, and only 1.2 behind the expert.</li>
+  <li><b>C</b> started at the density level, but early corrections were badly calibrated and pushed it to 56 shots; it recovered to about 45 without beating its starting point.</li>
+  <li><b>Where the DQN loses shots:</b> it hunts in fewer shots than density (17.1 against 27.5), but fires many more while a damaged ship is still afloat (28.8 against 17.2). It tends to leave a hit ship and probe elsewhere before finishing it.</li>
+</ul>
+<div class="box key"><span class="label">What this means</span>
+A network learns Battleship from experience far more efficiently than a table does, but with one seed and untuned settings it doesn't beat the hand-written expert. Full analysis: <code>docs/design_dqn.md</code> and <code>report/dqn_report.pdf</code>.</div>
+
+<!-- ================================================================== -->
+<h2 id="glossary"><span class="num">27</span>Glossary</h2>
+<table>
+<tr><th>Term</th><th>Meaning</th></tr>
+<tr><td>Ablation</td><td>Removing or changing one part of a design to measure its effect.</td></tr>
+<tr><td>Adam</td><td>An optimizer: gradient descent with an adaptive step size per weight.</td></tr>
+<tr><td>argmax</td><td>The input that gives the largest output ("which cell is best").</td></tr>
+<tr><td>Batch</td><td>A group of examples processed together in one training step.</td></tr>
+<tr><td>Bellman equation</td><td>Value of an action = reward now + discounted value of the best next action.</td></tr>
+<tr><td>Channel / plane</td><td>One 10×10 grid of numbers in the network's input or hidden layers.</td></tr>
+<tr><td>Checkpoint</td><td>Saved network weights (<code>.pt</code> file).</td></tr>
+<tr><td>Convolution</td><td>Sliding a small grid of weights over the board to detect a local pattern.</td></tr>
+<tr><td>Double DQN</td><td>Online network picks the next action, target network scores it; reduces overestimation.</td></tr>
+<tr><td>Dueling network</td><td>Q split into a board value V and per-cell advantages A.</td></tr>
+<tr><td>Episode</td><td>One full game.</td></tr>
+<tr><td>ε-greedy</td><td>Act randomly with probability ε, otherwise pick the best action.</td></tr>
+<tr><td>Experience replay</td><td>Storing transitions and training on random batches of them.</td></tr>
+<tr><td>Generalization</td><td>Doing well on inputs never seen during training.</td></tr>
+<tr><td>Gradient</td><td>The slope of the loss with respect to every weight: which way is uphill.</td></tr>
+<tr><td>Gradient descent</td><td>Repeatedly stepping the weights a little downhill on the loss.</td></tr>
+<tr><td>Huber loss</td><td>Squared for small errors, linear for large ones; robust to outliers.</td></tr>
+<tr><td>Hyperparameter</td><td>A setting chosen by us, not learned (learning rate, γ, …).</td></tr>
+<tr><td>Learning rate (α, η, <code>lr</code>)</td><td>The step size of each update.</td></tr>
+<tr><td>Loss</td><td>A number measuring how wrong the network is.</td></tr>
+<tr><td>Markov state</td><td>A state that contains everything about the past that matters for the future.</td></tr>
+<tr><td>Masking</td><td>Setting illegal actions' Q to −∞ so they're never chosen.</td></tr>
+<tr><td>MDP / POMDP</td><td>(Partially Observable) Markov Decision Process: the formal model of a sequential decision problem; "partially observable" = some of the state is hidden.</td></tr>
+<tr><td>Model-free</td><td>Learns from experience without being given the environment's rules or probabilities.</td></tr>
+<tr><td>MPS</td><td>Apple's GPU backend for PyTorch.</td></tr>
+<tr><td>Paired difference</td><td>Comparing two agents on the <i>same</i> boards, game by game; much less noisy than comparing two averages.</td></tr>
+<tr><td>Policy</td><td>The rule for choosing actions.</td></tr>
+<tr><td>Probability density</td><td>Hand-written strategy: fire at the cell covered by the most possible ship positions.</td></tr>
+<tr><td>Q-value Q(s, a)</td><td>Expected return of action a in state s, then playing well.</td></tr>
+<tr><td>Receptive field</td><td>How far a network layer can "see" around a cell (9×9 after 4 layers of 3×3).</td></tr>
+<tr><td>ReLU</td><td>max(0, z): the bend that lets networks represent complex functions.</td></tr>
+<tr><td>Residual (here)</td><td>Q = fixed baseline (density) + learned correction.</td></tr>
+<tr><td>Return</td><td>Total (discounted) reward from now to the end of the episode.</td></tr>
+<tr><td>Target network</td><td>A frozen copy of the network used to compute targets.</td></tr>
+<tr><td>TD error δ</td><td>Target minus prediction: how surprised the agent was.</td></tr>
+<tr><td>Tensor</td><td>A multi-dimensional array (PyTorch's version of a NumPy array), usable on the GPU.</td></tr>
+<tr><td>Validation set</td><td>Boards used to pick the best checkpoint; kept separate from the final test boards.</td></tr>
+<tr><td>Weights θ</td><td>The adjustable numbers inside a network.</td></tr>
+</table>
+<p style="color:var(--muted);margin-top:40px;font-size:14px">Part of the AI Foundations group project. Design rationale: <code>docs/design_dqn.md</code>.</p>
+</main>
+</div>
+<script>
+(function () {
+  var root = document.documentElement, key = "dqn-tutorial-theme";
+  try { var saved = localStorage.getItem(key); if (saved) root.setAttribute("data-theme", saved); } catch (e) {}
+  document.getElementById("themeToggle").addEventListener("click", function () {
+    var dark = root.getAttribute("data-theme") === "dark" ||
+      (!root.getAttribute("data-theme") && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    var next = dark ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem(key, next); } catch (e) {}
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+mini board: NetConfig(channels=32, layers=4, use_density=False, residual=0.0)  TrainConfig(games=100000, parallel=256, batch=256, replay_ratio=8, buffer=200000, learn_start=5000, lr=0.0003, gamma=1.0, target_every=1000, eps_start=1.0, eps_end=0.02, eps_fraction=0.3, double=True, grad_clip=10.0, eval_every=10000, seed=0, device='')
+games       0  eval  13.56 ± 0.31  train    nan  eps 1.000  loss nan       0s
+games   10024  eval   9.65 ± 0.26  train  13.46  eps 0.673  loss 0.019      11s
+games   20027  eval   9.44 ± 0.21  train  11.37  eps 0.346  loss 0.077      19s
+games   30020  eval   9.12 ± 0.21  train   9.83  eps 0.020  loss 0.127      27s
+games   40007  eval   8.97 ± 0.20  train   9.07  eps 0.020  loss 0.154      34s
+games   50028  eval   8.87 ± 0.20  train   9.00  eps 0.020  loss 0.146      40s
+games   60021  eval   8.84 ± 0.20  train   8.99  eps 0.020  loss 0.140      47s
+games   70029  eval   8.90 ± 0.20  train   8.95  eps 0.020  loss 0.136      54s
+games   80014  eval   8.86 ± 0.20  train   8.97  eps 0.020  loss 0.134      61s
+games   90012  eval   8.83 ± 0.20  train   8.97  eps 0.020  loss 0.138      68s
+games  100007  eval   8.92 ± 0.19  train   8.99  eps 0.020  loss 0.141      75s
+done in 1.3 min; best validation 8.830 at 90012 games; final 8.924
