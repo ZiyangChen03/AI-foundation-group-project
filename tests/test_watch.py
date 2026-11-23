@@ -46,3 +46,52 @@ def test_heat_is_the_agents_belief():
 def test_planners_need_the_small_board():
     with pytest.raises(SystemExit):
         main(["--agent", "optimal", "--board", "classic"])
+
+
+def test_q_view_shows_the_planners_values_and_the_agent_fires_at_the_smallest():
+    from battleship.planning import planner
+    app = WatchApp(MINI, "optimal", seed=12, show="q")
+    try:
+        plan = planner(MINI)
+        while not app.game.done:
+            app.render()
+            q = app.q["q"]
+            assert set(q) == set(app.observation.legal_actions)
+            layouts, fired = plan.state(app.agent.belief)
+            assert q[app.target] == pytest.approx(plan.optimal_value(layouts, fired))
+            assert q[app.target] == pytest.approx(min(q.values()))
+            # Q* = ship cells still unhit + P(miss now) + misses later, with misses later >= 0
+            later = q[app.target] - app.q["unhit"] - (1 - app.heat[app.target])
+            assert later >= -1e-9
+            press(app, pygame.K_SPACE)
+        assert app.q is None
+    finally:
+        pygame.quit()
+
+
+def test_q_key_switches_views_for_the_greedy_agent():
+    app = WatchApp(MINI, "belief", seed=12)
+    try:
+        assert app.q is None
+        press(app, pygame.K_q)
+        assert app.show == "q" and app.q is not None
+        assert app.q["q"][app.target] >= app.q["best"] - 1e-9     # greedy need not be optimal
+        press(app, pygame.K_SPACE)
+        assert app.q is not None                                  # stays on for the next shot
+        press(app, pygame.K_q)
+        assert app.show == "p" and app.q is None
+    finally:
+        pygame.quit()
+
+
+def test_q_view_is_only_for_pomdp_agents_on_the_small_board():
+    for argv in (["--agent", "density", "--show", "q"],
+                 ["--agent", "belief", "--board", "classic", "--show", "q"]):
+        with pytest.raises(SystemExit):
+            main(argv)
+    app = WatchApp(MINI, "density", seed=0)
+    try:
+        press(app, pygame.K_q)                                     # ignored: no exact belief
+        assert app.show == "p" and app.q is None
+    finally:
+        pygame.quit()

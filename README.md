@@ -64,6 +64,8 @@ Watch an agent play, with its belief shown on the board:
 
 ```bash
 uv run battleship_4x4.py --agent belief      # or optimal, rollout, density, hunt, random
+uv run battleship_4x4.py --agent optimal --show q   # Q* (expected shots left) on each square
+uv run scripts/show_q_values.py --play 12    # the same numbers in the terminal, move by move
 uv run scripts/verify_belief.py              # checks for the POMDP agent (~5 min)
 ```
 
