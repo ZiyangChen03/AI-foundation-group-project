@@ -1,16 +1,18 @@
 """Train a DQN agent and save the model and learning curve.
 
-    uv run scripts/train_dqn.py --board mini --variant board --games 20000
-    uv run scripts/train_dqn.py --board classic --variant residual --games 50000
+    uv run --extra dqn scripts/train_dqn.py --board mini --variant board --games 20000
+    uv run --extra dqn scripts/train_dqn.py --board classic --variant residual --games 50000
 
 Variants (docs/design_dqn.md, section 5):
     board     A: board planes only, learned from scratch
     density   B: board planes + the probability-density map as an input
     residual  C: B, plus Q = c * density + network (starts as probability density)
 
-Validation boards: on 4x4 all 264 layouts (the exact expected shots); on 10x10
-seeds 100000+ (the final benchmark uses seeds 0-1999, so they never overlap).
-The checkpoint with the best validation score is kept as ``best.pt``.
+Validation boards: on 10x10 seeds 100000+ (the final benchmark uses seeds
+0-1999, so they never overlap); on 4x4 all 264 layouts, which give the exact
+expected shots but are also the test set (4x4 has no other boards). The
+checkpoint with the best validation score is kept as ``best.pt``; on 4x4 it is
+chosen by the test score, so report ``final.pt`` there.
 """
 
 import argparse
@@ -26,7 +28,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from battleship import CLASSIC, MINI, all_layouts  # noqa: E402
 from battleship.dqn import model as qmodel  # noqa: E402
 from battleship.dqn.model import NetConfig  # noqa: E402
-from battleship.dqn.train import TrainConfig, eval_layouts, train  # noqa: E402
+from battleship.dqn.train import TrainConfig, default_device, eval_layouts, train  # noqa: E402
 
 BOARDS = {"mini": MINI, "classic": CLASSIC}
 VARIANTS = {"board": {}, "density": {"use_density": True},
@@ -45,8 +47,14 @@ def main(argv=None):
     p.add_argument("--eval-games", type=int, default=500, help="10x10 validation boards")
     p.add_argument("--out", type=Path, help="default: results/dqn/<board>_<variant>_s<seed>")
     for field, value in asdict(TrainConfig()).items():
-        if field != "games":
-            p.add_argument("--" + field.replace("_", "-"), type=type(value), default=value)
+        if field == "games":
+            continue
+        flag = "--" + field.replace("_", "-")
+        if isinstance(value, bool):
+            # type=bool would read any text, even "False", as True: use --x / --no-x.
+            p.add_argument(flag, action=argparse.BooleanOptionalAction, default=value)
+        else:
+            p.add_argument(flag, type=type(value), default=value)
     args = p.parse_args(argv)
 
     config = BOARDS[args.board]
@@ -56,6 +64,8 @@ def main(argv=None):
     net = NetConfig(args.channels, args.layers, **options)
     tc = TrainConfig(games=args.games, **{f: getattr(args, f) for f in asdict(TrainConfig())
                                           if f != "games"})
+    if not tc.device:                     # so the log and summary.json say which device ran
+        tc.device = default_device()
     layouts = (list(all_layouts(config)) if config == MINI
                else eval_layouts(config, args.eval_games, VALIDATION_SEED))
     out = args.out or Path("results/dqn") / f"{args.board}_{args.variant}_s{tc.seed}"
@@ -68,29 +78,29 @@ def main(argv=None):
             best.update(row)
             qmodel.save(out / "best.pt", model, config, {"name": name, **row})
 
-    log_file = (out / "log.txt").open("w")
+    with (out / "log.txt").open("w") as log_file:     # closed even if training stops early
 
-    def log(line):
-        print(line, flush=True)
-        log_file.write(line + "\n")
-        log_file.flush()
+        def log(line):
+            print(line, flush=True)
+            log_file.write(line + "\n")
+            log_file.flush()
 
-    log(f"{args.board} {args.variant}: {net}  {tc}")
-    started = time.time()
-    model, rows = train(config, net, tc, layouts, log=log, callback=keep_best)
-    seconds = time.time() - started
-    qmodel.save(out / "final.pt", model, config, {"name": name, **rows[-1]})
-    with (out / "curve.csv").open("w", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=list(rows[0]))
-        writer.writeheader()
-        writer.writerows(rows)
-    summary = {"board": args.board, "variant": args.variant, "net": asdict(net), "train": asdict(tc),
-               "validation_boards": len(layouts), "seconds": seconds,
-               "parameters": sum(p.numel() for p in model.parameters()),
-               "final": rows[-1], "best": best}
-    (out / "summary.json").write_text(json.dumps(summary, indent=2))
-    log(f"done in {seconds / 60:.1f} min; best validation {best['eval_mean']:.3f} "
-        f"at {best['games']} games; final {rows[-1]['eval_mean']:.3f}")
+        log(f"{args.board} {args.variant}: {net}  {tc}")
+        started = time.time()
+        model, rows = train(config, net, tc, layouts, log=log, callback=keep_best)
+        seconds = time.time() - started
+        qmodel.save(out / "final.pt", model, config, {"name": name, **rows[-1]})
+        with (out / "curve.csv").open("w", newline="") as f:
+            writer = csv.DictWriter(f, fieldnames=list(rows[0]))
+            writer.writeheader()
+            writer.writerows(rows)
+        summary = {"board": args.board, "variant": args.variant, "net": asdict(net),
+                   "train": asdict(tc), "validation_boards": len(layouts), "seconds": seconds,
+                   "parameters": sum(p.numel() for p in model.parameters()),
+                   "final": rows[-1], "best": best}
+        (out / "summary.json").write_text(json.dumps(summary, indent=2))
+        log(f"done in {seconds / 60:.1f} min; best validation {best['eval_mean']:.3f} "
+            f"at {best['games']} games; final {rows[-1]['eval_mean']:.3f}")
 
 
 if __name__ == "__main__":

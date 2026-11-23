@@ -79,6 +79,22 @@ beliefs as bitmasks over layouts and three answer-preserving shortcuts (never fi
 certain misses; fire a certain hit first; a branch-and-bound lower bound). The 4×4
 optimum takes about 10 s.
 
+### Information-gain planners (4×4)
+
+Two extra planners use the exact belief. With a uniform belief, H(b) = log2 |b|,
+so a shot's expected information gain is log2 |b| − Σ_o P(o|b,a) log2 |b_a^o|
+(`Planner.expected_entropy`).
+
+| `planner=` | Rule | Exact expected shots, 4×4 |
+|---|---|---|
+| `"infogain"` | fire where the outcome is expected to shrink the belief most | 8.958 |
+| `"greedy-info"` | greedy, ties between equally likely cells broken by information gain | 8.899 |
+
+For comparison: greedy 8.913, optimal 8.746 (same with sunk cells hidden, where
+optimal is 8.754). Pure information gain is *worse* than greedy: it spends shots
+learning about the board instead of hitting ships, and every shot costs the same.
+Used only to break ties, it beats random tie-breaking.
+
 ## 5. Verification
 
 Each piece is checked against something independent (`tests/test_belief.py`,

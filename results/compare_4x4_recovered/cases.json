@@ -1,0 +1,4118 @@
+[
+  {
+    "agent": "Random",
+    "training_seed": null,
+    "category": "fewest shots",
+    "layout_index": 76,
+    "policy_seed": 15,
+    "effective_policy_seed": 76000243,
+    "layout": [
+      [
+        2,
+        6,
+        10
+      ],
+      [
+        7,
+        11
+      ]
+    ],
+    "shots": 5,
+    "misses": 0,
+    "first_hit_shot": 1,
+    "misses_before_first_hit": 0,
+    "misses_after_first_hit": 0,
+    "sunk_at_shots": [
+      4,
+      5
+    ],
+    "history": [
+      {
+        "cell": 10,
+        "label": "C3",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 6,
+        "label": "C2",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 7,
+        "label": "D2",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 11,
+        "label": "D3",
+        "result": "sunk",
+        "sunk_length": 2
+      },
+      {
+        "cell": 2,
+        "label": "C1",
+        "result": "sunk",
+        "sunk_length": 3
+      }
+    ]
+  },
+  {
+    "agent": "Random",
+    "training_seed": null,
+    "category": "most shots",
+    "layout_index": 0,
+    "policy_seed": 9,
+    "effective_policy_seed": 9,
+    "layout": [
+      [
+        0,
+        1,
+        2
+      ],
+      [
+        3,
+        7
+      ]
+    ],
+    "shots": 16,
+    "misses": 11,
+    "first_hit_shot": 5,
+    "misses_before_first_hit": 4,
+    "misses_after_first_hit": 7,
+    "sunk_at_shots": [
+      11,
+      16
+    ],
+    "history": [
+      {
+        "cell": 14,
+        "label": "C4",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 9,
+        "label": "B3",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 5,
+        "label": "B2",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 4,
+        "label": "A2",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 2,
+        "label": "C1",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 3,
+        "label": "D1",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 0,
+        "label": "A1",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 11,
+        "label": "D3",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 15,
+        "label": "D4",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 10,
+        "label": "C3",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 1,
+        "label": "B1",
+        "result": "sunk",
+        "sunk_length": 3
+      },
+      {
+        "cell": 8,
+        "label": "A3",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 6,
+        "label": "C2",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 13,
+        "label": "B4",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 12,
+        "label": "A4",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 7,
+        "label": "D2",
+        "result": "sunk",
+        "sunk_length": 2
+      }
+    ]
+  },
+  {
+    "agent": "Hunt-target",
+    "training_seed": null,
+    "category": "fewest shots",
+    "layout_index": 0,
+    "policy_seed": 6,
+    "effective_policy_seed": 6,
+    "layout": [
+      [
+        0,
+        1,
+        2
+      ],
+      [
+        3,
+        7
+      ]
+    ],
+    "shots": 5,
+    "misses": 0,
+    "first_hit_shot": 1,
+    "misses_before_first_hit": 0,
+    "misses_after_first_hit": 0,
+    "sunk_at_shots": [
+      4,
+      5
+    ],
+    "history": [
+      {
+        "cell": 2,
+        "label": "C1",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 3,
+        "label": "D1",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 1,
+        "label": "B1",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 0,
+        "label": "A1",
+        "result": "sunk",
+        "sunk_length": 3
+      },
+      {
+        "cell": 7,
+        "label": "D2",
+        "result": "sunk",
+        "sunk_length": 2
+      }
+    ]
+  },
+  {
+    "agent": "Hunt-target",
+    "training_seed": null,
+    "category": "most shots",
+    "layout_index": 6,
+    "policy_seed": 0,
+    "effective_policy_seed": 6000018,
+    "layout": [
+      [
+        0,
+        1,
+        2
+      ],
+      [
+        6,
+        10
+      ]
+    ],
+    "shots": 16,
+    "misses": 11,
+    "first_hit_shot": 6,
+    "misses_before_first_hit": 5,
+    "misses_after_first_hit": 6,
+    "sunk_at_shots": [
+      9,
+      16
+    ],
+    "history": [
+      {
+        "cell": 12,
+        "label": "A4",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 5,
+        "label": "B2",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 3,
+        "label": "D1",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 14,
+        "label": "C4",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 11,
+        "label": "D3",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 0,
+        "label": "A1",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 4,
+        "label": "A2",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 1,
+        "label": "B1",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 2,
+        "label": "C1",
+        "result": "sunk",
+        "sunk_length": 3
+      },
+      {
+        "cell": 9,
+        "label": "B3",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 7,
+        "label": "D2",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 15,
+        "label": "D4",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 13,
+        "label": "B4",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 8,
+        "label": "A3",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 6,
+        "label": "C2",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 10,
+        "label": "C3",
+        "result": "sunk",
+        "sunk_length": 2
+      }
+    ]
+  },
+  {
+    "agent": "Hunt-target + parity",
+    "training_seed": null,
+    "category": "fewest shots",
+    "layout_index": 0,
+    "policy_seed": 6,
+    "effective_policy_seed": 6,
+    "layout": [
+      [
+        0,
+        1,
+        2
+      ],
+      [
+        3,
+        7
+      ]
+    ],
+    "shots": 5,
+    "misses": 0,
+    "first_hit_shot": 1,
+    "misses_before_first_hit": 0,
+    "misses_after_first_hit": 0,
+    "sunk_at_shots": [
+      4,
+      5
+    ],
+    "history": [
+      {
+        "cell": 2,
+        "label": "C1",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 3,
+        "label": "D1",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 1,
+        "label": "B1",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 0,
+        "label": "A1",
+        "result": "sunk",
+        "sunk_length": 3
+      },
+      {
+        "cell": 7,
+        "label": "D2",
+        "result": "sunk",
+        "sunk_length": 2
+      }
+    ]
+  },
+  {
+    "agent": "Hunt-target + parity",
+    "training_seed": null,
+    "category": "most shots",
+    "layout_index": 255,
+    "policy_seed": 6,
+    "effective_policy_seed": 255000771,
+    "layout": [
+      [
+        13,
+        14,
+        15
+      ],
+      [
+        5,
+        6
+      ]
+    ],
+    "shots": 16,
+    "misses": 11,
+    "first_hit_shot": 5,
+    "misses_before_first_hit": 4,
+    "misses_after_first_hit": 7,
+    "sunk_at_shots": [
+      9,
+      16
+    ],
+    "history": [
+      {
+        "cell": 10,
+        "label": "C3",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 7,
+        "label": "D2",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 2,
+        "label": "C1",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 8,
+        "label": "A3",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 5,
+        "label": "B2",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 9,
+        "label": "B3",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 1,
+        "label": "B1",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 4,
+        "label": "A2",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 6,
+        "label": "C2",
+        "result": "sunk",
+        "sunk_length": 2
+      },
+      {
+        "cell": 3,
+        "label": "D1",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 12,
+        "label": "A4",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 0,
+        "label": "A1",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 15,
+        "label": "D4",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 11,
+        "label": "D3",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 14,
+        "label": "C4",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 13,
+        "label": "B4",
+        "result": "sunk",
+        "sunk_length": 3
+      }
+    ]
+  },
+  {
+    "agent": "Probability density",
+    "training_seed": null,
+    "category": "fewest shots",
+    "layout_index": 4,
+    "policy_seed": 7,
+    "effective_policy_seed": 4000019,
+    "layout": [
+      [
+        0,
+        1,
+        2
+      ],
+      [
+        5,
+        9
+      ]
+    ],
+    "shots": 5,
+    "misses": 0,
+    "first_hit_shot": 1,
+    "misses_before_first_hit": 0,
+    "misses_after_first_hit": 0,
+    "sunk_at_shots": [
+      2,
+      5
+    ],
+    "history": [
+      {
+        "cell": 5,
+        "label": "B2",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 9,
+        "label": "B3",
+        "result": "sunk",
+        "sunk_length": 2
+      },
+      {
+        "cell": 2,
+        "label": "C1",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 1,
+        "label": "B1",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 0,
+        "label": "A1",
+        "result": "sunk",
+        "sunk_length": 3
+      }
+    ]
+  },
+  {
+    "agent": "Probability density",
+    "training_seed": null,
+    "category": "most shots",
+    "layout_index": 219,
+    "policy_seed": 13,
+    "effective_policy_seed": 219000670,
+    "layout": [
+      [
+        9,
+        10,
+        11
+      ],
+      [
+        3,
+        7
+      ]
+    ],
+    "shots": 13,
+    "misses": 8,
+    "first_hit_shot": 2,
+    "misses_before_first_hit": 1,
+    "misses_after_first_hit": 7,
+    "sunk_at_shots": [
+      5,
+      13
+    ],
+    "history": [
+      {
+        "cell": 5,
+        "label": "B2",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 10,
+        "label": "C3",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 6,
+        "label": "C2",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 9,
+        "label": "B3",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 11,
+        "label": "D3",
+        "result": "sunk",
+        "sunk_length": 3
+      },
+      {
+        "cell": 2,
+        "label": "C1",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 4,
+        "label": "A2",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 13,
+        "label": "B4",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 12,
+        "label": "A4",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 14,
+        "label": "C4",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 0,
+        "label": "A1",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 7,
+        "label": "D2",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 3,
+        "label": "D1",
+        "result": "sunk",
+        "sunk_length": 2
+      }
+    ]
+  },
+  {
+    "agent": "POMDP greedy",
+    "training_seed": null,
+    "category": "fewest shots",
+    "layout_index": 4,
+    "policy_seed": 7,
+    "effective_policy_seed": 4000019,
+    "layout": [
+      [
+        0,
+        1,
+        2
+      ],
+      [
+        5,
+        9
+      ]
+    ],
+    "shots": 5,
+    "misses": 0,
+    "first_hit_shot": 1,
+    "misses_before_first_hit": 0,
+    "misses_after_first_hit": 0,
+    "sunk_at_shots": [
+      2,
+      5
+    ],
+    "history": [
+      {
+        "cell": 5,
+        "label": "B2",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 9,
+        "label": "B3",
+        "result": "sunk",
+        "sunk_length": 2
+      },
+      {
+        "cell": 2,
+        "label": "C1",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 1,
+        "label": "B1",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 0,
+        "label": "A1",
+        "result": "sunk",
+        "sunk_length": 3
+      }
+    ]
+  },
+  {
+    "agent": "POMDP greedy",
+    "training_seed": null,
+    "category": "most shots",
+    "layout_index": 219,
+    "policy_seed": 13,
+    "effective_policy_seed": 219000670,
+    "layout": [
+      [
+        9,
+        10,
+        11
+      ],
+      [
+        3,
+        7
+      ]
+    ],
+    "shots": 13,
+    "misses": 8,
+    "first_hit_shot": 2,
+    "misses_before_first_hit": 1,
+    "misses_after_first_hit": 7,
+    "sunk_at_shots": [
+      5,
+      13
+    ],
+    "history": [
+      {
+        "cell": 5,
+        "label": "B2",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 10,
+        "label": "C3",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 6,
+        "label": "C2",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 9,
+        "label": "B3",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 11,
+        "label": "D3",
+        "result": "sunk",
+        "sunk_length": 3
+      },
+      {
+        "cell": 2,
+        "label": "C1",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 4,
+        "label": "A2",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 13,
+        "label": "B4",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 12,
+        "label": "A4",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 14,
+        "label": "C4",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 0,
+        "label": "A1",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 7,
+        "label": "D2",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 3,
+        "label": "D1",
+        "result": "sunk",
+        "sunk_length": 2
+      }
+    ]
+  },
+  {
+    "agent": "POMDP rollout",
+    "training_seed": null,
+    "category": "fewest shots",
+    "layout_index": 4,
+    "policy_seed": 7,
+    "effective_policy_seed": 4000019,
+    "layout": [
+      [
+        0,
+        1,
+        2
+      ],
+      [
+        5,
+        9
+      ]
+    ],
+    "shots": 5,
+    "misses": 0,
+    "first_hit_shot": 1,
+    "misses_before_first_hit": 0,
+    "misses_after_first_hit": 0,
+    "sunk_at_shots": [
+      2,
+      5
+    ],
+    "history": [
+      {
+        "cell": 5,
+        "label": "B2",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 9,
+        "label": "B3",
+        "result": "sunk",
+        "sunk_length": 2
+      },
+      {
+        "cell": 2,
+        "label": "C1",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 1,
+        "label": "B1",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 0,
+        "label": "A1",
+        "result": "sunk",
+        "sunk_length": 3
+      }
+    ]
+  },
+  {
+    "agent": "POMDP rollout",
+    "training_seed": null,
+    "category": "most shots",
+    "layout_index": 5,
+    "policy_seed": 12,
+    "effective_policy_seed": 5000027,
+    "layout": [
+      [
+        0,
+        1,
+        2
+      ],
+      [
+        6,
+        7
+      ]
+    ],
+    "shots": 12,
+    "misses": 7,
+    "first_hit_shot": 4,
+    "misses_before_first_hit": 3,
+    "misses_after_first_hit": 4,
+    "sunk_at_shots": [
+      11,
+      12
+    ],
+    "history": [
+      {
+        "cell": 10,
+        "label": "C3",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 13,
+        "label": "B4",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 5,
+        "label": "B2",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 2,
+        "label": "C1",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 3,
+        "label": "D1",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 1,
+        "label": "B1",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 8,
+        "label": "A3",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 11,
+        "label": "D3",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 14,
+        "label": "C4",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 6,
+        "label": "C2",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 7,
+        "label": "D2",
+        "result": "sunk",
+        "sunk_length": 2
+      },
+      {
+        "cell": 0,
+        "label": "A1",
+        "result": "sunk",
+        "sunk_length": 3
+      }
+    ]
+  },
+  {
+    "agent": "POMDP optimal",
+    "training_seed": null,
+    "category": "fewest shots",
+    "layout_index": 4,
+    "policy_seed": 7,
+    "effective_policy_seed": 4000019,
+    "layout": [
+      [
+        0,
+        1,
+        2
+      ],
+      [
+        5,
+        9
+      ]
+    ],
+    "shots": 5,
+    "misses": 0,
+    "first_hit_shot": 1,
+    "misses_before_first_hit": 0,
+    "misses_after_first_hit": 0,
+    "sunk_at_shots": [
+      2,
+      5
+    ],
+    "history": [
+      {
+        "cell": 5,
+        "label": "B2",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 9,
+        "label": "B3",
+        "result": "sunk",
+        "sunk_length": 2
+      },
+      {
+        "cell": 2,
+        "label": "C1",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 1,
+        "label": "B1",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 0,
+        "label": "A1",
+        "result": "sunk",
+        "sunk_length": 3
+      }
+    ]
+  },
+  {
+    "agent": "POMDP optimal",
+    "training_seed": null,
+    "category": "most shots",
+    "layout_index": 5,
+    "policy_seed": 8,
+    "effective_policy_seed": 5000023,
+    "layout": [
+      [
+        0,
+        1,
+        2
+      ],
+      [
+        6,
+        7
+      ]
+    ],
+    "shots": 12,
+    "misses": 7,
+    "first_hit_shot": 3,
+    "misses_before_first_hit": 2,
+    "misses_after_first_hit": 5,
+    "sunk_at_shots": [
+      11,
+      12
+    ],
+    "history": [
+      {
+        "cell": 5,
+        "label": "B2",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 10,
+        "label": "C3",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 2,
+        "label": "C1",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 3,
+        "label": "D1",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 8,
+        "label": "A3",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 13,
+        "label": "B4",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 15,
+        "label": "D4",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 7,
+        "label": "D2",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 1,
+        "label": "B1",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 11,
+        "label": "D3",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 0,
+        "label": "A1",
+        "result": "sunk",
+        "sunk_length": 3
+      },
+      {
+        "cell": 6,
+        "label": "C2",
+        "result": "sunk",
+        "sunk_length": 2
+      }
+    ]
+  },
+  {
+    "agent": "POMDP info gain",
+    "training_seed": null,
+    "category": "fewest shots",
+    "layout_index": 4,
+    "policy_seed": 7,
+    "effective_policy_seed": 4000019,
+    "layout": [
+      [
+        0,
+        1,
+        2
+      ],
+      [
+        5,
+        9
+      ]
+    ],
+    "shots": 5,
+    "misses": 0,
+    "first_hit_shot": 1,
+    "misses_before_first_hit": 0,
+    "misses_after_first_hit": 0,
+    "sunk_at_shots": [
+      2,
+      5
+    ],
+    "history": [
+      {
+        "cell": 5,
+        "label": "B2",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 9,
+        "label": "B3",
+        "result": "sunk",
+        "sunk_length": 2
+      },
+      {
+        "cell": 2,
+        "label": "C1",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 0,
+        "label": "A1",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 1,
+        "label": "B1",
+        "result": "sunk",
+        "sunk_length": 3
+      }
+    ]
+  },
+  {
+    "agent": "POMDP info gain",
+    "training_seed": null,
+    "category": "most shots",
+    "layout_index": 1,
+    "policy_seed": 3,
+    "effective_policy_seed": 1000006,
+    "layout": [
+      [
+        0,
+        1,
+        2
+      ],
+      [
+        4,
+        5
+      ]
+    ],
+    "shots": 14,
+    "misses": 9,
+    "first_hit_shot": 10,
+    "misses_before_first_hit": 9,
+    "misses_after_first_hit": 0,
+    "sunk_at_shots": [
+      13,
+      14
+    ],
+    "history": [
+      {
+        "cell": 9,
+        "label": "B3",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 6,
+        "label": "C2",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 14,
+        "label": "C4",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 7,
+        "label": "D2",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 12,
+        "label": "A4",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 8,
+        "label": "A3",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 3,
+        "label": "D1",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 15,
+        "label": "D4",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 10,
+        "label": "C3",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 4,
+        "label": "A2",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 0,
+        "label": "A1",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 1,
+        "label": "B1",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 5,
+        "label": "B2",
+        "result": "sunk",
+        "sunk_length": 2
+      },
+      {
+        "cell": 2,
+        "label": "C1",
+        "result": "sunk",
+        "sunk_length": 3
+      }
+    ]
+  },
+  {
+    "agent": "POMDP greedy + info tie-break",
+    "training_seed": null,
+    "category": "fewest shots",
+    "layout_index": 4,
+    "policy_seed": 7,
+    "effective_policy_seed": 4000019,
+    "layout": [
+      [
+        0,
+        1,
+        2
+      ],
+      [
+        5,
+        9
+      ]
+    ],
+    "shots": 5,
+    "misses": 0,
+    "first_hit_shot": 1,
+    "misses_before_first_hit": 0,
+    "misses_after_first_hit": 0,
+    "sunk_at_shots": [
+      2,
+      5
+    ],
+    "history": [
+      {
+        "cell": 5,
+        "label": "B2",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 9,
+        "label": "B3",
+        "result": "sunk",
+        "sunk_length": 2
+      },
+      {
+        "cell": 2,
+        "label": "C1",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 1,
+        "label": "B1",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 0,
+        "label": "A1",
+        "result": "sunk",
+        "sunk_length": 3
+      }
+    ]
+  },
+  {
+    "agent": "POMDP greedy + info tie-break",
+    "training_seed": null,
+    "category": "most shots",
+    "layout_index": 219,
+    "policy_seed": 13,
+    "effective_policy_seed": 219000670,
+    "layout": [
+      [
+        9,
+        10,
+        11
+      ],
+      [
+        3,
+        7
+      ]
+    ],
+    "shots": 13,
+    "misses": 8,
+    "first_hit_shot": 2,
+    "misses_before_first_hit": 1,
+    "misses_after_first_hit": 7,
+    "sunk_at_shots": [
+      5,
+      13
+    ],
+    "history": [
+      {
+        "cell": 5,
+        "label": "B2",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 10,
+        "label": "C3",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 6,
+        "label": "C2",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 9,
+        "label": "B3",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 11,
+        "label": "D3",
+        "result": "sunk",
+        "sunk_length": 3
+      },
+      {
+        "cell": 2,
+        "label": "C1",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 4,
+        "label": "A2",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 13,
+        "label": "B4",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 12,
+        "label": "A4",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 14,
+        "label": "C4",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 0,
+        "label": "A1",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 7,
+        "label": "D2",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 3,
+        "label": "D1",
+        "result": "sunk",
+        "sunk_length": 2
+      }
+    ]
+  },
+  {
+    "agent": "Raw-board Q-learning",
+    "training_seed": 0,
+    "category": "fewest shots",
+    "layout_index": 0,
+    "policy_seed": 0,
+    "effective_policy_seed": 0,
+    "layout": [
+      [
+        0,
+        1,
+        2
+      ],
+      [
+        3,
+        7
+      ]
+    ],
+    "shots": 5,
+    "misses": 0,
+    "first_hit_shot": 1,
+    "misses_before_first_hit": 0,
+    "misses_after_first_hit": 0,
+    "sunk_at_shots": [
+      4,
+      5
+    ],
+    "history": [
+      {
+        "cell": 1,
+        "label": "B1",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 2,
+        "label": "C1",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 3,
+        "label": "D1",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 0,
+        "label": "A1",
+        "result": "sunk",
+        "sunk_length": 3
+      },
+      {
+        "cell": 7,
+        "label": "D2",
+        "result": "sunk",
+        "sunk_length": 2
+      }
+    ]
+  },
+  {
+    "agent": "Raw-board Q-learning",
+    "training_seed": 0,
+    "category": "most shots",
+    "layout_index": 96,
+    "policy_seed": 0,
+    "effective_policy_seed": 96000288,
+    "layout": [
+      [
+        3,
+        7,
+        11
+      ],
+      [
+        9,
+        10
+      ]
+    ],
+    "shots": 16,
+    "misses": 11,
+    "first_hit_shot": 3,
+    "misses_before_first_hit": 2,
+    "misses_after_first_hit": 9,
+    "sunk_at_shots": [
+      11,
+      16
+    ],
+    "history": [
+      {
+        "cell": 1,
+        "label": "B1",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 4,
+        "label": "A2",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 3,
+        "label": "D1",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 15,
+        "label": "D4",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 5,
+        "label": "B2",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 14,
+        "label": "C4",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 0,
+        "label": "A1",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 7,
+        "label": "D2",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 2,
+        "label": "C1",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 6,
+        "label": "C2",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 11,
+        "label": "D3",
+        "result": "sunk",
+        "sunk_length": 3
+      },
+      {
+        "cell": 12,
+        "label": "A4",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 9,
+        "label": "B3",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 13,
+        "label": "B4",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 8,
+        "label": "A3",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 10,
+        "label": "C3",
+        "result": "sunk",
+        "sunk_length": 2
+      }
+    ]
+  },
+  {
+    "agent": "Raw-board Q-learning",
+    "training_seed": 1,
+    "category": "fewest shots",
+    "layout_index": 36,
+    "policy_seed": 0,
+    "effective_policy_seed": 36000108,
+    "layout": [
+      [
+        1,
+        2,
+        3
+      ],
+      [
+        0,
+        4
+      ]
+    ],
+    "shots": 5,
+    "misses": 0,
+    "first_hit_shot": 1,
+    "misses_before_first_hit": 0,
+    "misses_after_first_hit": 0,
+    "sunk_at_shots": [
+      4,
+      5
+    ],
+    "history": [
+      {
+        "cell": 0,
+        "label": "A1",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 1,
+        "label": "B1",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 2,
+        "label": "C1",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 3,
+        "label": "D1",
+        "result": "sunk",
+        "sunk_length": 3
+      },
+      {
+        "cell": 4,
+        "label": "A2",
+        "result": "sunk",
+        "sunk_length": 2
+      }
+    ]
+  },
+  {
+    "agent": "Raw-board Q-learning",
+    "training_seed": 1,
+    "category": "most shots",
+    "layout_index": 142,
+    "policy_seed": 0,
+    "effective_policy_seed": 142000426,
+    "layout": [
+      [
+        5,
+        6,
+        7
+      ],
+      [
+        9,
+        10
+      ]
+    ],
+    "shots": 16,
+    "misses": 11,
+    "first_hit_shot": 6,
+    "misses_before_first_hit": 5,
+    "misses_after_first_hit": 6,
+    "sunk_at_shots": [
+      12,
+      16
+    ],
+    "history": [
+      {
+        "cell": 0,
+        "label": "A1",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 13,
+        "label": "B4",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 1,
+        "label": "B1",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 3,
+        "label": "D1",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 2,
+        "label": "C1",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 5,
+        "label": "B2",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 4,
+        "label": "A2",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 6,
+        "label": "C2",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 12,
+        "label": "A4",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 8,
+        "label": "A3",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 15,
+        "label": "D4",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 7,
+        "label": "D2",
+        "result": "sunk",
+        "sunk_length": 3
+      },
+      {
+        "cell": 10,
+        "label": "C3",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 14,
+        "label": "C4",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 11,
+        "label": "D3",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 9,
+        "label": "B3",
+        "result": "sunk",
+        "sunk_length": 2
+      }
+    ]
+  },
+  {
+    "agent": "Raw-board Q-learning",
+    "training_seed": 2,
+    "category": "fewest shots",
+    "layout_index": 2,
+    "policy_seed": 0,
+    "effective_policy_seed": 2000006,
+    "layout": [
+      [
+        0,
+        1,
+        2
+      ],
+      [
+        4,
+        8
+      ]
+    ],
+    "shots": 5,
+    "misses": 0,
+    "first_hit_shot": 1,
+    "misses_before_first_hit": 0,
+    "misses_after_first_hit": 0,
+    "sunk_at_shots": [
+      3,
+      5
+    ],
+    "history": [
+      {
+        "cell": 0,
+        "label": "A1",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 4,
+        "label": "A2",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 8,
+        "label": "A3",
+        "result": "sunk",
+        "sunk_length": 2
+      },
+      {
+        "cell": 2,
+        "label": "C1",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 1,
+        "label": "B1",
+        "result": "sunk",
+        "sunk_length": 3
+      }
+    ]
+  },
+  {
+    "agent": "Raw-board Q-learning",
+    "training_seed": 2,
+    "category": "most shots",
+    "layout_index": 50,
+    "policy_seed": 0,
+    "effective_policy_seed": 50000150,
+    "layout": [
+      [
+        1,
+        2,
+        3
+      ],
+      [
+        11,
+        15
+      ]
+    ],
+    "shots": 16,
+    "misses": 11,
+    "first_hit_shot": 2,
+    "misses_before_first_hit": 1,
+    "misses_after_first_hit": 10,
+    "sunk_at_shots": [
+      5,
+      16
+    ],
+    "history": [
+      {
+        "cell": 0,
+        "label": "A1",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 1,
+        "label": "B1",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 3,
+        "label": "D1",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 6,
+        "label": "C2",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 2,
+        "label": "C1",
+        "result": "sunk",
+        "sunk_length": 3
+      },
+      {
+        "cell": 5,
+        "label": "B2",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 13,
+        "label": "B4",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 4,
+        "label": "A2",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 12,
+        "label": "A4",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 8,
+        "label": "A3",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 7,
+        "label": "D2",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 9,
+        "label": "B3",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 10,
+        "label": "C3",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 15,
+        "label": "D4",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 14,
+        "label": "C4",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 11,
+        "label": "D3",
+        "result": "sunk",
+        "sunk_length": 2
+      }
+    ]
+  },
+  {
+    "agent": "Belief-state Q-learning",
+    "training_seed": 0,
+    "category": "fewest shots",
+    "layout_index": 44,
+    "policy_seed": 0,
+    "effective_policy_seed": 44000132,
+    "layout": [
+      [
+        1,
+        2,
+        3
+      ],
+      [
+        8,
+        9
+      ]
+    ],
+    "shots": 5,
+    "misses": 0,
+    "first_hit_shot": 1,
+    "misses_before_first_hit": 0,
+    "misses_after_first_hit": 0,
+    "sunk_at_shots": [
+      4,
+      5
+    ],
+    "history": [
+      {
+        "cell": 8,
+        "label": "A3",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 2,
+        "label": "C1",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 3,
+        "label": "D1",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 1,
+        "label": "B1",
+        "result": "sunk",
+        "sunk_length": 3
+      },
+      {
+        "cell": 9,
+        "label": "B3",
+        "result": "sunk",
+        "sunk_length": 2
+      }
+    ]
+  },
+  {
+    "agent": "Belief-state Q-learning",
+    "training_seed": 0,
+    "category": "most shots",
+    "layout_index": 262,
+    "policy_seed": 0,
+    "effective_policy_seed": 262000786,
+    "layout": [
+      [
+        13,
+        14,
+        15
+      ],
+      [
+        9,
+        10
+      ]
+    ],
+    "shots": 14,
+    "misses": 9,
+    "first_hit_shot": 8,
+    "misses_before_first_hit": 7,
+    "misses_after_first_hit": 2,
+    "sunk_at_shots": [
+      13,
+      14
+    ],
+    "history": [
+      {
+        "cell": 8,
+        "label": "A3",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 7,
+        "label": "D2",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 11,
+        "label": "D3",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 5,
+        "label": "B2",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 3,
+        "label": "D1",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 0,
+        "label": "A1",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 2,
+        "label": "C1",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 10,
+        "label": "C3",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 14,
+        "label": "C4",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 12,
+        "label": "A4",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 13,
+        "label": "B4",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 6,
+        "label": "C2",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 9,
+        "label": "B3",
+        "result": "sunk",
+        "sunk_length": 2
+      },
+      {
+        "cell": 15,
+        "label": "D4",
+        "result": "sunk",
+        "sunk_length": 3
+      }
+    ]
+  },
+  {
+    "agent": "Belief-state Q-learning",
+    "training_seed": 1,
+    "category": "fewest shots",
+    "layout_index": 82,
+    "policy_seed": 0,
+    "effective_policy_seed": 82000246,
+    "layout": [
+      [
+        2,
+        6,
+        10
+      ],
+      [
+        13,
+        14
+      ]
+    ],
+    "shots": 5,
+    "misses": 0,
+    "first_hit_shot": 1,
+    "misses_before_first_hit": 0,
+    "misses_after_first_hit": 0,
+    "sunk_at_shots": [
+      2,
+      5
+    ],
+    "history": [
+      {
+        "cell": 14,
+        "label": "C4",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 13,
+        "label": "B4",
+        "result": "sunk",
+        "sunk_length": 2
+      },
+      {
+        "cell": 2,
+        "label": "C1",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 10,
+        "label": "C3",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 6,
+        "label": "C2",
+        "result": "sunk",
+        "sunk_length": 3
+      }
+    ]
+  },
+  {
+    "agent": "Belief-state Q-learning",
+    "training_seed": 1,
+    "category": "most shots",
+    "layout_index": 95,
+    "policy_seed": 0,
+    "effective_policy_seed": 95000285,
+    "layout": [
+      [
+        3,
+        7,
+        11
+      ],
+      [
+        8,
+        12
+      ]
+    ],
+    "shots": 14,
+    "misses": 9,
+    "first_hit_shot": 3,
+    "misses_before_first_hit": 2,
+    "misses_after_first_hit": 7,
+    "sunk_at_shots": [
+      13,
+      14
+    ],
+    "history": [
+      {
+        "cell": 14,
+        "label": "C4",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 5,
+        "label": "B2",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 11,
+        "label": "D3",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 9,
+        "label": "B3",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 10,
+        "label": "C3",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 4,
+        "label": "A2",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 2,
+        "label": "C1",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 0,
+        "label": "A1",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 12,
+        "label": "A4",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 7,
+        "label": "D2",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 15,
+        "label": "D4",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 13,
+        "label": "B4",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 3,
+        "label": "D1",
+        "result": "sunk",
+        "sunk_length": 3
+      },
+      {
+        "cell": 8,
+        "label": "A3",
+        "result": "sunk",
+        "sunk_length": 2
+      }
+    ]
+  },
+  {
+    "agent": "Belief-state Q-learning",
+    "training_seed": 2,
+    "category": "fewest shots",
+    "layout_index": 12,
+    "policy_seed": 0,
+    "effective_policy_seed": 12000036,
+    "layout": [
+      [
+        0,
+        1,
+        2
+      ],
+      [
+        10,
+        11
+      ]
+    ],
+    "shots": 5,
+    "misses": 0,
+    "first_hit_shot": 1,
+    "misses_before_first_hit": 0,
+    "misses_after_first_hit": 0,
+    "sunk_at_shots": [
+      3,
+      5
+    ],
+    "history": [
+      {
+        "cell": 0,
+        "label": "A1",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 10,
+        "label": "C3",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 11,
+        "label": "D3",
+        "result": "sunk",
+        "sunk_length": 2
+      },
+      {
+        "cell": 1,
+        "label": "B1",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 2,
+        "label": "C1",
+        "result": "sunk",
+        "sunk_length": 3
+      }
+    ]
+  },
+  {
+    "agent": "Belief-state Q-learning",
+    "training_seed": 2,
+    "category": "most shots",
+    "layout_index": 2,
+    "policy_seed": 0,
+    "effective_policy_seed": 2000006,
+    "layout": [
+      [
+        0,
+        1,
+        2
+      ],
+      [
+        4,
+        8
+      ]
+    ],
+    "shots": 14,
+    "misses": 9,
+    "first_hit_shot": 1,
+    "misses_before_first_hit": 0,
+    "misses_after_first_hit": 9,
+    "sunk_at_shots": [
+      12,
+      14
+    ],
+    "history": [
+      {
+        "cell": 0,
+        "label": "A1",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 10,
+        "label": "C3",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 9,
+        "label": "B3",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 13,
+        "label": "B4",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 11,
+        "label": "D3",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 5,
+        "label": "B2",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 6,
+        "label": "C2",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 14,
+        "label": "C4",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 3,
+        "label": "D1",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 8,
+        "label": "A3",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 1,
+        "label": "B1",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 2,
+        "label": "C1",
+        "result": "sunk",
+        "sunk_length": 3
+      },
+      {
+        "cell": 12,
+        "label": "A4",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 4,
+        "label": "A2",
+        "result": "sunk",
+        "sunk_length": 2
+      }
+    ]
+  },
+  {
+    "agent": "DQN board",
+    "training_seed": 0,
+    "category": "fewest shots",
+    "layout_index": 162,
+    "policy_seed": 0,
+    "effective_policy_seed": 162000486,
+    "layout": [
+      [
+        5,
+        9,
+        13
+      ],
+      [
+        10,
+        14
+      ]
+    ],
+    "shots": 5,
+    "misses": 0,
+    "first_hit_shot": 1,
+    "misses_before_first_hit": 0,
+    "misses_after_first_hit": 0,
+    "sunk_at_shots": [
+      4,
+      5
+    ],
+    "history": [
+      {
+        "cell": 9,
+        "label": "B3",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 13,
+        "label": "B4",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 14,
+        "label": "C4",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 5,
+        "label": "B2",
+        "result": "sunk",
+        "sunk_length": 3
+      },
+      {
+        "cell": 10,
+        "label": "C3",
+        "result": "sunk",
+        "sunk_length": 2
+      }
+    ]
+  },
+  {
+    "agent": "DQN board",
+    "training_seed": 0,
+    "category": "most shots",
+    "layout_index": 116,
+    "policy_seed": 0,
+    "effective_policy_seed": 116000348,
+    "layout": [
+      [
+        4,
+        5,
+        6
+      ],
+      [
+        14,
+        15
+      ]
+    ],
+    "shots": 13,
+    "misses": 8,
+    "first_hit_shot": 2,
+    "misses_before_first_hit": 1,
+    "misses_after_first_hit": 7,
+    "sunk_at_shots": [
+      8,
+      13
+    ],
+    "history": [
+      {
+        "cell": 9,
+        "label": "B3",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 4,
+        "label": "A2",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 6,
+        "label": "C2",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 10,
+        "label": "C3",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 8,
+        "label": "A3",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 0,
+        "label": "A1",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 13,
+        "label": "B4",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 5,
+        "label": "B2",
+        "result": "sunk",
+        "sunk_length": 3
+      },
+      {
+        "cell": 11,
+        "label": "D3",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 3,
+        "label": "D1",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 1,
+        "label": "B1",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 15,
+        "label": "D4",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 14,
+        "label": "C4",
+        "result": "sunk",
+        "sunk_length": 2
+      }
+    ]
+  },
+  {
+    "agent": "DQN board",
+    "training_seed": 1,
+    "category": "fewest shots",
+    "layout_index": 40,
+    "policy_seed": 0,
+    "effective_policy_seed": 40000120,
+    "layout": [
+      [
+        1,
+        2,
+        3
+      ],
+      [
+        5,
+        9
+      ]
+    ],
+    "shots": 5,
+    "misses": 0,
+    "first_hit_shot": 1,
+    "misses_before_first_hit": 0,
+    "misses_after_first_hit": 0,
+    "sunk_at_shots": [
+      2,
+      5
+    ],
+    "history": [
+      {
+        "cell": 5,
+        "label": "B2",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 9,
+        "label": "B3",
+        "result": "sunk",
+        "sunk_length": 2
+      },
+      {
+        "cell": 2,
+        "label": "C1",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 1,
+        "label": "B1",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 3,
+        "label": "D1",
+        "result": "sunk",
+        "sunk_length": 3
+      }
+    ]
+  },
+  {
+    "agent": "DQN board",
+    "training_seed": 1,
+    "category": "most shots",
+    "layout_index": 198,
+    "policy_seed": 0,
+    "effective_policy_seed": 198000594,
+    "layout": [
+      [
+        8,
+        9,
+        10
+      ],
+      [
+        0,
+        1
+      ]
+    ],
+    "shots": 13,
+    "misses": 8,
+    "first_hit_shot": 6,
+    "misses_before_first_hit": 5,
+    "misses_after_first_hit": 3,
+    "sunk_at_shots": [
+      11,
+      13
+    ],
+    "history": [
+      {
+        "cell": 5,
+        "label": "B2",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 2,
+        "label": "C1",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 7,
+        "label": "D2",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 4,
+        "label": "A2",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 12,
+        "label": "A4",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 10,
+        "label": "C3",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 6,
+        "label": "C2",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 11,
+        "label": "D3",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 14,
+        "label": "C4",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 9,
+        "label": "B3",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 8,
+        "label": "A3",
+        "result": "sunk",
+        "sunk_length": 3
+      },
+      {
+        "cell": 1,
+        "label": "B1",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 0,
+        "label": "A1",
+        "result": "sunk",
+        "sunk_length": 2
+      }
+    ]
+  },
+  {
+    "agent": "DQN board",
+    "training_seed": 2,
+    "category": "fewest shots",
+    "layout_index": 66,
+    "policy_seed": 0,
+    "effective_policy_seed": 66000198,
+    "layout": [
+      [
+        1,
+        5,
+        9
+      ],
+      [
+        12,
+        13
+      ]
+    ],
+    "shots": 5,
+    "misses": 0,
+    "first_hit_shot": 1,
+    "misses_before_first_hit": 0,
+    "misses_after_first_hit": 0,
+    "sunk_at_shots": [
+      4,
+      5
+    ],
+    "history": [
+      {
+        "cell": 5,
+        "label": "B2",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 9,
+        "label": "B3",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 13,
+        "label": "B4",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 1,
+        "label": "B1",
+        "result": "sunk",
+        "sunk_length": 3
+      },
+      {
+        "cell": 12,
+        "label": "A4",
+        "result": "sunk",
+        "sunk_length": 2
+      }
+    ]
+  },
+  {
+    "agent": "DQN board",
+    "training_seed": 2,
+    "category": "most shots",
+    "layout_index": 17,
+    "policy_seed": 0,
+    "effective_policy_seed": 17000051,
+    "layout": [
+      [
+        0,
+        1,
+        2
+      ],
+      [
+        14,
+        15
+      ]
+    ],
+    "shots": 12,
+    "misses": 7,
+    "first_hit_shot": 4,
+    "misses_before_first_hit": 3,
+    "misses_after_first_hit": 4,
+    "sunk_at_shots": [
+      9,
+      12
+    ],
+    "history": [
+      {
+        "cell": 5,
+        "label": "B2",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 10,
+        "label": "C3",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 7,
+        "label": "D2",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 2,
+        "label": "C1",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 1,
+        "label": "B1",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 13,
+        "label": "B4",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 8,
+        "label": "A3",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 3,
+        "label": "D1",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 0,
+        "label": "A1",
+        "result": "sunk",
+        "sunk_length": 3
+      },
+      {
+        "cell": 15,
+        "label": "D4",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 11,
+        "label": "D3",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 14,
+        "label": "C4",
+        "result": "sunk",
+        "sunk_length": 2
+      }
+    ]
+  },
+  {
+    "agent": "DQN density",
+    "training_seed": 0,
+    "category": "fewest shots",
+    "layout_index": 110,
+    "policy_seed": 0,
+    "effective_policy_seed": 110000330,
+    "layout": [
+      [
+        4,
+        5,
+        6
+      ],
+      [
+        9,
+        13
+      ]
+    ],
+    "shots": 5,
+    "misses": 0,
+    "first_hit_shot": 1,
+    "misses_before_first_hit": 0,
+    "misses_after_first_hit": 0,
+    "sunk_at_shots": [
+      4,
+      5
+    ],
+    "history": [
+      {
+        "cell": 9,
+        "label": "B3",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 5,
+        "label": "B2",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 6,
+        "label": "C2",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 13,
+        "label": "B4",
+        "result": "sunk",
+        "sunk_length": 2
+      },
+      {
+        "cell": 4,
+        "label": "A2",
+        "result": "sunk",
+        "sunk_length": 3
+      }
+    ]
+  },
+  {
+    "agent": "DQN density",
+    "training_seed": 0,
+    "category": "most shots",
+    "layout_index": 13,
+    "policy_seed": 0,
+    "effective_policy_seed": 13000039,
+    "layout": [
+      [
+        0,
+        1,
+        2
+      ],
+      [
+        10,
+        14
+      ]
+    ],
+    "shots": 12,
+    "misses": 7,
+    "first_hit_shot": 5,
+    "misses_before_first_hit": 4,
+    "misses_after_first_hit": 3,
+    "sunk_at_shots": [
+      9,
+      12
+    ],
+    "history": [
+      {
+        "cell": 9,
+        "label": "B3",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 6,
+        "label": "C2",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 11,
+        "label": "D3",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 12,
+        "label": "A4",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 1,
+        "label": "B1",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 0,
+        "label": "A1",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 4,
+        "label": "A2",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 14,
+        "label": "C4",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 2,
+        "label": "C1",
+        "result": "sunk",
+        "sunk_length": 3
+      },
+      {
+        "cell": 15,
+        "label": "D4",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 13,
+        "label": "B4",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 10,
+        "label": "C3",
+        "result": "sunk",
+        "sunk_length": 2
+      }
+    ]
+  },
+  {
+    "agent": "DQN density",
+    "training_seed": 1,
+    "category": "fewest shots",
+    "layout_index": 8,
+    "policy_seed": 0,
+    "effective_policy_seed": 8000024,
+    "layout": [
+      [
+        0,
+        1,
+        2
+      ],
+      [
+        8,
+        9
+      ]
+    ],
+    "shots": 5,
+    "misses": 0,
+    "first_hit_shot": 1,
+    "misses_before_first_hit": 0,
+    "misses_after_first_hit": 0,
+    "sunk_at_shots": [
+      2,
+      5
+    ],
+    "history": [
+      {
+        "cell": 9,
+        "label": "B3",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 8,
+        "label": "A3",
+        "result": "sunk",
+        "sunk_length": 2
+      },
+      {
+        "cell": 2,
+        "label": "C1",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 1,
+        "label": "B1",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 0,
+        "label": "A1",
+        "result": "sunk",
+        "sunk_length": 3
+      }
+    ]
+  },
+  {
+    "agent": "DQN density",
+    "training_seed": 1,
+    "category": "most shots",
+    "layout_index": 20,
+    "policy_seed": 0,
+    "effective_policy_seed": 20000060,
+    "layout": [
+      [
+        0,
+        4,
+        8
+      ],
+      [
+        2,
+        3
+      ]
+    ],
+    "shots": 12,
+    "misses": 7,
+    "first_hit_shot": 3,
+    "misses_before_first_hit": 2,
+    "misses_after_first_hit": 5,
+    "sunk_at_shots": [
+      6,
+      12
+    ],
+    "history": [
+      {
+        "cell": 9,
+        "label": "B3",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 6,
+        "label": "C2",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 4,
+        "label": "A2",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 8,
+        "label": "A3",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 12,
+        "label": "A4",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 0,
+        "label": "A1",
+        "result": "sunk",
+        "sunk_length": 3
+      },
+      {
+        "cell": 11,
+        "label": "D3",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 14,
+        "label": "C4",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 1,
+        "label": "B1",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 3,
+        "label": "D1",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 7,
+        "label": "D2",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 2,
+        "label": "C1",
+        "result": "sunk",
+        "sunk_length": 2
+      }
+    ]
+  },
+  {
+    "agent": "DQN density",
+    "training_seed": 2,
+    "category": "fewest shots",
+    "layout_index": 96,
+    "policy_seed": 0,
+    "effective_policy_seed": 96000288,
+    "layout": [
+      [
+        3,
+        7,
+        11
+      ],
+      [
+        9,
+        10
+      ]
+    ],
+    "shots": 5,
+    "misses": 0,
+    "first_hit_shot": 1,
+    "misses_before_first_hit": 0,
+    "misses_after_first_hit": 0,
+    "sunk_at_shots": [
+      3,
+      5
+    ],
+    "history": [
+      {
+        "cell": 10,
+        "label": "C3",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 11,
+        "label": "D3",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 9,
+        "label": "B3",
+        "result": "sunk",
+        "sunk_length": 2
+      },
+      {
+        "cell": 7,
+        "label": "D2",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 3,
+        "label": "D1",
+        "result": "sunk",
+        "sunk_length": 3
+      }
+    ]
+  },
+  {
+    "agent": "DQN density",
+    "training_seed": 2,
+    "category": "most shots",
+    "layout_index": 50,
+    "policy_seed": 0,
+    "effective_policy_seed": 50000150,
+    "layout": [
+      [
+        1,
+        2,
+        3
+      ],
+      [
+        11,
+        15
+      ]
+    ],
+    "shots": 12,
+    "misses": 7,
+    "first_hit_shot": 5,
+    "misses_before_first_hit": 4,
+    "misses_after_first_hit": 3,
+    "sunk_at_shots": [
+      8,
+      12
+    ],
+    "history": [
+      {
+        "cell": 10,
+        "label": "C3",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 13,
+        "label": "B4",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 8,
+        "label": "A3",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 5,
+        "label": "B2",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 2,
+        "label": "C1",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 1,
+        "label": "B1",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 0,
+        "label": "A1",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 3,
+        "label": "D1",
+        "result": "sunk",
+        "sunk_length": 3
+      },
+      {
+        "cell": 7,
+        "label": "D2",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 15,
+        "label": "D4",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 14,
+        "label": "C4",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 11,
+        "label": "D3",
+        "result": "sunk",
+        "sunk_length": 2
+      }
+    ]
+  },
+  {
+    "agent": "DQN residual",
+    "training_seed": 0,
+    "category": "fewest shots",
+    "layout_index": 23,
+    "policy_seed": 0,
+    "effective_policy_seed": 23000069,
+    "layout": [
+      [
+        0,
+        4,
+        8
+      ],
+      [
+        5,
+        6
+      ]
+    ],
+    "shots": 5,
+    "misses": 0,
+    "first_hit_shot": 1,
+    "misses_before_first_hit": 0,
+    "misses_after_first_hit": 0,
+    "sunk_at_shots": [
+      2,
+      5
+    ],
+    "history": [
+      {
+        "cell": 5,
+        "label": "B2",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 6,
+        "label": "C2",
+        "result": "sunk",
+        "sunk_length": 2
+      },
+      {
+        "cell": 8,
+        "label": "A3",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 4,
+        "label": "A2",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 0,
+        "label": "A1",
+        "result": "sunk",
+        "sunk_length": 3
+      }
+    ]
+  },
+  {
+    "agent": "DQN residual",
+    "training_seed": 0,
+    "category": "most shots",
+    "layout_index": 239,
+    "policy_seed": 0,
+    "effective_policy_seed": 239000717,
+    "layout": [
+      [
+        12,
+        13,
+        14
+      ],
+      [
+        6,
+        7
+      ]
+    ],
+    "shots": 13,
+    "misses": 8,
+    "first_hit_shot": 5,
+    "misses_before_first_hit": 4,
+    "misses_after_first_hit": 4,
+    "sunk_at_shots": [
+      9,
+      13
+    ],
+    "history": [
+      {
+        "cell": 5,
+        "label": "B2",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 2,
+        "label": "C1",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 11,
+        "label": "D3",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 8,
+        "label": "A3",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 14,
+        "label": "C4",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 10,
+        "label": "C3",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 15,
+        "label": "D4",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 13,
+        "label": "B4",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 12,
+        "label": "A4",
+        "result": "sunk",
+        "sunk_length": 3
+      },
+      {
+        "cell": 0,
+        "label": "A1",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 7,
+        "label": "D2",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 3,
+        "label": "D1",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 6,
+        "label": "C2",
+        "result": "sunk",
+        "sunk_length": 2
+      }
+    ]
+  },
+  {
+    "agent": "DQN residual",
+    "training_seed": 1,
+    "category": "fewest shots",
+    "layout_index": 59,
+    "policy_seed": 0,
+    "effective_policy_seed": 59000177,
+    "layout": [
+      [
+        1,
+        5,
+        9
+      ],
+      [
+        6,
+        7
+      ]
+    ],
+    "shots": 5,
+    "misses": 0,
+    "first_hit_shot": 1,
+    "misses_before_first_hit": 0,
+    "misses_after_first_hit": 0,
+    "sunk_at_shots": [
+      2,
+      5
+    ],
+    "history": [
+      {
+        "cell": 6,
+        "label": "C2",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 7,
+        "label": "D2",
+        "result": "sunk",
+        "sunk_length": 2
+      },
+      {
+        "cell": 9,
+        "label": "B3",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 5,
+        "label": "B2",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 1,
+        "label": "B1",
+        "result": "sunk",
+        "sunk_length": 3
+      }
+    ]
+  },
+  {
+    "agent": "DQN residual",
+    "training_seed": 1,
+    "category": "most shots",
+    "layout_index": 15,
+    "policy_seed": 0,
+    "effective_policy_seed": 15000045,
+    "layout": [
+      [
+        0,
+        1,
+        2
+      ],
+      [
+        12,
+        13
+      ]
+    ],
+    "shots": 12,
+    "misses": 7,
+    "first_hit_shot": 4,
+    "misses_before_first_hit": 3,
+    "misses_after_first_hit": 4,
+    "sunk_at_shots": [
+      8,
+      12
+    ],
+    "history": [
+      {
+        "cell": 6,
+        "label": "C2",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 9,
+        "label": "B3",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 11,
+        "label": "D3",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 1,
+        "label": "B1",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 2,
+        "label": "C1",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 3,
+        "label": "D1",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 14,
+        "label": "C4",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 0,
+        "label": "A1",
+        "result": "sunk",
+        "sunk_length": 3
+      },
+      {
+        "cell": 4,
+        "label": "A2",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 12,
+        "label": "A4",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 8,
+        "label": "A3",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 13,
+        "label": "B4",
+        "result": "sunk",
+        "sunk_length": 2
+      }
+    ]
+  },
+  {
+    "agent": "DQN residual",
+    "training_seed": 2,
+    "category": "fewest shots",
+    "layout_index": 111,
+    "policy_seed": 0,
+    "effective_policy_seed": 111000333,
+    "layout": [
+      [
+        4,
+        5,
+        6
+      ],
+      [
+        10,
+        11
+      ]
+    ],
+    "shots": 5,
+    "misses": 0,
+    "first_hit_shot": 1,
+    "misses_before_first_hit": 0,
+    "misses_after_first_hit": 0,
+    "sunk_at_shots": [
+      3,
+      5
+    ],
+    "history": [
+      {
+        "cell": 5,
+        "label": "B2",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 6,
+        "label": "C2",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 4,
+        "label": "A2",
+        "result": "sunk",
+        "sunk_length": 3
+      },
+      {
+        "cell": 11,
+        "label": "D3",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 10,
+        "label": "C3",
+        "result": "sunk",
+        "sunk_length": 2
+      }
+    ]
+  },
+  {
+    "agent": "DQN residual",
+    "training_seed": 2,
+    "category": "most shots",
+    "layout_index": 47,
+    "policy_seed": 0,
+    "effective_policy_seed": 47000141,
+    "layout": [
+      [
+        1,
+        2,
+        3
+      ],
+      [
+        9,
+        13
+      ]
+    ],
+    "shots": 12,
+    "misses": 7,
+    "first_hit_shot": 5,
+    "misses_before_first_hit": 4,
+    "misses_after_first_hit": 3,
+    "sunk_at_shots": [
+      8,
+      12
+    ],
+    "history": [
+      {
+        "cell": 5,
+        "label": "B2",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 10,
+        "label": "C3",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 8,
+        "label": "A3",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 7,
+        "label": "D2",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 13,
+        "label": "B4",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 14,
+        "label": "C4",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 12,
+        "label": "A4",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 9,
+        "label": "B3",
+        "result": "sunk",
+        "sunk_length": 2
+      },
+      {
+        "cell": 1,
+        "label": "B1",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 2,
+        "label": "C1",
+        "result": "hit",
+        "sunk_length": null
+      },
+      {
+        "cell": 0,
+        "label": "A1",
+        "result": "miss",
+        "sunk_length": null
+      },
+      {
+        "cell": 3,
+        "label": "D1",
+        "result": "sunk",
+        "sunk_length": 3
+      }
+    ]
+  }
+]

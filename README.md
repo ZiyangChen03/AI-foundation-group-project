@@ -110,18 +110,80 @@ It is a separate package, so the other agents do not load PyTorch. Results on th
 | DQN-C (residual on density) | 46.05 | +1.41 ± 0.46 | 14 min |
 | DQN-A (board only) | 53.00 | +8.35 ± 0.54 | 12 min |
 
-On 4×4 the board-only DQN reaches 8.92 exact expected shots in 75 s (density 8.86,
-optimum 8.746).
+On 4×4 the historical board-only DQN final checkpoint reaches 8.924 shots in
+75 s of training. Exact random-tie probability density is 8.909; the Bellman
+optimum is 8.746. These historical runs use different training budgets from the
+matched comparison below. See [docs/design_dqn.md](docs/design_dqn.md).
 
 ```bash
-uv run scripts/train_dqn.py --board classic --variant density --games 100000 --eps-fraction 0.1
-uv run scripts/benchmark_dqn.py classic results/dqn/classic_density_s0/best.pt
-uv run pytest tests/test_dqn.py      # vectorized games and density match the reference code
+uv sync --extra dqn
+uv run --extra dqn scripts/train_dqn.py --board classic --variant density --games 100000 --eps-fraction 0.1
+uv run --extra dqn scripts/benchmark_dqn.py classic results/dqn/classic_density_s0/best.pt
+uv run --extra dqn pytest tests/test_dqn.py
 ```
 
 Design and results: [docs/design_dqn.md](docs/design_dqn.md). Beginner tutorial:
 [tutorial/dqn_tutorial.html](tutorial/dqn_tutorial.html). Two-page report:
 [report/dqn_report.pdf](report/dqn_report.pdf).
+
+The existing PDF predates the corrections in #20 and has not been rebuilt here.
+Use the design document for the corrected 4×4 numbers. PyTorch is an optional
+extra; non-DQN code does not require it.
+
+### Complete 4×4 comparison
+
+Completed experiment and analysis: [docs/comparison_results_README.md](docs/comparison_results_README.md).
+The run covers 126,720 solo evaluation games and 80,400 tournament matches.
+Final data: [results/compare_4x4_recovered/results.md](results/compare_4x4_recovered/results.md).
+
+The integrated comparison includes raw-board Q-learning, belief-state Q-learning,
+all three DQN variants, four heuristic baselines and five POMDP planners. It
+supports uniform placement, opponent placement habits and head-to-head matches.
+**The manual experiment is complete.** Both training and recovered-comparison manifests
+report `complete`; all 15 model hashes and the game/match coverage were validated.
+The commands below reproduce a fresh experiment and require new/empty output directories.
+
+From the root of this checkout:
+
+```powershell
+uv sync --extra dqn
+uv run --extra dqn scripts/train_comparison_4x4.py --shots 1000000 --every 100000 --seeds 0 1 2 --output results/comparison_training
+uv run --extra dqn scripts/compare_4x4.py --trained results/comparison_training --require-complete --samples 20 --games 400 --output results/compare_4x4_complete
+```
+
+Observed final means across three training seeds: raw-board Q-learning **12.0379**,
+belief-state Q-learning **9.6768**, DQN board **8.9369**, DQN density **8.8763**,
+and DQN residual **8.8460** shots. Probability density scores **8.9000**.
+The exact Bellman optimum is **8.746212**; its sampled policy score is **8.713636**,
+which reflects finite random-choice sampling and does not beat the exact optimum.
+See the completed analysis for learning curves, timings, habit results and limitations.
+
+This run reused validated solo results after fixing the oracle's zero-probability
+layout handling. Its completed report is in `results/compare_4x4_recovered/`;
+`results/compare_4x4_complete/` preserves the original interrupted run.
+
+Each learning method receives the same number of **training shots**, including
+shots in unfinished games. This is not an episode budget. Models are trained
+sequentially and final checkpoints are evaluated with learning disabled. All 264
+layouts are covered; random choices are sampled and are not described as exact
+expectations. `--require-complete` verifies all five learners, at least three
+matched training seeds, equal budgets and all evaluation stages.
+
+The generated `results/compare_4x4_complete/results.md` includes means, game and
+training-seed spread, observed worst cases, training/decision times, placement
+habits, learning curves and tournament results. CSV data, source/model hashes and
+example game sequences are exported alongside it. The full default tournament
+contains 80,400 games across model-seed pairings.
+
+To compare saved checkpoints without retraining, or run a small functional check,
+see [docs/comparison_4x4.md](docs/comparison_4x4.md). That guide also explains
+resuming training, algorithm assumptions and which integrated files to upload.
+Local training models are ignored by Git; generated comparison reports can be
+committed after you run the experiment.
+
+```powershell
+uv run --extra dqn pytest -q
+```
 
 ### Adding a dependency
 

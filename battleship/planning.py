@@ -39,6 +39,7 @@ Three shortcuts keep V* fast without changing it:
 """
 
 from functools import cache
+from math import log2
 
 from .belief import Belief, _table
 from .config import GameConfig
@@ -197,6 +198,30 @@ class Planner:
              for cell in self.hit_counts(layouts, fired)}
         best = min(q.values())
         return [cell for cell, v in q.items() if v <= best + tolerance]
+
+    # --- information gain ----------------------------------------------------
+
+    def expected_entropy(self, layouts: int, fired: int, cell: int) -> float:
+        """E[H(b')] after a shot at ``cell``. Beliefs are uniform over their
+        layouts, so H(b) = log2 |b| and the information gain of the shot is
+        log2 |b| - E[H(b')]."""
+        size = layouts.bit_count()
+        return sum(g.bit_count() / size * log2(g.bit_count())
+                   for g in self.outcomes(layouts, fired, cell))
+
+    def info_gain_shots(self, layouts: int, fired: int, tolerance: float = 1e-9) -> list[int]:
+        """The cells with the largest expected information gain."""
+        entropy = {cell: self.expected_entropy(layouts, fired, cell)
+                   for cell in self.hit_counts(layouts, fired)}
+        best = min(entropy.values())
+        return [cell for cell, h in entropy.items() if h <= best + tolerance]
+
+    def greedy_info_shots(self, layouts: int, fired: int, tolerance: float = 1e-9) -> list[int]:
+        """The most likely cells, ties broken by information gain."""
+        cells = self.greedy_shots(layouts, fired)
+        entropy = {cell: self.expected_entropy(layouts, fired, cell) for cell in cells}
+        best = min(entropy.values())
+        return [cell for cell in cells if entropy[cell] <= best + tolerance]
 
     def policy_value(self, choose, layouts: int | None = None, fired: int = 0) -> float:
         """Exact expected shots of a policy ``choose(layouts, fired) -> cells``

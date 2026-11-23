@@ -28,6 +28,9 @@ from .vec_env import MAX_LENGTH, VecBattleship, normalized_density
 
 
 def default_device() -> str:
+    """An NVIDIA GPU if there is one, else an Apple GPU, else the CPU."""
+    if torch.cuda.is_available():
+        return "cuda"
     return "mps" if torch.backends.mps.is_available() else "cpu"
 
 
@@ -115,8 +118,19 @@ def play_greedy(model: QNet, config: GameConfig, layouts: list[Layout], device) 
 
 
 def train(config: GameConfig, net: NetConfig, tc: TrainConfig, eval_layouts: list[Layout],
-          log=print, callback=None) -> tuple[QNet, list[dict]]:
-    """Train a Q-network; returns it and one log row per evaluation."""
+          log=print, callback=None, *, shot_budget: int | None = None,
+          eval_shots: int | None = None) -> tuple[QNet, list[dict]]:
+    """Train a Q-network; optionally stop at an exact environment-shot budget.
+
+    The optional budget counts new environment transitions, not replay samples.
+    A partial final vector batch prevents overshooting; unfinished games are
+    counted in shots but not in completed games. Existing game-budget calls
+    retain their original behavior.
+    """
+    if shot_budget is not None and (shot_budget < 1 or eval_shots is None or eval_shots < 1):
+        raise ValueError("shot_budget and eval_shots must be positive")
+    if tc.parallel < 1 or tc.buffer < tc.parallel or tc.batch < 1 or tc.eval_every < 1:
+        raise ValueError("require positive batch/parallel/eval_every and buffer >= parallel")
     device = tc.device or default_device()
     torch.manual_seed(tc.seed)
     rng = random.Random(tc.seed)
@@ -133,14 +147,19 @@ def train(config: GameConfig, net: NetConfig, tc: TrainConfig, eval_layouts: lis
     steps_per_iter = max(1, round(tc.parallel * tc.replay_ratio / tc.batch))
     finished, grad_steps, recent, losses = 0, 0, [], []
     next_eval, rows, start = 0, [], time.time()
+    training_shots, evaluation_seconds = 0, 0.0
 
     def evaluate_now():
+        nonlocal evaluation_seconds
+        eval_start = time.time()
+        training_seconds = eval_start - start - evaluation_seconds
         shots = play_greedy(online, config, eval_layouts, device).float()
         row = dict(games=finished, eval_mean=shots.mean().item(),
                    eval_sem=(shots.std() / math.sqrt(len(shots))).item() if len(shots) > 1 else 0.0,
                    train_mean=sum(recent) / len(recent) if recent else float("nan"),
                    epsilon=epsilon(), loss=sum(losses) / len(losses) if losses else float("nan"),
-                   grad_steps=grad_steps, seconds=time.time() - start)
+                   grad_steps=grad_steps, seconds=time.time() - start,
+                   training_shots=training_shots, training_seconds=training_seconds)
         rows.append(row)
         log(f"games {row['games']:>7}  eval {row['eval_mean']:6.2f} ± {1.96 * row['eval_sem']:.2f}"
             f"  train {row['train_mean']:6.2f}  eps {row['epsilon']:.3f}  loss {row['loss']:.3f}"
@@ -149,16 +168,21 @@ def train(config: GameConfig, net: NetConfig, tc: TrainConfig, eval_layouts: lis
         losses.clear()
         if callback:
             callback(online, row)
+        evaluation_seconds += time.time() - eval_start
 
     def epsilon():
-        frac = min(1.0, finished / max(1, tc.eps_fraction * tc.games))
+        progress = training_shots if shot_budget is not None else finished
+        budget = shot_budget if shot_budget is not None else tc.games
+        frac = min(1.0, progress / max(1, tc.eps_fraction * budget))
         return tc.eps_start + frac * (tc.eps_end - tc.eps_start)
 
     while True:
-        if finished >= next_eval:
+        progress = training_shots if shot_budget is not None else finished
+        budget = shot_budget if shot_budget is not None else tc.games
+        if progress >= next_eval or progress >= budget:
             evaluate_now()
-            next_eval += tc.eval_every
-            if finished >= tc.games:
+            next_eval += eval_shots if shot_budget is not None else tc.eval_every
+            if progress >= budget:
                 break
         board, remaining = env.board.clone(), env.remaining()
         legal = board == 0
@@ -169,11 +193,18 @@ def train(config: GameConfig, net: NetConfig, tc: TrainConfig, eval_layouts: lis
         explore = torch.rand(env.n) < epsilon()
         if explore.any():
             actions[explore] = torch.multinomial(legal[explore].float(), 1).squeeze(1)
-        done = env.step(actions).clone()
+        active = torch.ones(env.n, dtype=torch.bool)
+        if shot_budget is not None:
+            count = min(env.n, shot_budget - training_shots, next_eval - training_shots)
+            active[count:] = False
+        done = env.step(actions, active).clone() & active
+        training_shots += int(active.sum())
         next_board, next_remaining = env.board.clone(), env.remaining()
         next_dens = (normalized_density(next_board, next_remaining, config)
                      if net.needs_density else None)
-        replay.add(board, remaining, dens, actions, done, next_board, next_remaining, next_dens)
+        replay.add(board[active], remaining[active], None if dens is None else dens[active],
+                   actions[active], done[active], next_board[active], next_remaining[active],
+                   None if next_dens is None else next_dens[active])
         if done.any():
             recent.extend(env.shots[done].tolist())
             finished += int(done.sum())
@@ -184,7 +215,9 @@ def train(config: GameConfig, net: NetConfig, tc: TrainConfig, eval_layouts: lis
 
         if replay.size < tc.learn_start:
             continue
-        for _ in range(steps_per_iter):
+        updates_this_iter = (max(1, round(int(active.sum()) * tc.replay_ratio / tc.batch))
+                             if shot_budget is not None else steps_per_iter)
+        for _ in range(updates_this_iter):
             b, r, d, a, dn, nb, nr, nd = replay.sample(tc.batch)
             q_sa = _q(online, b, r, d, config).gather(1, a[:, None]).squeeze(1)
             with torch.no_grad():

@@ -1,0 +1,202 @@
+left,right,left_training_seed,right_training_seed,games,left_wins,first_player_wins
+Random,Hunt-target,,,400,54,214
+Random,Hunt-target + parity,,,400,23,205
+Random,Probability density,,,400,14,210
+Random,POMDP greedy,,,400,14,208
+Random,POMDP rollout,,,400,12,206
+Random,POMDP optimal,,,400,12,204
+Random,POMDP info gain,,,400,12,204
+Random,POMDP greedy + info tie-break,,,400,14,208
+Random,Raw-board Q-learning,,0,400,92,214
+Random,Raw-board Q-learning,,1,400,98,208
+Random,Raw-board Q-learning,,2,400,94,230
+Random,Belief-state Q-learning,,0,400,20,208
+Random,Belief-state Q-learning,,1,400,28,202
+Random,Belief-state Q-learning,,2,400,28,206
+Random,DQN board,,0,400,13,205
+Random,DQN board,,1,400,14,206
+Random,DQN board,,2,400,14,204
+Random,DQN density,,0,400,9,199
+Random,DQN density,,1,400,14,200
+Random,DQN density,,2,400,14,204
+Random,DQN residual,,0,400,11,205
+Random,DQN residual,,1,400,17,199
+Random,DQN residual,,2,400,16,204
+Hunt-target,Hunt-target + parity,,,400,180,208
+Hunt-target,Probability density,,,400,136,216
+Hunt-target,POMDP greedy,,,400,140,212
+Hunt-target,POMDP rollout,,,400,132,212
+Hunt-target,POMDP optimal,,,400,131,213
+Hunt-target,POMDP info gain,,,400,135,211
+Hunt-target,POMDP greedy + info tie-break,,,400,140,212
+Hunt-target,Raw-board Q-learning,,0,400,263,193
+Hunt-target,Raw-board Q-learning,,1,400,291,213
+Hunt-target,Raw-board Q-learning,,2,400,266,228
+Hunt-target,Belief-state Q-learning,,0,400,168,216
+Hunt-target,Belief-state Q-learning,,1,400,163,235
+Hunt-target,Belief-state Q-learning,,2,400,177,227
+Hunt-target,DQN board,,0,400,130,214
+Hunt-target,DQN board,,1,400,141,229
+Hunt-target,DQN board,,2,400,129,221
+Hunt-target,DQN density,,0,400,135,193
+Hunt-target,DQN density,,1,400,142,238
+Hunt-target,DQN density,,2,400,122,216
+Hunt-target,DQN residual,,0,400,129,205
+Hunt-target,DQN residual,,1,400,138,212
+Hunt-target,DQN residual,,2,400,126,214
+Hunt-target + parity,Probability density,,,400,156,228
+Hunt-target + parity,POMDP greedy,,,400,162,216
+Hunt-target + parity,POMDP rollout,,,400,147,215
+Hunt-target + parity,POMDP optimal,,,400,148,218
+Hunt-target + parity,POMDP info gain,,,400,167,217
+Hunt-target + parity,POMDP greedy + info tie-break,,,400,161,219
+Hunt-target + parity,Raw-board Q-learning,,0,400,312,202
+Hunt-target + parity,Raw-board Q-learning,,1,400,316,214
+Hunt-target + parity,Raw-board Q-learning,,2,400,305,231
+Hunt-target + parity,Belief-state Q-learning,,0,400,199,207
+Hunt-target + parity,Belief-state Q-learning,,1,400,181,223
+Hunt-target + parity,Belief-state Q-learning,,2,400,196,234
+Hunt-target + parity,DQN board,,0,400,156,222
+Hunt-target + parity,DQN board,,1,400,157,215
+Hunt-target + parity,DQN board,,2,400,147,223
+Hunt-target + parity,DQN density,,0,400,142,202
+Hunt-target + parity,DQN density,,1,400,158,220
+Hunt-target + parity,DQN density,,2,400,147,235
+Hunt-target + parity,DQN residual,,0,400,149,221
+Hunt-target + parity,DQN residual,,1,400,150,206
+Hunt-target + parity,DQN residual,,2,400,127,219
+Probability density,POMDP greedy,,,400,195,231
+Probability density,POMDP rollout,,,400,180,232
+Probability density,POMDP optimal,,,400,176,238
+Probability density,POMDP info gain,,,400,197,225
+Probability density,POMDP greedy + info tie-break,,,400,190,232
+Probability density,Raw-board Q-learning,,0,400,342,206
+Probability density,Raw-board Q-learning,,1,400,344,218
+Probability density,Raw-board Q-learning,,2,400,329,225
+Probability density,Belief-state Q-learning,,0,400,230,214
+Probability density,Belief-state Q-learning,,1,400,231,229
+Probability density,Belief-state Q-learning,,2,400,253,241
+Probability density,DQN board,,0,400,199,245
+Probability density,DQN board,,1,400,204,236
+Probability density,DQN board,,2,400,185,245
+Probability density,DQN density,,0,400,194,220
+Probability density,DQN density,,1,400,199,247
+Probability density,DQN density,,2,400,184,234
+Probability density,DQN residual,,0,400,191,227
+Probability density,DQN residual,,1,400,209,231
+Probability density,DQN residual,,2,400,170,246
+POMDP greedy,POMDP rollout,,,400,178,228
+POMDP greedy,POMDP optimal,,,400,170,234
+POMDP greedy,POMDP info gain,,,400,190,224
+POMDP greedy,POMDP greedy + info tie-break,,,400,188,228
+POMDP greedy,Raw-board Q-learning,,0,400,333,203
+POMDP greedy,Raw-board Q-learning,,1,400,343,219
+POMDP greedy,Raw-board Q-learning,,2,400,331,225
+POMDP greedy,Belief-state Q-learning,,0,400,229,211
+POMDP greedy,Belief-state Q-learning,,1,400,222,234
+POMDP greedy,Belief-state Q-learning,,2,400,253,245
+POMDP greedy,DQN board,,0,400,191,249
+POMDP greedy,DQN board,,1,400,203,233
+POMDP greedy,DQN board,,2,400,190,244
+POMDP greedy,DQN density,,0,400,196,218
+POMDP greedy,DQN density,,1,400,203,239
+POMDP greedy,DQN density,,2,400,187,245
+POMDP greedy,DQN residual,,0,400,189,223
+POMDP greedy,DQN residual,,1,400,200,224
+POMDP greedy,DQN residual,,2,400,177,251
+POMDP rollout,POMDP optimal,,,400,195,237
+POMDP rollout,POMDP info gain,,,400,218,232
+POMDP rollout,POMDP greedy + info tie-break,,,400,205,235
+POMDP rollout,Raw-board Q-learning,,0,400,337,201
+POMDP rollout,Raw-board Q-learning,,1,400,346,220
+POMDP rollout,Raw-board Q-learning,,2,400,336,226
+POMDP rollout,Belief-state Q-learning,,0,400,248,228
+POMDP rollout,Belief-state Q-learning,,1,400,236,236
+POMDP rollout,Belief-state Q-learning,,2,400,256,228
+POMDP rollout,DQN board,,0,400,210,232
+POMDP rollout,DQN board,,1,400,210,240
+POMDP rollout,DQN board,,2,400,191,249
+POMDP rollout,DQN density,,0,400,206,222
+POMDP rollout,DQN density,,1,400,205,233
+POMDP rollout,DQN density,,2,400,197,233
+POMDP rollout,DQN residual,,0,400,203,229
+POMDP rollout,DQN residual,,1,400,219,231
+POMDP rollout,DQN residual,,2,400,193,239
+POMDP optimal,POMDP info gain,,,400,217,235
+POMDP optimal,POMDP greedy + info tie-break,,,400,214,240
+POMDP optimal,Raw-board Q-learning,,0,400,338,208
+POMDP optimal,Raw-board Q-learning,,1,400,350,216
+POMDP optimal,Raw-board Q-learning,,2,400,327,229
+POMDP optimal,Belief-state Q-learning,,0,400,250,232
+POMDP optimal,Belief-state Q-learning,,1,400,242,228
+POMDP optimal,Belief-state Q-learning,,2,400,265,233
+POMDP optimal,DQN board,,0,400,204,240
+POMDP optimal,DQN board,,1,400,213,231
+POMDP optimal,DQN board,,2,400,209,247
+POMDP optimal,DQN density,,0,400,200,228
+POMDP optimal,DQN density,,1,400,207,243
+POMDP optimal,DQN density,,2,400,190,236
+POMDP optimal,DQN residual,,0,400,208,224
+POMDP optimal,DQN residual,,1,400,212,228
+POMDP optimal,DQN residual,,2,400,193,241
+POMDP info gain,POMDP greedy + info tie-break,,,400,182,234
+POMDP info gain,Raw-board Q-learning,,0,400,337,201
+POMDP info gain,Raw-board Q-learning,,1,400,347,215
+POMDP info gain,Raw-board Q-learning,,2,400,336,224
+POMDP info gain,Belief-state Q-learning,,0,400,235,223
+POMDP info gain,Belief-state Q-learning,,1,400,222,224
+POMDP info gain,Belief-state Q-learning,,2,400,240,236
+POMDP info gain,DQN board,,0,400,197,247
+POMDP info gain,DQN board,,1,400,208,232
+POMDP info gain,DQN board,,2,400,182,250
+POMDP info gain,DQN density,,0,400,197,221
+POMDP info gain,DQN density,,1,400,204,236
+POMDP info gain,DQN density,,2,400,190,236
+POMDP info gain,DQN residual,,0,400,190,226
+POMDP info gain,DQN residual,,1,400,201,231
+POMDP info gain,DQN residual,,2,400,185,247
+POMDP greedy + info tie-break,Raw-board Q-learning,,0,400,335,205
+POMDP greedy + info tie-break,Raw-board Q-learning,,1,400,344,218
+POMDP greedy + info tie-break,Raw-board Q-learning,,2,400,329,227
+POMDP greedy + info tie-break,Belief-state Q-learning,,0,400,230,214
+POMDP greedy + info tie-break,Belief-state Q-learning,,1,400,223,237
+POMDP greedy + info tie-break,Belief-state Q-learning,,2,400,251,245
+POMDP greedy + info tie-break,DQN board,,0,400,192,250
+POMDP greedy + info tie-break,DQN board,,1,400,206,232
+POMDP greedy + info tie-break,DQN board,,2,400,189,245
+POMDP greedy + info tie-break,DQN density,,0,400,197,221
+POMDP greedy + info tie-break,DQN density,,1,400,203,239
+POMDP greedy + info tie-break,DQN density,,2,400,184,248
+POMDP greedy + info tie-break,DQN residual,,0,400,191,225
+POMDP greedy + info tie-break,DQN residual,,1,400,199,225
+POMDP greedy + info tie-break,DQN residual,,2,400,175,253
+Raw-board Q-learning,Belief-state Q-learning,0,0,400,76,214
+Raw-board Q-learning,Belief-state Q-learning,1,1,400,81,227
+Raw-board Q-learning,Belief-state Q-learning,2,2,400,90,220
+Raw-board Q-learning,DQN board,0,0,400,57,209
+Raw-board Q-learning,DQN board,1,1,400,65,219
+Raw-board Q-learning,DQN board,2,2,400,66,208
+Raw-board Q-learning,DQN density,0,0,400,55,207
+Raw-board Q-learning,DQN density,1,1,400,63,223
+Raw-board Q-learning,DQN density,2,2,400,64,208
+Raw-board Q-learning,DQN residual,0,0,400,62,218
+Raw-board Q-learning,DQN residual,1,1,400,60,222
+Raw-board Q-learning,DQN residual,2,2,400,57,203
+Belief-state Q-learning,DQN board,0,0,400,157,229
+Belief-state Q-learning,DQN board,1,1,400,172,228
+Belief-state Q-learning,DQN board,2,2,400,138,228
+Belief-state Q-learning,DQN density,0,0,400,152,218
+Belief-state Q-learning,DQN density,1,1,400,177,231
+Belief-state Q-learning,DQN density,2,2,400,134,220
+Belief-state Q-learning,DQN residual,0,0,400,155,215
+Belief-state Q-learning,DQN residual,1,1,400,170,218
+Belief-state Q-learning,DQN residual,2,2,400,129,217
+DQN board,DQN density,0,0,400,192,218
+DQN board,DQN density,1,1,400,205,233
+DQN board,DQN density,2,2,400,184,230
+DQN board,DQN residual,0,0,400,188,208
+DQN board,DQN residual,1,1,400,196,222
+DQN board,DQN residual,2,2,400,186,230
+DQN density,DQN residual,0,0,400,184,224
+DQN density,DQN residual,1,1,400,196,226
+DQN density,DQN residual,2,2,400,201,237
