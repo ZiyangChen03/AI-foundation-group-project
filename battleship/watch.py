@@ -5,6 +5,7 @@
     uv run python -m battleship.watch --agent density --no-reveal
     uv run python -m battleship.watch --board classic --seed 7
     uv run python -m battleship.watch --agent optimal --show q   # Q* on every square
+    uv run python -m battleship.watch --agent infogain --show i  # information gain (bits)
 
 Each untried square is shaded by the agent's P(ship at square), with the
 percentage written on it (relative scores for probability density). The ring
@@ -16,15 +17,23 @@ and plays optimally afterwards. The optimal agent fires at the smallest. The
 panel splits the chosen square's Q* into ship cells still unhit + chance of a
 miss now + misses expected later, and names greedy's pick when it differs.
 
+With --show i (or the I key) they show each square's expected information gain
+instead: how many bits of uncertainty about the layout the shot removes on
+average, log2(layouts now) - E[log2(layouts left)]. The infogain agent fires at
+the largest, among squares that could still hold a ship. The panel also gives
+that square's Q*, so the two rules can be compared.
+
 It plays by itself (one shot every --delay ms), or with --step one shot at a
 time: each Space, Right or click on the board fires the next shot, and new
-games stay in step mode. --show q starts in step mode (A plays on by itself).
-Keys: Space or Right = fire one shot, A = pause / play, H = show/hide the
-hidden ships, Q = P(ship) / Q* view, N = new game, Esc = quit.
+games stay in step mode. --show q and --show i start in step mode (A plays on
+by itself). Keys: Space or Right = fire one shot, A = pause / play, H =
+show/hide the hidden ships, Q = Q* view, I = information-gain view (press again
+for P(ship)), N = new game, Esc = quit.
 """
 
 import argparse
 import random
+from math import log2
 
 import pygame
 
@@ -39,6 +48,7 @@ AGENTS = {
     "belief": lambda: BeliefAgent(),
     "rollout": lambda: BeliefAgent(planner="rollout"),
     "optimal": lambda: BeliefAgent(planner="optimal"),
+    "infogain": lambda: BeliefAgent(planner="infogain"),
     "density": ProbabilityDensityAgent,
     "hunt": lambda: HuntTargetAgent(parity=True),
     "random": RandomAgent,
@@ -66,7 +76,8 @@ class WatchApp(BoardApp):
         self.next_auto = 0
         self.target = self.heat = self.kind = None
         self.show = show
-        self.q = None                     # Q*(b, a) per square, in the Q* view
+        self.q = None                     # Q*(b, a) per square, in the Q* and info views
+        self.info = None                  # information gain per square, in the info view
         self.cell_font = pygame.font.SysFont("Segoe UI", 15 if config.size <= 6 else 11)
         self.new_game(seed)
 
@@ -78,7 +89,7 @@ class WatchApp(BoardApp):
         self.agent.new_game(self.config, random.Random(f"agent:{seed}"))
         self.last = ("Space or click the board: next shot" if self.step_mode
                      else "Space: one shot   A: pause / play")
-        if getattr(self.agent, "planner", "greedy") != "greedy" or self.show == "q":
+        if getattr(self.agent, "planner", "greedy") in ("optimal", "rollout") or self.show != "p":
             self.solving_notice()
         self.plan_next()
 
@@ -94,11 +105,12 @@ class WatchApp(BoardApp):
     def plan_next(self) -> None:
         """Ask the agent for its next shot and read its belief for display."""
         if self.game.done:
-            self.target, self.heat, self.kind, self.q = None, None, None, None
+            self.target, self.heat, self.kind, self.q, self.info = None, None, None, None, None
             return
         self.target = self.agent.select_shot(self.observation)
         self.heat, self.kind = self.read_belief()
-        self.q = self.read_q() if self.show == "q" else None
+        self.q = self.read_q() if self.show in ("q", "i") else None
+        self.info = self.read_info() if self.show == "i" else None
 
     def can_show_q(self) -> bool:
         """Q* needs the exact belief, which the POMDP agents keep on 4 x 4."""
@@ -116,14 +128,33 @@ class WatchApp(BoardApp):
         unhit = plan.total - (plan._ship_cells(layouts) & fired).bit_count()
         return {"q": q, "unhit": unhit, "best": min(q.values()), "worst": max(q.values())}
 
-    def toggle_view(self) -> None:
-        if self.show == "q":
-            self.show, self.q = "p", None
+    def read_info(self):
+        """Expected information gain per square, from the planner's own
+        ``expected_entropy`` (what the infogain agent maximizes). Squares no
+        remaining layout covers are left out, as the infogain planner does."""
+        if not self.can_show_q():
+            return None
+        plan = planner(self.config)
+        layouts, fired = plan.state(self.agent.belief)
+        n = layouts.bit_count()
+        candidates = plan.hit_counts(layouts, fired)
+        bits = {cell: max(0.0, log2(n) - plan.expected_entropy(layouts, fired, cell))
+                for cell in candidates}
+        picks = plan.info_gain_shots(layouts, fired)
+        return {"bits": bits, "n": n, "picks": picks,
+                "best": max(bits.values()), "worst": min(bits.values())}
+
+    def toggle_view(self, kind: str = "q") -> None:
+        """Switch to the Q* view (kind "q") or the information-gain view ("i");
+        pressing the same key again goes back to P(ship)."""
+        if self.show == kind:
+            self.show, self.q, self.info = "p", None, None
         elif self.can_show_q():
-            self.show = "q"
+            self.show = kind
             if not self.game.done:
                 self.solving_notice()
                 self.q = self.read_q()
+                self.info = self.read_info() if kind == "i" else None
 
     def read_belief(self):
         if isinstance(self.agent, BeliefAgent):
@@ -165,7 +196,9 @@ class WatchApp(BoardApp):
             elif event.key == pygame.K_h:
                 self.show_ships = not self.show_ships
             elif event.key == pygame.K_q:
-                self.toggle_view()
+                self.toggle_view("q")
+            elif event.key == pygame.K_i:
+                self.toggle_view("i")
             elif event.key in (pygame.K_n, pygame.K_r):
                 self.new_game(self.seed + 1)
                 self.auto = not self.step_mode
@@ -203,8 +236,14 @@ class WatchApp(BoardApp):
         for cell, rect in enumerate(self.cells):
             state = obs.board[cell]
             color = colors[state.value]
-            p = qv = None
-            if state.value == "?" and self.q is not None:
+            p = qv = bits = None
+            if state.value == "?" and self.info is not None:
+                bits = self.info["bits"].get(cell)
+                if bits is not None:
+                    spread = self.info["best"] - self.info["worst"]
+                    t = 1.0 if spread == 0 else (bits - self.info["worst"]) / spread
+                    color = _mix(PANEL, "#5fb0e0", t)      # brightest = most bits
+            elif state.value == "?" and self.q is not None:
                 qv = self.q["q"][cell]
                 spread = self.q["worst"] - self.q["best"]
                 t = 1.0 if spread == 0 else (self.q["worst"] - qv) / spread
@@ -215,7 +254,10 @@ class WatchApp(BoardApp):
             pygame.draw.rect(self.screen, color, rect, border_radius=radius)
             if cell in hidden and state.value == "?":
                 pygame.draw.rect(self.screen, TEXT, rect, width=2, border_radius=radius)
-            if qv is not None:
+            if bits is not None:
+                self.label(f"{bits:.3f}", rect.center, BG if t > 0.55 else TEXT,
+                           self.cell_font, center=True)
+            elif qv is not None:
                 self.label(f"{qv:.3f}", rect.center, BG if t > 0.55 else TEXT,
                            self.cell_font, center=True)
             elif p is not None and p > 0:
@@ -235,7 +277,9 @@ class WatchApp(BoardApp):
 
     def render_panel(self):
         x, y = 520, 192
-        if self.q is not None:
+        if self.info is not None:
+            self.render_info_panel(x, y)
+        elif self.q is not None:
             self.render_q_panel(x, y)
         else:
             self.render_p_panel(x, y)
@@ -244,8 +288,9 @@ class WatchApp(BoardApp):
         keys = [first, f"A   pause / play ({'playing' if self.auto else 'paused'})",
                 f"H   hidden ships ({'shown' if self.show_ships else 'hidden'})",
                 "N   new game", "Esc   quit"]
-        if self.can_show_q() or self.show == "q":
-            keys.insert(3, f"Q   view ({'Q*' if self.show == 'q' else 'P(ship)'})")
+        if self.can_show_q() or self.show != "p":
+            view = {"p": "P(ship)", "q": "Q*", "i": "info gain"}[self.show]
+            keys.insert(3, f"Q / I   Q* / info-gain view (now {view})")
         for i, text in enumerate(keys):
             self.label(text, (x, 482 + 22 * i), MUTED, self.small_font)
 
@@ -273,6 +318,35 @@ class WatchApp(BoardApp):
         for i, c in enumerate(ranked):
             self.label(f"{label(c, self.config):>4}   {q[c]:6.3f}   P(hit) {100 * self.heat[c]:3.0f}%",
                        (x, y + 130 + 22 * i), TEXT, self.small_font)
+
+    def render_info_panel(self, x, y):
+        bits, q, n = self.info["bits"], self.q["q"], self.info["n"]
+        self.label("Next shot   (info gain = bits removed)", (x, y), MUTED, self.small_font)
+        if self.target is not None:
+            b = bits.get(self.target, 0.0)
+            self.label(f"{label(self.target, self.config)}   {b:.3f} bits   Q* {q[self.target]:.3f}",
+                       (x, y + 22), ACCENT)
+            self.label(f"{n} layouts = {log2(n):.2f} bits of uncertainty now", (x, y + 50), TEXT,
+                       self.small_font)
+            optimal = [c for c in q if q[c] <= self.q["best"] + 1e-9]
+            most = self.info["picks"]
+            if self.target not in most:                # e.g. watching the optimal agent
+                self.label(f"Info gain would fire {self.names(most)}: {self.info['best']:.3f} bits",
+                           (x, y + 74), TEXT, self.small_font)
+            elif self.target not in optimal:
+                self.label(f"Optimal would fire {self.names(optimal)}: Q* {self.q['best']:.3f}",
+                           (x, y + 74), TEXT, self.small_font)
+            else:
+                best_p = max(self.heat[c] for c in q)
+                greedy = [c for c in q if self.heat[c] >= best_p - 1e-12]
+                if self.target not in greedy:
+                    self.label(f"Greedy would fire {self.names(greedy)}: P(hit) {100 * best_p:.0f}%",
+                               (x, y + 74), TEXT, self.small_font)
+        ranked = sorted(bits, key=lambda c: (-bits[c], q[c]))[:6]
+        self.label("Most information", (x, y + 108), MUTED, self.small_font)
+        for i, c in enumerate(ranked):
+            self.label(f"{label(c, self.config):>4}  {bits[c]:.3f} bits  P(hit) {100 * self.heat[c]:3.0f}%"
+                       f"  Q* {q[c]:.3f}", (x, y + 130 + 22 * i), TEXT, self.small_font)
 
     def names(self, cells, most: int = 4) -> str:
         shown = ", ".join(label(c, self.config) for c in sorted(cells)[:most])
@@ -320,22 +394,23 @@ def main(argv=None):
     parser.add_argument("--delay", type=int, default=700, help="auto-play ms per shot")
     parser.add_argument("--step", "--manual", dest="step", action="store_true",
                         help="one shot at a time: Space, Right or a click on the board fires "
-                             "the next shot (the default with --show q)")
+                             "the next shot (the default with --show q or i)")
     parser.add_argument("--auto", action="store_true",
-                        help="play by itself even with --show q")
-    parser.add_argument("--show", choices=("p", "q"), default="p",
-                        help="p: P(ship) on each square; q: Q*, the expected shots left "
-                             "(POMDP agents on 4 x 4)")
+                        help="play by itself even with --show q or i")
+    parser.add_argument("--show", choices=("p", "q", "i"), default="p",
+                        help="p: P(ship) on each square; q: Q*, the expected shots left; "
+                             "i: information gain in bits (POMDP agents on 4 x 4)")
     args = parser.parse_args(argv)
     base = MINI if args.board == "mini" else CLASSIC
     config = GameConfig(base.size, base.fleet, reveal_sunk_cells=not args.no_reveal)
-    if args.agent in ("optimal", "rollout") and args.board == "classic":
+    if args.agent in ("optimal", "rollout", "infogain") and args.board == "classic":
         parser.error(f"--agent {args.agent} needs the exact belief; use --board mini")
-    if args.show == "q" and (args.board == "classic" or args.agent not in ("belief", "rollout", "optimal")):
-        parser.error("--show q needs a POMDP agent (belief, rollout or optimal) on --board mini")
-    if args.agent in ("optimal", "rollout") or args.show == "q":
+    pomdp = ("belief", "rollout", "optimal", "infogain")
+    if args.show != "p" and (args.board == "classic" or args.agent not in pomdp):
+        parser.error(f"--show {args.show} needs a POMDP agent ({', '.join(pomdp)}) on --board mini")
+    if args.agent in ("optimal", "rollout") or args.show != "p":
         print("Solving the belief-state MDP for this board (about 10-30 s, once)...")
-    step_mode = args.step or (args.show == "q" and not args.auto)
+    step_mode = args.step or (args.show != "p" and not args.auto)
     WatchApp(config, args.agent, args.seed, show=args.show, step_mode=step_mode).run(args.delay)
 
 

@@ -145,3 +145,46 @@ def test_show_q_starts_in_step_mode(monkeypatch):
     assert made["step_mode"] is True
     watch.main(["--agent", "belief"])
     assert made["step_mode"] is False
+
+
+def test_info_view_shows_the_planners_information_gain_and_the_agent_fires_at_the_most():
+    from math import log2
+    from battleship.planning import planner
+    app = WatchApp(MINI, "infogain", seed=17, show="i", step_mode=True)
+    try:
+        plan = planner(MINI)
+        while not app.game.done:
+            app.render()
+            layouts, fired = plan.state(app.agent.belief)
+            bits = app.info["bits"]
+            assert set(bits) == set(plan.hit_counts(layouts, fired))    # squares that could hold a ship
+            for cell, b in bits.items():
+                expected = log2(layouts.bit_count()) - plan.expected_entropy(layouts, fired, cell)
+                assert b == pytest.approx(max(0.0, expected))
+            assert app.target in plan.info_gain_shots(layouts, fired)
+            assert bits[app.target] == pytest.approx(max(bits.values()))
+            assert app.q is not None                                     # Q* shown alongside
+            press(app, pygame.K_SPACE)
+        assert app.info is None and "All ships sunk" in app.last
+    finally:
+        pygame.quit()
+
+
+def test_q_and_i_keys_switch_between_the_three_views():
+    app = WatchApp(MINI, "optimal", seed=17, step_mode=True)
+    try:
+        press(app, pygame.K_i)
+        assert app.show == "i" and app.info is not None and app.q is not None
+        press(app, pygame.K_q)
+        assert app.show == "q" and app.info is None and app.q is not None
+        press(app, pygame.K_q)
+        assert app.show == "p" and app.q is None and app.info is None
+    finally:
+        pygame.quit()
+
+
+def test_info_view_is_only_for_pomdp_agents_on_the_small_board():
+    for argv in (["--agent", "density", "--show", "i"],
+                 ["--agent", "infogain", "--board", "classic"]):
+        with pytest.raises(SystemExit):
+            main(argv)
