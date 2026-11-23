@@ -94,8 +94,13 @@ Design, the two habit models, verification and full learning curves:
 
 `battleship.dqn.DQNAgent` is Q-learning with a convolutional network, trained on 256
 vectorized games at once (Double DQN, dueling head, replay buffer, target network).
-It is a separate package, so the other agents do not load PyTorch. Results on the
-2,000 test boards (seeds 0–1999, paired against probability density):
+It is a separate package, so the other agents do not load PyTorch, and PyTorch is
+an optional extra: install it with `uv sync --extra dqn` or prefix commands with
+`uv run --extra dqn`. Without it, everything else works and the DQN tests are
+skipped (a plain `uv sync` removes PyTorch again, so check that pytest does not
+report the DQN tests as skipped). On Windows the locked PyTorch is the CPU build;
+an NVIDIA GPU is used on Linux. Results on the 2,000 test boards (seeds 0–1999,
+paired against probability density):
 
 | Agent | 10×10 shots | Paired vs density | Training |
 |---|---|---|---|
@@ -104,18 +109,20 @@ It is a separate package, so the other agents do not load PyTorch. Results on th
 | DQN-C (residual on density) | 46.05 | +1.41 ± 0.46 | 14 min |
 | DQN-A (board only) | 53.00 | +8.35 ± 0.54 | 12 min |
 
-On 4×4 the board-only DQN reaches 8.92 exact expected shots in 75 s (density 8.86,
-optimum 8.746).
+On 4×4 the board-only DQN reaches 8.924 expected shots in 75 s, level with
+probability density (8.909) and belief greedy (8.913); the optimum is 8.746. 4×4
+has no held-out boards, so this is how well it plays the 264 layouts it trained on.
 
 ```bash
-uv run scripts/train_dqn.py --board classic --variant density --games 100000 --eps-fraction 0.1
-uv run scripts/benchmark_dqn.py classic results/dqn/classic_density_s0/best.pt
-uv run pytest tests/test_dqn.py      # vectorized games and density match the reference code
+uv run --extra dqn scripts/train_dqn.py --board classic --variant density --games 100000 --eps-fraction 0.1
+uv run --extra dqn scripts/benchmark_dqn.py classic results/dqn/classic_density_s0/best.pt --out results/dqn/my_benchmark
+uv run --extra dqn pytest tests/test_dqn.py      # vectorized games and density match the reference code
 ```
 
 Design and results: [docs/design_dqn.md](docs/design_dqn.md). Beginner tutorial:
 [tutorial/dqn_tutorial.html](tutorial/dqn_tutorial.html). Two-page report:
-[report/dqn_report.pdf](report/dqn_report.pdf).
+[report/dqn_report.pdf](report/dqn_report.pdf) (not yet rebuilt: its 4×4 numbers are
+the old ones; `report/dqn_report.tex` has the current numbers).
 
 ### Adding a dependency
 
@@ -124,6 +131,8 @@ uv add <package>
 ```
 
 Then commit the updated `pyproject.toml` and `uv.lock`. Never commit `.venv/`.
+A large dependency that only one part of the project needs (like PyTorch for DQN)
+belongs in an optional extra instead: `uv add --optional <extra> <package>`.
 
 ## Code layout
 
