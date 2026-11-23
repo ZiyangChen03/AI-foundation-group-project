@@ -99,3 +99,32 @@ def test_rejects_bad_options():
         OpponentBeliefAgent(model="neural")
     with pytest.raises(ValueError):
         OpponentBeliefAgent(smoothing=0)
+
+
+def test_uses_weighted_particles_on_the_classic_board():
+    from battleship import CLASSIC
+    from battleship.particles import ParticleBelief
+    agent = OpponentBeliefAgent(num_particles=100)
+    agent.learn(EDGES.sample(CLASSIC, random.Random(0)))
+    record = play_solo(agent, CLASSIC, seed=1)
+    assert isinstance(agent.belief, ParticleBelief) and agent.belief.weight is not None
+    assert record.num_shots <= CLASSIC.num_cells
+    ship = next(iter(agent.counts))
+    assert agent.placement_weight(*ship) == 1 + agent.smoothing
+
+
+def test_layout_model_needs_the_exact_belief():
+    from battleship import CLASSIC
+    with pytest.raises(ValueError):
+        play_solo(OpponentBeliefAgent(model="layouts", num_particles=50), CLASSIC, seed=0)
+
+
+def test_learn_counts_like_end_game():
+    a, b = OpponentBeliefAgent(), OpponentBeliefAgent()
+    rng = random.Random(3)
+    b.training = True
+    for g in range(5):
+        layout = EDGES.sample(MINI, rng)
+        a.learn(layout)
+        play_solo(b, MINI, layout=layout, agent_seed=g)
+    assert a.counts == b.counts and a.games_learned == b.games_learned == 5

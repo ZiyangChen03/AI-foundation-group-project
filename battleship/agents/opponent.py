@@ -2,7 +2,9 @@ from collections import Counter
 from math import prod
 
 from ..belief import Belief
-from .belief import BeliefAgent
+from ..particles import ParticleBelief
+from .base import Agent
+from .belief import BeliefAgent, _exact_is_practical
 
 MODELS = ("placements", "layouts")
 
@@ -38,12 +40,16 @@ class OpponentBeliefAgent(BeliefAgent):
     misled by chance patterns in a few games.
 
     ``habit=`` fixes the prior to a known ``Habit`` instead (an oracle, the
-    best this agent could learn). Exact belief and greedy shots only, so small
-    boards such as MINI.
+    best this agent could learn). Shots are greedy.
+
+    On boards too large for the exact belief (``belief="auto"`` picks), the
+    agent uses ``ParticleBelief`` with the placement weights, so only
+    ``model="placements"`` (and habits that split per ship) work there.
     """
 
-    def __init__(self, model: str = "placements", smoothing: float = 3, habit=None):
-        super().__init__(belief="exact", planner="greedy")
+    def __init__(self, model: str = "placements", smoothing: float = 3, habit=None,
+                 belief: str = "auto", num_particles: int = 1000):
+        super().__init__(belief=belief, num_particles=num_particles, planner="greedy")
         if model not in MODELS:
             raise ValueError(f"model must be one of {MODELS}")
         if smoothing <= 0:
@@ -57,8 +63,22 @@ class OpponentBeliefAgent(BeliefAgent):
                      else f"opponent-{model}-s{smoothing}")
 
     def new_game(self, config, rng):
-        super().new_game(config, rng)
-        self.belief = Belief.prior(config, self.prior_weights(config))
+        Agent.new_game(self, config, rng)
+        if self.mode == "exact" or (self.mode == "auto" and _exact_is_practical(config)):
+            self.belief = Belief.prior(config, self.prior_weights(config))
+        elif self.model == "layouts" and self.habit is None:
+            raise ValueError('model "layouts" needs the exact belief (small boards)')
+        else:
+            self.belief = ParticleBelief(config, rng, self.num_particles,
+                                         placement_weight=self.placement_weight)
+        self.shots_seen = 0
+        self.pending = []
+
+    def placement_weight(self, length: int, cells: frozenset) -> float:
+        """The prior factor of one ship placement (the placement model)."""
+        if self.habit is not None:
+            return self.habit.placement_weight(length, cells, self.config)
+        return self.counts[length, cells] + self.smoothing
 
     def prior_weights(self, config) -> tuple[float, ...]:
         """The prior weight of every layout in the exact belief's table."""
@@ -72,13 +92,20 @@ class OpponentBeliefAgent(BeliefAgent):
                      for layout in layouts)
 
     def end_game(self, record):
-        if self.training and self.habit is None:
-            if self.model == "layouts":
-                self.counts[_board(record.layout)] += 1
-            else:
-                for ship in record.layout:
-                    self.counts[ship.length, ship.cells] += 1
-            self.games_learned += 1
+        if self.training:
+            self.learn(record.layout)
+
+    def learn(self, layout) -> None:
+        """Count one board the opponent used. Learning reads only the revealed
+        layout, so this is what ``end_game`` does after a game in training."""
+        if self.habit is not None:
+            return
+        if self.model == "layouts":
+            self.counts[_board(layout)] += 1
+        else:
+            for ship in layout:
+                self.counts[ship.length, ship.cells] += 1
+        self.games_learned += 1
 
     def forget(self) -> None:
         """Drop everything learned about the opponent."""

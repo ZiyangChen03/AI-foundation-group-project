@@ -7,7 +7,8 @@ from battleship import CLASSIC, MINI, all_layouts, layout_from_cells, play_solo
 from battleship.agents import BeliefAgent
 from battleship.belief import Belief
 from battleship.opponents import (FeatureHabit, border_cells, expected_shots, favorites,
-                                  horizontal_ships, standard_habits, touching_pairs, uniform)
+                                  horizontal_ships, large_board_habits, standard_habits,
+                                  touching_pairs, uniform)
 
 
 def test_features_on_a_known_layout():
@@ -74,3 +75,28 @@ def test_expected_shots_only_plays_layouts_the_habit_uses():
              for layout in habit.layouts]
     assert expected_shots(BeliefAgent(), MINI, habit, agent_seeds=[0]) == pytest.approx(
         sum(shots) / 2)
+
+
+def test_per_ship_factors_multiply_to_the_weight():
+    habit = FeatureHabit("edges", border_cells, 0.7)
+    for layout in list(all_layouts(MINI))[::20]:
+        product = math.prod(habit.placement_weight(s.length, s.cells, MINI) for s in layout)
+        assert math.isclose(product, habit.weight(layout, MINI))
+
+
+def test_pair_habits_do_not_split_per_ship():
+    habit = FeatureHabit("touching", touching_pairs, 2.0)
+    assert not habit.per_ship
+    with pytest.raises(ValueError):
+        habit.placement_weight(3, frozenset({0, 1, 2}), MINI)
+
+
+def test_large_board_habits_shift_the_classic_fleet():
+    rng = random.Random(0)
+    habits = {h.name: h for h in large_board_habits()}
+    border = {name: sum(border_cells(habits[name].sample(CLASSIC, rng), CLASSIC)
+                        for _ in range(300)) / 300 for name in ("uniform", "edges", "center")}
+    assert border["edges"] > border["uniform"] + 2 > border["center"] + 4
+    horizontal = sum(horizontal_ships(habits["horizontal"].sample(CLASSIC, rng), CLASSIC)
+                     for _ in range(300)) / 300
+    assert horizontal > 3.3                     # 2.5 under uniform placement
