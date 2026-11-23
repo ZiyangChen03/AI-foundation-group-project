@@ -95,3 +95,53 @@ def test_q_view_is_only_for_pomdp_agents_on_the_small_board():
         assert app.show == "p" and app.q is None
     finally:
         pygame.quit()
+
+
+def test_step_mode_fires_one_shot_per_press_or_click_and_stays_paused():
+    app = WatchApp(MINI, "belief", seed=5, step_mode=True)
+    try:
+        assert not app.auto
+        press(app, pygame.K_SPACE)
+        assert app.observation.num_shots == 1
+        cell = next(c for c in app.observation.legal_actions)
+        app.handle_event(pygame.event.Event(pygame.MOUSEBUTTONDOWN, button=1,
+                                            pos=app.cells[cell].center))
+        assert app.observation.num_shots == 2              # a click on the board: one shot
+        press(app, pygame.K_n)
+        assert app.observation.num_shots == 0 and not app.auto   # a new game stays in step mode
+        press(app, pygame.K_a)
+        assert app.auto                                    # A still plays on by itself
+    finally:
+        pygame.quit()
+
+
+def test_clicking_the_board_does_nothing_outside_step_mode():
+    app = WatchApp(MINI, "belief", seed=5, auto=False)
+    try:
+        app.handle_event(pygame.event.Event(pygame.MOUSEBUTTONDOWN, button=1,
+                                            pos=app.cells[0].center))
+        assert app.observation.num_shots == 0
+    finally:
+        pygame.quit()
+
+
+def test_show_q_starts_in_step_mode(monkeypatch):
+    import battleship.watch as watch
+    made = {}
+
+    class Fake:
+        def __init__(self, *args, **kwargs):
+            made.update(kwargs)
+
+        def run(self, delay):
+            pass
+
+    monkeypatch.setattr(watch, "WatchApp", Fake)
+    watch.main(["--agent", "optimal", "--show", "q"])
+    assert made["step_mode"] is True
+    watch.main(["--agent", "optimal", "--show", "q", "--auto"])
+    assert made["step_mode"] is False
+    watch.main(["--agent", "belief", "--manual"])            # the old flag still works
+    assert made["step_mode"] is True
+    watch.main(["--agent", "belief"])
+    assert made["step_mode"] is False

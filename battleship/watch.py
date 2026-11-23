@@ -16,7 +16,9 @@ and plays optimally afterwards. The optimal agent fires at the smallest. The
 panel splits the chosen square's Q* into ship cells still unhit + chance of a
 miss now + misses expected later, and names greedy's pick when it differs.
 
-It plays by itself (one shot every --delay ms; --manual starts paused).
+It plays by itself (one shot every --delay ms), or with --step one shot at a
+time: each Space, Right or click on the board fires the next shot, and new
+games stay in step mode. --show q starts in step mode (A plays on by itself).
 Keys: Space or Right = fire one shot, A = pause / play, H = show/hide the
 hidden ships, Q = P(ship) / Q* view, N = new game, Esc = quit.
 """
@@ -51,14 +53,15 @@ class WatchApp(BoardApp):
     WIDTH = 900
 
     def __init__(self, config: GameConfig, agent_name: str, seed: int, auto: bool = True,
-                 show: str = "p"):
+                 show: str = "p", step_mode: bool = False):
         super().__init__(config)
         pygame.display.set_caption(f"Battleship - watching {agent_name} - "
                                    f"{config.size} x {config.size}")
         self.agent_name = agent_name
         self.agent = AGENTS[agent_name]()
         self.seed = seed
-        self.auto = auto
+        self.step_mode = step_mode            # one shot per key press or click
+        self.auto = auto and not step_mode
         self.show_ships = False
         self.next_auto = 0
         self.target = self.heat = self.kind = None
@@ -73,7 +76,8 @@ class WatchApp(BoardApp):
         self.seed = seed
         self.observation = self.game.reset(seed=seed)
         self.agent.new_game(self.config, random.Random(f"agent:{seed}"))
-        self.last = "Space: one shot   A: pause / play"
+        self.last = ("Space or click the board: next shot" if self.step_mode
+                     else "Space: one shot   A: pause / play")
         if getattr(self.agent, "planner", "greedy") != "greedy" or self.show == "q":
             self.solving_notice()
         self.plan_next()
@@ -164,10 +168,13 @@ class WatchApp(BoardApp):
                 self.toggle_view()
             elif event.key in (pygame.K_n, pygame.K_r):
                 self.new_game(self.seed + 1)
-                self.auto = True
+                self.auto = not self.step_mode
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             if self.new_game_button.collidepoint(event.pos):
                 self.new_game(self.seed + 1)
+                self.auto = self.auto and not self.step_mode
+            elif self.step_mode and any(rect.collidepoint(event.pos) for rect in self.cells):
+                self.step()                          # a click on the board: next shot
 
     # --- drawing ----------------------------------------------------------------
 
@@ -175,6 +182,8 @@ class WatchApp(BoardApp):
         size, obs = self.config.size, self.observation
         self.screen.fill(BG)
         self.label("WATCHING  " + self.agent_name.upper(), (40, 25), font=self.title_font)
+        if self.step_mode:
+            self.label("one shot at a time", (520, 40), ACCENT, self.font)
         reveal = "sunk ships revealed" if self.config.reveal_sunk_cells else "sunk ships hidden"
         self.label(f"{size} x {size} / ships {', '.join(map(str, self.config.fleet))} / "
                    f"{reveal} / board seed {self.seed}", (40, 77), MUTED, self.small_font)
@@ -230,7 +239,9 @@ class WatchApp(BoardApp):
             self.render_q_panel(x, y)
         else:
             self.render_p_panel(x, y)
-        keys = ["Space / Right   fire one shot", f"A   pause / play ({'playing' if self.auto else 'paused'})",
+        first = ("Space / Right / click board   next shot" if self.step_mode
+                 else "Space / Right   fire one shot")
+        keys = [first, f"A   pause / play ({'playing' if self.auto else 'paused'})",
                 f"H   hidden ships ({'shown' if self.show_ships else 'hidden'})",
                 "N   new game", "Esc   quit"]
         if self.can_show_q() or self.show == "q":
@@ -307,8 +318,11 @@ def main(argv=None):
                         help="sinking a ship does not reveal its cells")
     parser.add_argument("--seed", type=int, default=0, help="which hidden board to start on")
     parser.add_argument("--delay", type=int, default=700, help="auto-play ms per shot")
-    parser.add_argument("--manual", action="store_true",
-                        help="start paused; press Space for each shot")
+    parser.add_argument("--step", "--manual", dest="step", action="store_true",
+                        help="one shot at a time: Space, Right or a click on the board fires "
+                             "the next shot (the default with --show q)")
+    parser.add_argument("--auto", action="store_true",
+                        help="play by itself even with --show q")
     parser.add_argument("--show", choices=("p", "q"), default="p",
                         help="p: P(ship) on each square; q: Q*, the expected shots left "
                              "(POMDP agents on 4 x 4)")
@@ -321,7 +335,8 @@ def main(argv=None):
         parser.error("--show q needs a POMDP agent (belief, rollout or optimal) on --board mini")
     if args.agent in ("optimal", "rollout") or args.show == "q":
         print("Solving the belief-state MDP for this board (about 10-30 s, once)...")
-    WatchApp(config, args.agent, args.seed, auto=not args.manual, show=args.show).run(args.delay)
+    step_mode = args.step or (args.show == "q" and not args.auto)
+    WatchApp(config, args.agent, args.seed, show=args.show, step_mode=step_mode).run(args.delay)
 
 
 if __name__ == "__main__":
