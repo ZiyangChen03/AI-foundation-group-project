@@ -127,8 +127,12 @@ Each piece is checked against something independent (`tests/test_belief.py`,
 | **optimal POMDP policy (V\*)** | **8.746** | **8.754** |
 | rollout (exact, greedy base) | 8.765 | 8.784 |
 | belief, greedy | 8.913 | 8.913 |
-| probability density | 8.92 | 10.13 |
-| hunt-target + parity | 9.68 | 10.83 |
+| probability density | 8.909 | 10.129 |
+| hunt-target + parity | 9.682 | 10.828 |
+
+Probability density and hunt-target break ties at random; their values average over
+every possible tie, enumerated exactly (`scripts/exact_4x4.py`, added in PR #20, does
+this for density), and agree with 15,840 simulated games each.
 
 **V\* assumes random ship placement.** It is the fewest shots any strategy can
 average when every legal layout is equally likely, which is how our runner places
