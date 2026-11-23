@@ -65,8 +65,9 @@ class Board:
 
     def info_gain(self, cell: int) -> float:
         n = self.count()
-        return -sum(g.bit_count() / n * math.log2(g.bit_count() / n)
+        bits = -sum(g.bit_count() / n * math.log2(g.bit_count() / n)
                     for g in self.plan.outcomes(self.layouts, self.fired, cell))
+        return max(bits, 0.0)                 # a certain result gives 0, never -0
 
     def q(self, cell: int) -> float:
         return self.plan._q(self.layouts, self.fired, cell, self.plan.optimal_value)
@@ -213,11 +214,12 @@ def show(board: Board, history: str = "") -> None:
     for b in blocks:
         print("\n".join(b))
         print()
-    print(f"  Q* = {left} unhit ship cells + P(miss now) + misses later")
+    print(f"  Q* = {left} unhit ship cells + P(miss now) + misses later"
+          f"  (averaged over tied cells, as a random tie-break would play)")
     for label, picks in (("greedy fires at", greedy), ("max info gain fires", info), ("optimal fires at", optimal)):
-        c = min(picks, key=board.q)
-        print(f"  {label:21s} {names(picks):18s} Q* = {board.q(c):.3f} = {left} + "
-              f"{1 - board.p_hit(c):.3f} + {board.misses_later(c):.3f}"
+        avg = lambda f: sum(f(c) for c in picks) / len(picks)
+        print(f"  {label:21s} {names(picks):18s} Q* = {avg(board.q):.3f} = {left} + "
+              f"{avg(lambda c: 1 - board.p_hit(c)):.3f} + {avg(board.misses_later):.3f}"
               + ("  = V*(b)" if picks is optimal else ""))
     print(f"  expected misses left with optimal play: {v - left:.3f}  (V* minus the {left} unhit ship cells)")
     print(f"  playing greedy from here instead:       "
