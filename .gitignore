@@ -218,3 +218,10 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Local comparison training artifacts
+.worktrees/
+results/comparison_training/
+results/comparison_smoke/
+battleship/q_learning/artifacts/
+results/belief_q/*.json.gz

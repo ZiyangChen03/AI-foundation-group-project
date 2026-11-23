@@ -1,0 +1,15 @@
+{
+  "status": "passed",
+  "training_status": "complete",
+  "comparison_status": "complete",
+  "validated_checkpoint_hashes": 15,
+  "algorithms": 14,
+  "evaluated_model_or_policy_entries": 24,
+  "solo_games": 126720,
+  "layouts_per_model": 264,
+  "policy_seeds_per_layout": 20,
+  "tournament_model_pairings": 201,
+  "tournament_games": 80400,
+  "tournament_matrix_reconciled": true,
+  "oracle_rows": 1
+}

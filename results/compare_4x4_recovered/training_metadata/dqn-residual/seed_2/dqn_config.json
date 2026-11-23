@@ -1,0 +1,31 @@
+{
+  "net": {
+    "channels": 32,
+    "layers": 4,
+    "use_density": true,
+    "residual": 1.0
+  },
+  "train": {
+    "games": 50000,
+    "parallel": 256,
+    "batch": 256,
+    "replay_ratio": 8,
+    "buffer": 200000,
+    "learn_start": 10000,
+    "lr": 0.0003,
+    "gamma": 1.0,
+    "target_every": 1000,
+    "eps_start": 1.0,
+    "eps_end": 0.05,
+    "eps_fraction": 1.0,
+    "double": true,
+    "grad_clip": 10.0,
+    "eval_every": 5000,
+    "seed": 2,
+    "device": "cpu"
+  },
+  "torch_version": "2.15.0+cpu",
+  "threads": 1,
+  "shot_budget": 1000000,
+  "eval_shots": 100000
+}
