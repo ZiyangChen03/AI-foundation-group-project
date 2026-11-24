@@ -1,0 +1,32 @@
+{
+  "agent": "belief-q-particles",
+  "board": "10x10 classic",
+  "training_games": 400,
+  "eps_start": 1.0,
+  "eps_end": 0.02,
+  "gamma": 0.0,
+  "reward": "miss",
+  "keys": 33,
+  "train_seconds": 173.4,
+  "test_boards": 200,
+  "mean_shots": 46.66,
+  "ci95": 1.306075249742506,
+  "median": 46.0,
+  "worst": 72,
+  "best": 26,
+  "ms_per_shot": 17.63100890810787,
+  "curve": [
+    {
+      "games": 200,
+      "test50_mean": 45.82,
+      "keys": 32
+    },
+    {
+      "games": 400,
+      "test50_mean": 45.66,
+      "keys": 33
+    }
+  ],
+  "train_particles": 100,
+  "test_particles": 300
+}

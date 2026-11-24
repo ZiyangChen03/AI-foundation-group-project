@@ -4,6 +4,7 @@
     uv run python -m battleship.watch --agent optimal          # exact optimal policy
     uv run python -m battleship.watch --agent density --no-reveal
     uv run python -m battleship.watch --board classic --seed 7
+    uv run python -m battleship.watch --board classic --agent optimal   # approximate on 10 x 10
     uv run python -m battleship.watch --agent optimal --show q   # Q* on every square
     uv run python -m battleship.watch --agent infogain --show i  # information gain (bits)
 
@@ -23,6 +24,12 @@ average, log2(layouts now) - E[log2(layouts left)]. The infogain agent fires at
 the largest, among squares that could still hold a ship. The panel also gives
 that square's Q*, so the two rules can be compared.
 
+On 10 x 10 the exact belief cannot be listed, so --agent optimal and
+--agent infogain play the particle versions in battleship/agents/belief_10x10.py
+(optimal is then an approximation, a sampled lookahead, and the screen says so),
+and --agent q-local / belief-q-10x10 play the 10 x 10 Q-tables trained by
+scripts/train_q_10x10.py. The Q* and bits views need the exact belief (4 x 4).
+
 It plays by itself (one shot every --delay ms), or with --step one shot at a
 time: each Space, Right or click on the board fires the next shot, and new
 games stay in step mode. --show q and --show i start in step mode (A plays on
@@ -34,10 +41,14 @@ for P(ship)), N = new game, Esc = quit.
 import argparse
 import random
 from math import log2
+from pathlib import Path
 
 import pygame
 
 from .agents import BeliefAgent, HuntTargetAgent, ProbabilityDensityAgent, RandomAgent
+from .agents.belief import _exact_is_practical
+from .agents.belief_10x10 import LargeBoardBeliefAgent
+from .agents.q_10x10 import LocalQAgent, ParticleBeliefQAgent
 from .belief import Belief
 from .config import CLASSIC, MINI, GameConfig, label
 from .env import BattleshipEnv, Result
@@ -54,6 +65,33 @@ AGENTS = {
     "random": RandomAgent,
 }
 
+# Boards too large for the exact belief (10 x 10) play these versions instead.
+AGENTS_LARGE = {
+    "optimal": lambda: LargeBoardBeliefAgent("optimal-approx"),
+    "infogain": lambda: LargeBoardBeliefAgent("infogain"),
+}
+
+Q_10X10 = Path(__file__).resolve().parents[1] / "results" / "q_10x10"
+
+
+def _trained(cls, file: str):
+    def make():
+        path = Q_10X10 / file
+        if not path.exists():
+            raise FileNotFoundError(f"no trained table at {path}; run scripts/train_q_10x10.py")
+        return cls.load(path)
+    return make
+
+
+AGENTS["q-local"] = _trained(LocalQAgent, "local.json.gz")
+AGENTS["belief-q-10x10"] = _trained(ParticleBeliefQAgent, "belief.json.gz")
+
+
+def make_agent(name: str, config: GameConfig):
+    if name in AGENTS_LARGE and not _exact_is_practical(config):
+        return AGENTS_LARGE[name]()
+    return AGENTS[name]()
+
 
 def _mix(low: str, high: str, t: float) -> pygame.Color:
     return pygame.Color(low).lerp(pygame.Color(high), max(0.0, min(1.0, t)))
@@ -68,7 +106,7 @@ class WatchApp(BoardApp):
         pygame.display.set_caption(f"Battleship - watching {agent_name} - "
                                    f"{config.size} x {config.size}")
         self.agent_name = agent_name
-        self.agent = AGENTS[agent_name]()
+        self.agent = make_agent(agent_name, config)
         self.seed = seed
         self.step_mode = step_mode            # one shot per key press or click
         self.auto = auto and not step_mode
@@ -89,7 +127,9 @@ class WatchApp(BoardApp):
         self.agent.new_game(self.config, random.Random(f"agent:{seed}"))
         self.last = ("Space or click the board: next shot" if self.step_mode
                      else "Space: one shot   A: pause / play")
-        if getattr(self.agent, "planner", "greedy") in ("optimal", "rollout") or self.show != "p":
+        solves = (getattr(self.agent, "planner", "greedy") in ("optimal", "rollout")
+                  and _exact_is_practical(self.config))
+        if solves or self.show != "p":
             self.solving_notice()
         self.plan_next()
 
@@ -218,8 +258,13 @@ class WatchApp(BoardApp):
         if self.step_mode:
             self.label("one shot at a time", (520, 40), ACCENT, self.font)
         reveal = "sunk ships revealed" if self.config.reveal_sunk_cells else "sunk ships hidden"
+        note = ""
+        if isinstance(self.agent, LargeBoardBeliefAgent):
+            note = (" / APPROXIMATE: sampled lookahead" if self.agent.large_planner == "optimal-approx"
+                    else " / estimated from sampled layouts")
         self.label(f"{size} x {size} / ships {', '.join(map(str, self.config.fleet))} / "
-                   f"{reveal} / board seed {self.seed}", (40, 77), MUTED, self.small_font)
+                   f"{reveal} / board seed {self.seed}{note}", (40, 77),
+                   ACCENT if note else MUTED, self.small_font)
         self.label(f"Shots: {obs.num_shots}", (40, 122))
         self.label(f"Ships left: {len(obs.remaining_ship_lengths)} / {len(self.config.fleet)}",
                    (265, 122))
@@ -403,8 +448,6 @@ def main(argv=None):
     args = parser.parse_args(argv)
     base = MINI if args.board == "mini" else CLASSIC
     config = GameConfig(base.size, base.fleet, reveal_sunk_cells=not args.no_reveal)
-    if args.agent in ("optimal", "rollout", "infogain") and args.board == "classic":
-        parser.error(f"--agent {args.agent} needs the exact belief; use --board mini")
     pomdp = ("belief", "rollout", "optimal", "infogain")
     if args.show != "p" and (args.board == "classic" or args.agent not in pomdp):
         parser.error(f"--show {args.show} needs a POMDP agent ({', '.join(pomdp)}) on --board mini")

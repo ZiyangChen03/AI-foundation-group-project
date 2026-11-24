@@ -1,0 +1,108 @@
+[
+  {
+    "agent": "probability-density",
+    "games": 200,
+    "mean": 43.47,
+    "ci95": 1.2724201104538693,
+    "median": 42.5,
+    "worst": 67,
+    "best": 23,
+    "ms_per_shot": 0.2748841960288945
+  },
+  {
+    "agent": "belief-greedy",
+    "games": 200,
+    "mean": 45.205,
+    "ci95": 1.2923202707576225,
+    "median": 44.0,
+    "worst": 69,
+    "best": 24,
+    "ms_per_shot": 113.23351740961277,
+    "vs_density": 1.735,
+    "vs_density_ci95": 1.7497418153263378
+  },
+  {
+    "agent": "belief-greedy-info",
+    "games": 200,
+    "mean": 45.55,
+    "ci95": 1.3334509052015806,
+    "median": 45.0,
+    "worst": 68,
+    "best": 28,
+    "ms_per_shot": 107.89900004393988,
+    "vs_density": 2.08,
+    "vs_density_ci95": 1.6041703028678145
+  },
+  {
+    "agent": "belief-optimal-approx",
+    "games": 200,
+    "mean": 45.88,
+    "ci95": 1.2586648604591986,
+    "median": 45.0,
+    "worst": 69,
+    "best": 27,
+    "ms_per_shot": 300.7865433085934,
+    "vs_density": 2.41,
+    "vs_density_ci95": 1.6033174700441406
+  },
+  {
+    "agent": "q-learning-local",
+    "games": 200,
+    "mean": 46.17,
+    "ci95": 1.1145704397325582,
+    "median": 47.0,
+    "worst": 65,
+    "best": 25,
+    "ms_per_shot": 0.36092416065998484,
+    "vs_density": 2.7,
+    "vs_density_ci95": 1.614763719355477
+  },
+  {
+    "agent": "belief-q-particles",
+    "games": 200,
+    "mean": 46.455,
+    "ci95": 1.305732110935332,
+    "median": 46.0,
+    "worst": 72,
+    "best": 28,
+    "ms_per_shot": 10.993755516072978,
+    "vs_density": 2.985,
+    "vs_density_ci95": 1.6259315808879053
+  },
+  {
+    "agent": "belief-infogain",
+    "games": 200,
+    "mean": 46.625,
+    "ci95": 1.273597443164904,
+    "median": 46.0,
+    "worst": 71,
+    "best": 26,
+    "ms_per_shot": 123.71900445041022,
+    "vs_density": 3.155,
+    "vs_density_ci95": 1.541121098095466
+  },
+  {
+    "agent": "hunt-target+parity",
+    "games": 200,
+    "mean": 50.025,
+    "ci95": 1.2620251870958523,
+    "median": 50.5,
+    "worst": 69,
+    "best": 28,
+    "ms_per_shot": 0.03864399802752132,
+    "vs_density": 6.555,
+    "vs_density_ci95": 1.8482613249827893
+  },
+  {
+    "agent": "random",
+    "games": 200,
+    "mean": 94.95,
+    "ci95": 0.6366684486982523,
+    "median": 96.0,
+    "worst": 100,
+    "best": 76,
+    "ms_per_shot": 0.0156479199643789,
+    "vs_density": 51.48,
+    "vs_density_ci95": 1.3979231389141387
+  }
+]
