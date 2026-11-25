@@ -101,6 +101,47 @@ uniform one. There are two reasons:
 Design, the two habit models, verification and full learning curves:
 [docs/design_opponent_belief.md](docs/design_opponent_belief.md).
 
+### Every agent on 10×10
+
+Some agents need things that only exist on small boards: the exact list of
+layouts (264 on 4×4, about 30 billion on 10×10) or a Q-table over whole boards.
+Their 10×10 versions are separate classes; the 4×4 originals are unchanged.
+
+- **Information gain and greedy-info** (`battleship/agents/belief_10x10.py`):
+  each shot's result chances come from the 1,000 sampled layouts of the particle
+  belief instead of the full list (within 0.04 bits of the exact value on 4×4).
+- **Optimal, approximated**: Q\* can't be computed on 10×10, so `optimal-approx`
+  uses the sampled lookahead (rollout) on every shot. It is an approximation,
+  not the optimum.
+- **The two Q-tables** (`battleship/agents/q_10x10.py`, trained with
+  `scripts/train_q_10x10.py`): the raw-board table is keyed on each square's
+  3×3 neighbourhood, the belief-state table on what the particle belief says
+  about the square. Both use −1 per miss and γ = 0; with the originals' −1 per
+  shot and γ = 1 the neighbourhood table stayed near random (92.3 shots).
+
+The same 200 boards for every agent (seeds 0–199, `results/benchmark_10x10.md`):
+
+| Agent | Mean shots | Paired vs density |
+|---|---|---|
+| probability density | 43.47 | – |
+| belief, greedy | 45.20 | +1.74 ± 1.75 |
+| belief, greedy-info (particles) | 45.55 | +2.08 ± 1.60 |
+| belief, optimal-approx (rollout) | 45.88 | +2.41 ± 1.60 |
+| Q-table on 3×3 neighbourhoods | 46.17 | +2.70 ± 1.61 |
+| Q-table on the particle belief | 46.45 | +2.98 ± 1.63 |
+| belief, information gain (particles) | 46.62 | +3.15 ± 1.54 |
+| hunt-target + parity | 50.02 | +6.55 ± 1.85 |
+| random | 94.95 | +51.48 ± 1.40 |
+
+DQN on 10×10 is in the next section (45.85 for the best variant, on 2,000 boards).
+
+```bash
+uv run scripts/train_q_10x10.py local --games 20000     # ~3 min
+uv run scripts/train_q_10x10.py belief --games 400      # ~3 min
+uv run scripts/benchmark_10x10.py --games 200           # ~10 min on 12 cores
+uv run battleship_4x4.py --board classic --agent optimal   # watch the approximation
+```
+
 ### DQN: deep Q-learning
 
 `battleship.dqn.DQNAgent` is Q-learning with a convolutional network, trained on 256

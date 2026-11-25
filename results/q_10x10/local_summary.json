@@ -1,0 +1,40 @@
+{
+  "agent": "q-learning-local",
+  "board": "10x10 classic",
+  "training_games": 20000,
+  "eps_start": 1.0,
+  "eps_end": 0.02,
+  "gamma": 0.0,
+  "reward": "miss",
+  "keys": 7451,
+  "train_seconds": 192.1,
+  "test_boards": 200,
+  "mean_shots": 46.17,
+  "ci95": 1.1145704397325582,
+  "median": 47.0,
+  "worst": 65,
+  "best": 25,
+  "ms_per_shot": 0.16010525372732196,
+  "curve": [
+    {
+      "games": 5000,
+      "test50_mean": 47.94,
+      "keys": 7191
+    },
+    {
+      "games": 10000,
+      "test50_mean": 46.62,
+      "keys": 7410
+    },
+    {
+      "games": 15000,
+      "test50_mean": 48,
+      "keys": 7448
+    },
+    {
+      "games": 20000,
+      "test50_mean": 46.52,
+      "keys": 7451
+    }
+  ]
+}

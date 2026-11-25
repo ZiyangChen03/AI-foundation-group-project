@@ -43,9 +43,26 @@ def test_heat_is_the_agents_belief():
         pygame.quit()
 
 
-def test_planners_need_the_small_board():
-    with pytest.raises(SystemExit):
-        main(["--agent", "optimal", "--board", "classic"])
+def test_exact_views_need_the_small_board():
+    for argv in (["--agent", "optimal", "--board", "classic", "--show", "q"],
+                 ["--agent", "infogain", "--board", "classic", "--show", "i"]):
+        with pytest.raises(SystemExit):
+            main(argv)
+
+
+@pytest.mark.parametrize("agent, planner", [("optimal", "optimal-approx"), ("infogain", "infogain")])
+def test_10x10_plays_the_particle_versions(agent, planner):
+    from battleship import CLASSIC
+    from battleship.agents.belief_10x10 import LargeBoardBeliefAgent
+    app = WatchApp(CLASSIC, agent, seed=1, step_mode=True)
+    try:
+        assert isinstance(app.agent, LargeBoardBeliefAgent) and app.agent.large_planner == planner
+        for _ in range(3):
+            assert app.target in app.observation.legal_actions
+            press(app, pygame.K_SPACE)
+        assert app.observation.num_shots == 3
+    finally:
+        pygame.quit()
 
 
 def test_q_view_shows_the_planners_values_and_the_agent_fires_at_the_smallest():
@@ -185,6 +202,6 @@ def test_q_and_i_keys_switch_between_the_three_views():
 
 def test_info_view_is_only_for_pomdp_agents_on_the_small_board():
     for argv in (["--agent", "density", "--show", "i"],
-                 ["--agent", "infogain", "--board", "classic"]):
+                 ["--agent", "infogain", "--board", "classic", "--show", "i"]):
         with pytest.raises(SystemExit):
             main(argv)
